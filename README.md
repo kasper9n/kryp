@@ -9,6 +9,7 @@
 ```
 # when updating, remember to update README.md
 DB_PASSWORD=my_password
+DB_ROOT_PASSWORD=my_password
 ```
 
 ### Commands
