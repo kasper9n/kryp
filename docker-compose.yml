@@ -1,5 +1,17 @@
 version: '3.4'
 services:
+  web:
+    tty: true
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: dev-stage
+    volumes:
+      - ./web:/usr/src/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
   api:
     tty: true
     build:
