@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine AS api-dev-stage
+FROM golang:1.14-alpine AS dev-stage
 WORKDIR /go/src/app
 RUN apk add git mercurial \
   && go get github.com/githubnemo/CompileDaemon
@@ -8,6 +8,7 @@ COPY . .
 RUN go build
 ENTRYPOINT CompileDaemon -command=./cryptrack-api -log-prefix=false
 
-FROM golang:1.14-alpine
-COPY --from=api-dev-stage /go/src/app /go/src/app
+FROM alpine
 WORKDIR /go/src/app
+COPY --from=dev-stage /go/src/app/cryptrack-api .
+ENTRYPOINT ./cryptrack-api

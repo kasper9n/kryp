@@ -1,5 +1,10 @@
 # Cryptrack
 
+crypto data api alterantives
+- https://www.coinapi.io/
+- https://min-api.cryptocompare.com
+- https://coinmarketcap.com/api/
+
 ## Dev instructions
 
 ### Getting started

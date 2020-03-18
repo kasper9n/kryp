@@ -1,11 +1,11 @@
 version: '3.4'
 services:
   api:
+    tty: true
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: api-dev-stage
-    image: golang:1.14-alpine
+      target: dev-stage
     volumes:
       - ./api:/go/src/app
     ports:
@@ -14,6 +14,7 @@ services:
     depends_on:
       - db
   db:
+    tty: true
     image: mysql:8.0
     environment:
       MYSQL_DATABASE: db
