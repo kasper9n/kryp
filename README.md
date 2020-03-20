@@ -28,5 +28,15 @@ Rebuild the Docker images (e.g for when Dockerfile or npm dependencies change):
 docker-compose build
 ```
 
+Lint frontend code:
+```
+make lint
+```
+
+Lint and fix frontend code:
+```
+make lint-fix
+```
+
 ### Deployment
 TBA. Will probably use Docker Contexts

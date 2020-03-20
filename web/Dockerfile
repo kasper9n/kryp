@@ -4,4 +4,4 @@ COPY package.json ./
 RUN npm install
 WORKDIR /usr/src/app
 COPY . .
-ENTRYPOINT npm run serve
+CMD ["npm", "run", "serve"]
