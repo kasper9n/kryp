@@ -1,9 +1,17 @@
 import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
+import Chakra, {
+  ThemeProvider,
+  ColorModeProvider,
+  Box,
+  CSSReset,
+} from '@chakra-ui/vue'
+import App from '@/App.vue'
+import router from '@/router'
+import store from '@/store'
 
 Vue.config.productionTip = false
+
+Vue.use(Chakra)
 
 const MetaPlugin = {
   install (Vue, { titleTemplate }) {
@@ -26,5 +34,7 @@ Vue.use(MetaPlugin, {
 new Vue({
   router,
   store,
-  render: h => h(App),
+  render: (h) => h(ThemeProvider, [
+    h(ColorModeProvider, [h(Box, [h(CSSReset), h(App)])]),
+  ]),
 }).$mount('#app')
