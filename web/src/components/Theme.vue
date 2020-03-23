@@ -1,5 +1,6 @@
 <style lang='sass'>
 :root
+  $accent-color: #ed127c
   --background-color-1: #FFFFFF
   --background-color-2: #f8f9fc
   --background-color-3: #edeff2
@@ -9,16 +10,14 @@
   --secondary-text-color: hsl(0, 0%, 50%)
   --button-text-color: #ffffff
 
-  --accent-color: rgb(20, 134, 255)
+  --accent-color: #{ $accent-color }
 
-  --button-color: rgba(20, 134, 255, 0.9)
+  --button-color: #{ transparentize($accent-color, 0.1) }
 
-  // --light-line-color: hsl(210, 0%, 92%)
   --light-line-color: #E5E5E5
-  // --light-line-color: #d5d6d7
   --line-color: #d5d6d7
   --line-hover-color: #b9babc
-  --line-highlight-color: rgba(20, 134, 255, 0.5)
+  --line-highlight-color: #{ transparentize($accent-color, 0.5) }
 
   --header-height: 70px
 
