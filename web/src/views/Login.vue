@@ -5,7 +5,7 @@
   TextBox.textbox(name='password' placeholder='Password' type='password')
   .row
     router-link(to='/reset-password') Forgot password?
-    Button.btn(@click='login($route.query.continue || "/app")') Log in
+    Button.btn(@click='login($route.query.continue || "/app/dashboard")') Log in
 </template>
 
 <script>

@@ -1,10 +1,10 @@
 <template lang='pug'>
-.register.page
+.signup.page
   h1 Sign up
   TextBox.textbox(name='email' placeholder='Email' type='text')
   TextBox.textbox(name='password' placeholder='Password' type='password')
   TextBox.textbox(name='password-repeat' placeholder='Confirm' type='password')
-  Button.btn(@click='register($route.query.continue || "/app")') Create account
+  Button.btn(@click='signup("/app/dashboard")') Create account
 </template>
 
 <script>
@@ -13,20 +13,20 @@ import TextBox from '@/components/TextBox.vue'
 import Button from '@/components/Button.vue'
 
 export default {
-  title: 'Register',
+  title: 'Sign up',
   components: {
     TextBox,
     Button,
   },
   methods: {
-    ...mapActions('account', ['register', 'logout']),
+    ...mapActions('account', ['signup', 'logout']),
   },
   computed: mapState('account', ['loggedIn']),
 }
 </script>
 
 <style lang='sass' scoped>
-.register
+.signup
   padding: 30px
   max-width: var(--page-form-width)
   text-align: center

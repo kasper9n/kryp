@@ -2,8 +2,12 @@
 .nav.logged-in(v-if='$store.state.appArea && $store.state.account.loggedIn')
   router-link.item(to='/app/dashboard')
     h2 Cryptrack
-  router-link.item(to='/app/releases')
-    h4 Releases
+  select.item
+    option Main
+    option Crypto
+    option Stocks
+  router-link.item(to='/app/portfolio/g7eia')
+    h4 Main
   .separator
   .item(@click='logout()')
     h4 Log out
@@ -11,8 +15,8 @@
   router-link.item(to='/')
     h2 Cryptrack
   .separator
-  router-link.item(to='/register')
-    h4 Register
+  router-link.item(to='/Signup')
+    h4 Sign up
   router-link.item(to='/login')
     h4 Log in
 </template>

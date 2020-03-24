@@ -3,7 +3,7 @@ import VueRouter from 'vue-router'
 import store from '@/store/index.js'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
-import Register from '@/views/Register.vue'
+import Signup from '@/views/Signup.vue'
 import PageNotFound from '@/views/404.vue'
 import Dashboard from '@/views/app/Dashboard.vue'
 
@@ -15,8 +15,8 @@ const routes = [
     component: Home,
   },
   {
-    path: '/register',
-    component: Register,
+    path: '/signup',
+    component: Signup,
   },
   {
     path: '/login',

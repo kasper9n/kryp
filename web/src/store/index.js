@@ -27,6 +27,10 @@ const account = {
     },
   },
   actions: {
+    signup ({ commit }, redirectTo) {
+      commit('login')
+      router.push(redirectTo)
+    },
     login ({ commit }, redirectTo) {
       commit('login')
       router.push(redirectTo)
