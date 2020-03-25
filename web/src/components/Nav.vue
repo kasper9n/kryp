@@ -1,5 +1,5 @@
 <template lang='pug'>
-.nav.logged-in(v-if='$store.state.appArea && $store.state.account.loggedIn')
+.nav.logged-in(v-if='$pocket.isInAppArea && $account.loggedIn')
   router-link.item(to='/app/dashboard')
     h2 Cryptrack
   select.item
@@ -20,19 +20,6 @@
   router-link.item(to='/login')
     h4 Log in
 </template>
-
-<script>
-import { mapActions } from 'vuex'
-
-export default {
-  methods: {
-    ...mapActions('account', ['logout']),
-    loginPage () {
-      return this.$router.currentRoute.path === '/login'
-    },
-  },
-}
-</script>
 
 <style lang='sass' scoped>
 .nav

@@ -5,11 +5,10 @@
   TextBox.textbox(name='password' placeholder='Password' type='password')
   .row
     router-link(to='/reset-password') Forgot password?
-    Button.btn(@click='login($route.query.continue || "/app/dashboard")') Log in
+    Button.btn(@click='$account.login($route.query.continue || "/app/dashboard")') Log in
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex'
 import TextBox from '@/components/TextBox.vue'
 import Button from '@/components/Button.vue'
 
@@ -19,10 +18,6 @@ export default {
     TextBox,
     Button,
   },
-  methods: {
-    ...mapActions('account', ['login', 'logout']),
-  },
-  computed: mapState('account', ['loggedIn']),
 }
 </script>
 
