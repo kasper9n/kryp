@@ -47,6 +47,4 @@ button
     opacity: 0.9
   &:focus span
     box-shadow: 0px 0px 0px 3px var(--line-highlight-color)
-  // &:active, &:hover:not(:active):not(:focus)
-    // border-color: var(--line-hover-color)
 </style>

@@ -1,5 +1,9 @@
 import router from '@/router/index.js'
 
+const $pocket = {
+  isInAppArea: false,
+}
+
 const $account = {
   loggedIn: false,
   email: null,
@@ -24,11 +28,25 @@ const $account = {
   },
 }
 
-const $pocket = {
-  isInAppArea: false,
+const $portfolios = {
+  portfolios: [
+    {
+      id: '2n8pgyqnvq',
+      name: 'Main',
+    },
+    {
+      id: '464fuh3na3',
+      name: 'Crypto',
+    },
+    {
+      id: '9ggukb7jtk',
+      name: 'Stocks and stuff',
+    },
+  ],
 }
 
 export default {
-  $account,
   $pocket,
+  $account,
+  $portfolios,
 }

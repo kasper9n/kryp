@@ -1,23 +1,29 @@
 <style lang='sass'>
 :root
-  $accent-color: #ed127c
-  --background-color-1: #FFFFFF
+  // $accent-color: #ed127c
+  // $accent-color: #ed125b
+  // $accent-color: #1fbdbd
+  $accent-color: #1fb782
+  $accent-color: #5c5ee6
+  --background-color-1: #ffffff
   --background-color-2: #f8f9fc
   --background-color-3: #edeff2
   --background-color-4: #e6e7eb
 
   --text-color: #444444
   --secondary-text-color: hsl(0, 0%, 50%)
-  --button-text-color: #ffffff
 
   --accent-color: #{ $accent-color }
 
+  --button-text-color: #ffffff
   --button-color: #{ transparentize($accent-color, 0.1) }
 
-  --light-line-color: #E5E5E5
+  --light-line-color: #e5e5e5
   --line-color: #d5d6d7
   --line-hover-color: #b9babc
   --line-highlight-color: #{ transparentize($accent-color, 0.5) }
+
+  --dropdown-background-color: #ffffff
 
   --header-height: 70px
 

@@ -26,6 +26,8 @@ Vue.use(MetaPlugin, {
 
 Vue.use(VuePocket, store)
 
+Vue.prototype.$log = console.log
+
 new Vue({
   router,
   render: (h) => h(App),

@@ -1,25 +1,54 @@
 <template lang='pug'>
 .nav.logged-in(v-if='$pocket.isInAppArea && $account.loggedIn')
-  router-link.item(to='/app/dashboard')
+  router-link.nav-link(to='/app/dashboard')
     h2 Cryptrack
-  select.item
-    option Main
-    option Crypto
-    option Stocks
-  router-link.item(to='/app/portfolio/g7eia')
-    h4 Main
+  Dropdown.portfolio-picker(
+    defaultText='Main'
+    :options=`[
+      { type: "space" },
+      {
+        type: "text",
+        text: "Portfolio",
+      },
+      {
+        text: "Main",
+      },
+      {
+        text: "Crypto",
+      },
+      {
+        text: "Stocks and stuff haha",
+      },
+      { type: "separator" },
+      {
+        type: "button",
+        text: "Create portfolio",
+      },
+      { type: "space" },
+    ]`
+  )
   .separator
-  .item(@click='logout()')
-    h4 Log out
+  button.nav-link(@click='$account.logout()')
+    h4(tabindex='-1') Log out
 .nav.logged-out(v-else)
-  router-link.item(to='/')
+  router-link.nav-link(to='/')
     h2 Cryptrack
   .separator
-  router-link.item(to='/Signup')
+  router-link.nav-link(to='/Signup')
     h4 Sign up
-  router-link.item(to='/login')
+  router-link.nav-link(to='/login')
     h4 Log in
 </template>
+
+<script>
+import Dropdown from '@/components/Dropdown.vue'
+
+export default {
+  components: {
+    Dropdown,
+  },
+}
+</script>
 
 <style lang='sass' scoped>
 .nav
@@ -32,9 +61,21 @@
   padding: 0px 30px
   white-space: nowrap
   user-select: none
-  .item
-    cursor: pointer
+  button
+    border: none
+    font-size: inherit
+    outline: none
+    h4:focus
+      outline: none
+    &:focus h4
+      outline: var(--line-highlight-color) 3px auto
+  .nav-link, .portfolio-picker
     margin: 0px 10px
+  .portfolio-picker
+    max-width: 250px
+    width: auto
+  .nav-link
+    cursor: pointer
     transition: 0.15s var(--easing)
     transition-property: opacity, color
     text-decoration: none
