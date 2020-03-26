@@ -2,6 +2,16 @@ import router from '@/router/index.js'
 
 const $pocket = {
   isInAppArea: false,
+  darkTheme: false,
+  toggleDarkTheme () {
+    this.darkTheme = !this.darkTheme
+    this.updateTheme()
+  },
+  updateTheme () {
+    const dataset = document.querySelector('html').dataset
+    if (this.darkTheme === true) dataset.theme = 'dark'
+    else dataset.theme = 'light'
+  },
 }
 
 const $account = {

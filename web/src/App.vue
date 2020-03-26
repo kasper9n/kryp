@@ -7,13 +7,18 @@
 
 <script>
 import Nav from '@/components/Nav.vue'
-import Theme from '@/components/Theme.vue'
+import LightTheme from '@/styles/LightTheme.vue'
+import DarkTheme from '@/styles/DarkTheme.vue'
 
 export default {
   name: 'home',
   components: {
     Nav,
-    Theme,
+    LightTheme,
+    DarkTheme,
+  },
+  created () {
+    this.$pocket.updateTheme()
   },
 }
 </script>

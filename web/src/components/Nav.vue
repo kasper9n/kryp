@@ -30,6 +30,16 @@
   .separator
   button.nav-link(@click='$account.logout()')
     h4(tabindex='-1') Log out
+  MoonIcon.dark-theme-toggle(
+    v-if='$pocket.darkTheme'
+    @click='$pocket.toggleDarkTheme()'
+    size='18'
+  )
+  SunIcon.dark-theme-toggle(
+    v-else
+    @click='$pocket.toggleDarkTheme()'
+    size='18'
+  )
 .nav.logged-out(v-else)
   router-link.nav-link(to='/')
     h2 Cryptrack
@@ -38,14 +48,27 @@
     h4 Sign up
   router-link.nav-link(to='/login')
     h4 Log in
+  MoonIcon.dark-theme-toggle(
+    v-if='$pocket.darkTheme'
+    @click='$pocket.toggleDarkTheme()'
+    size='18'
+  )
+  SunIcon.dark-theme-toggle(
+    v-else
+    @click='$pocket.toggleDarkTheme()'
+    size='18'
+  )
 </template>
 
 <script>
 import Dropdown from '@/components/Dropdown.vue'
+import { SunIcon, MoonIcon } from 'vue-feather-icons'
 
 export default {
   components: {
     Dropdown,
+    SunIcon,
+    MoonIcon,
   },
 }
 </script>
@@ -61,6 +84,9 @@ export default {
   padding: 0px 30px
   white-space: nowrap
   user-select: none
+  .dark-theme-toggle
+    cursor: pointer
+    padding: 4px
   button
     border: none
     font-size: inherit

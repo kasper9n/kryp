@@ -1,5 +1,5 @@
 <style lang='sass'>
-:root
+:root[data-theme='light']
   // $accent-color: #ed127c
   // $accent-color: #ed125b
   // $accent-color: #1fbdbd
