@@ -43,7 +43,11 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.path.startsWith('/app')) {
+  if (to.path === '/app/logout') {
+    store.$account.logout(() => {
+      next({ path: '/login', replace: true })
+    })
+  } else if (to.path.startsWith('/app')) {
     if (store.$account.loggedIn) {
       store.$pocket.isInAppArea = true
       next()

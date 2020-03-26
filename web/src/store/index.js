@@ -24,17 +24,17 @@ const $account = {
     this.email = 'example@gmail.com'
     this.firstName = 'Foo'
     this.lastName = 'Barson'
-    router.push(redirectTo)
+    if (redirectTo) router.push(redirectTo)
   },
   signup (redirectTo) {
     this.login(redirectTo)
   },
-  logout (state) {
+  logout (callback) {
     this.loggedIn = false
     this.email = null
     this.firstName = null
     this.lastName = null
-    router.push('/login')
+    if (callback) callback()
   },
 }
 

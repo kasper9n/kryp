@@ -133,6 +133,7 @@ export default {
     width: auto
     cursor: pointer
     padding: 8px 0px
+    height: 36px
     box-sizing: border-box
     transition: all 0.15s
     border-radius: 3px
@@ -140,13 +141,13 @@ export default {
     border-style: solid
     border-color: transparent
     .text
-      width: 100%
       overflow: hidden
       text-overflow: ellipsis
       margin-left: 16px
     .chevron
       margin-left: 2px
       margin-right: 10px
+      margin-top: 2px
   .box
     position: absolute
     padding: 0px 0px

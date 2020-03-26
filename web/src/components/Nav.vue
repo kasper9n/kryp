@@ -28,8 +28,8 @@
     ]`
   )
   .separator
-  button.nav-link(@click='$account.logout()')
-    h4(tabindex='-1') Log out
+  router-link.nav-link(to='/app/logout')
+    h4 Log out
   MoonIcon.dark-theme-toggle(
     v-if='$pocket.darkTheme'
     @click='$pocket.toggleDarkTheme()'
@@ -87,14 +87,6 @@ export default {
   .dark-theme-toggle
     cursor: pointer
     padding: 4px
-  button
-    border: none
-    font-size: inherit
-    outline: none
-    h4:focus
-      outline: none
-    &:focus h4
-      outline: var(--line-highlight-color) 3px auto
   .nav-link, .portfolio-picker
     margin: 0px 10px
   .portfolio-picker
@@ -113,6 +105,6 @@ export default {
   .separator
     margin-right: auto
 
-.router-link-exact-active
+.router-link-active
   color: var(--accent-color)
 </style>
