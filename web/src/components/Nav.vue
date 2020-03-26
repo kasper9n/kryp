@@ -30,12 +30,12 @@
   .separator
   router-link.nav-link(to='/app/logout')
     h4 Log out
-  MoonIcon.dark-theme-toggle(
+  MoonIcon.icon(
     v-if='$pocket.darkTheme'
     @click='$pocket.toggleDarkTheme()'
     size='18'
   )
-  SunIcon.dark-theme-toggle(
+  SunIcon.icon(
     v-else
     @click='$pocket.toggleDarkTheme()'
     size='18'
@@ -48,12 +48,12 @@
     h4 Sign up
   router-link.nav-link(to='/login')
     h4 Log in
-  MoonIcon.dark-theme-toggle(
+  MoonIcon.icon(
     v-if='$pocket.darkTheme'
     @click='$pocket.toggleDarkTheme()'
     size='18'
   )
-  SunIcon.dark-theme-toggle(
+  SunIcon.icon(
     v-else
     @click='$pocket.toggleDarkTheme()'
     size='18'
@@ -76,6 +76,7 @@ export default {
 <style lang='sass' scoped>
 .nav
   background-color: var(--background-color-1)
+  transition: all 0.2s var(--easing)
   box-shadow: var(--shadow)
   display: flex
   align-items: center
@@ -84,7 +85,7 @@ export default {
   padding: 0px 30px
   white-space: nowrap
   user-select: none
-  .dark-theme-toggle
+  .icon
     cursor: pointer
     padding: 4px
   .nav-link, .portfolio-picker
@@ -94,8 +95,7 @@ export default {
     width: auto
   .nav-link
     cursor: pointer
-    transition: 0.15s var(--easing)
-    transition-property: opacity, color
+    transition: all 0.2s var(--easing)
     text-decoration: none
     padding: 2px
     h2, h3, h4

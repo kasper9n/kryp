@@ -135,7 +135,7 @@ export default {
     padding: 8px 0px
     height: 36px
     box-sizing: border-box
-    transition: all 0.15s
+    // transition: all 0.2s var(--easing)
     border-radius: 3px
     border-width: 1px
     border-style: solid

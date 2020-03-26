@@ -32,6 +32,7 @@ body
   -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
   background-color: var(--background-color-2)
+  transition: all 0.2s var(--easing)
   min-height: 100vh
   width: 100vw
   min-width: 250px
@@ -40,6 +41,7 @@ body
   outline-width: 3px
 #app, a
   color: var(--text-color)
+  transition: all 0.2s var(--easing)
 #app
   font-size: 15px
 div

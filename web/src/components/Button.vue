@@ -29,10 +29,10 @@ button
   cursor: pointer
   white-space: nowrap
   box-shadow: none
-  transition: all 0.15s
+  transition: all 0.2s var(--easing)
   opacity: 1
   span
-    transition: all 0.15s
+    transition: all 0.2s var(--easing)
     outline: none
     background-color: var(--button-color)
     width: 100%
