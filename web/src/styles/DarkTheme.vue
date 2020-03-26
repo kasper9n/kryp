@@ -6,9 +6,9 @@
   $accent-color: #1fb782
   $accent-color: #5c5ee6
   --background-color-1: hsl(0, 0%, 0%)
-  --background-color-2: hsl(225, 40%, 2%)
-  --background-color-3: hsl(216, 16%, 6%)
-  --background-color-4: hsl(228, 11%, 9%)
+  --background-color-2: hsl(225, 40%, 0%)
+  --background-color-3: hsl(216, 16%, 0%)
+  --background-color-4: hsl(228, 11%, 0%)
 
   --text-color: hsl(0, 0%, 100%)
   --secondary-text-color: hsl(0, 0%, 50%)
@@ -23,7 +23,7 @@
   --line-hover-color: hsl(220, 2%, 27%)
   --line-highlight-color: #{ transparentize($accent-color, 0.3) }
 
-  --dropdown-background-color: hsl(0, 0%, 8%)
+  --dropdown-background-color: hsl(0, 0%, 5%)
 
   --header-height: 70px
 
