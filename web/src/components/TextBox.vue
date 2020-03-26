@@ -28,7 +28,7 @@ input
   border-style: solid
   border-color: var(--line-color)
   background-color: var(--background-color-1)
-  transition: all 0.2s var(--easing)
+  transition: all 0.15s
   &:focus, &:active
     border-color: var(--line-highlight-color)
     box-shadow: 0px 0px 0px 1px var(--line-highlight-color)
