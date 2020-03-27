@@ -4,6 +4,7 @@ crypto data api alterantives
 - https://www.coinapi.io/
 - https://min-api.cryptocompare.com
 - https://coinmarketcap.com/api/
+- https://iexcloud.io/pricing/
 
 ## Dev instructions
 

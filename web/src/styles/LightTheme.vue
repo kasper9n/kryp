@@ -9,6 +9,10 @@
   --background-color-2: #f8f9fc
   --background-color-3: #edeff2
   --background-color-4: #e6e7eb
+  --card-background-color: #ffffff
+
+  --positive-color: #15b28d
+  --negative-color: #e73253
 
   --text-color: #444444
   --secondary-text-color: hsl(0, 0%, 50%)
