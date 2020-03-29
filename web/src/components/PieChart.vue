@@ -1,5 +1,6 @@
 <template lang='pug'>
-canvas
+.container
+  canvas(ref='canvas')
 </template>
 
 <script>
@@ -24,7 +25,7 @@ export default {
 
       let segment
       const hoverExpansion = 3
-      this.chart = new Chart(this.$el, {
+      this.chart = new Chart(this.$refs.canvas, {
         type: 'pie',
         data: {
           labels: this.labels,
@@ -104,3 +105,8 @@ export default {
   },
 }
 </script>
+
+<style lang='sass' scoped>
+.container
+  position: relative
+</style>

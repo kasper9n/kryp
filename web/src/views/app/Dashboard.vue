@@ -16,18 +16,16 @@
   .row.two
     Card.card.big
       p Assets
-      .chart-container
-        PieChart.chart(
-          :labels='["BTC", "ETH", "XLM", "NANO"]',
-          :values='[45, 25, 20, 1]',
-        )
+      PieChart.chart(
+        :labels='["BTC", "ETH", "XLM", "NANO"]',
+        :values='[45, 25, 20, 1]',
+      )
     Card.card.big
       p Accounts
-      .chart-container
-        PieChart.chart(
-          :labels='["Binance", "Coinbase", "Bittrex"]',
-          :values='[45, 25, 20]',
-        )
+      PieChart.chart(
+        :labels='["Binance", "Coinbase", "Bittrex"]',
+        :values='[45, 25, 20]',
+      )
 </template>
 
 <script>
@@ -43,8 +41,6 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.chart-container
-  position: relative
 .dashboard
   padding-top: 20px
   .row
