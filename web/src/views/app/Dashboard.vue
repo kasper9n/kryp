@@ -16,67 +16,35 @@
   .row.two
     Card.card.big
       p Assets
-      Chart.chart(:options='assetChartOptions')
+      .chart-container
+        PieChart.chart(
+          :labels='["BTC", "ETH", "XLM", "NANO"]',
+          :values='[45, 25, 20, 1]',
+        )
     Card.card.big
       p Accounts
-      Chart.chart(:options='assetChartOptions')
+      .chart-container
+        PieChart.chart(
+          :labels='["Binance", "Coinbase", "Bittrex"]',
+          :values='[45, 25, 20]',
+        )
 </template>
 
 <script>
 import Card from '@/components/Card.vue'
-import Chart from '@/components/Chart.vue'
+import PieChart from '@/components/PieChart.vue'
 export default {
   title: 'Dashboard',
   components: {
     Card,
-    Chart,
-  },
-  data () {
-    const assetChartOptions = {
-      type: 'pie',
-      data: {
-        labels: ['BTC', 'ETH', 'XLM', 'NANO'],
-        datasets: [
-          {
-            label: 'Value',
-            data: [20, 45, 25, 10],
-            backgroundColor: [
-              // b3 = 70% opacity
-              '#ff6384b3',
-              '#36a2ebb3',
-              '#cc65feb3',
-              '#ffce56b3',
-            ],
-            hoverBackgroundColor: [
-              '#ff6384',
-              '#36a2eb',
-              '#cc65fe',
-              '#ffce56',
-            ],
-            borderColor: '#ffffff',
-            hoverBorderColor: '#ffffff',
-            borderWidth: 5,
-            hoverBorderWidth: 2,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        cutoutPercentage: 70,
-        animation: {
-          animateRotate: true,
-          animateScale: true,
-        },
-      },
-    }
-    return {
-      assetChartOptions,
-    }
+    PieChart,
   },
 }
 </script>
 
 <style lang='sass' scoped>
+.chart-container
+  position: relative
 .dashboard
   padding-top: 20px
   .row
