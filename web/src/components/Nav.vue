@@ -84,6 +84,8 @@ export default {
   padding: 0px 30px
   white-space: nowrap
   user-select: none
+  position: relative
+  z-index: 100
   .dark-theme-toggle
     cursor: pointer
     padding: 4px

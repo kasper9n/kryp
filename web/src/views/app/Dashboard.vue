@@ -1,6 +1,6 @@
 <template lang='pug'>
 .dashboard
-  .row
+  .row.cards
     Card.card
       p Current value
       h2 $541,199,959.54
@@ -17,14 +17,48 @@
     Card.card.big
       p Assets
       PieChart.chart(
-        :labels='["BTC", "ETH", "XLM", "NANO"]',
-        :values='[45, 25, 20, 1]',
+        :tableColumns=`[
+          { key: 'asset', title: 'Asset', align: 'left' },
+          { key: 'amount', title: 'Amount', align: 'right' },
+          { key: 'value', title: 'Value NOK', align: 'right' },
+          { key: 'percent', title: 'Share' , align: 'right'},
+        ]`
+        chartLabelKey='asset'
+        chartValueKey='value'
+        :input=`[
+            { asset: "BTC", value: 3, amount: "1.32839173", percent: "14.91%" },
+            { asset: "ETH", value: 7, amount: "1.32839173", percent: "14.91%" },
+            { asset: "AUG", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "DOGE", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "LINK", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "XRP", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "SC", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "NANO", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "XMR", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "ZCH", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "XLM", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "TUSD", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "BCH", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "LTC", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "EOS", value: 1, amount: "1.32839173", percent: "14.91%" },
+            { asset: "BNB", value: 1, amount: "1.32839173", percent: "14.91%" },
+        ]`
       )
     Card.card.big
       p Accounts
       PieChart.chart(
-        :labels='["Binance", "Coinbase", "Bittrex"]',
-        :values='[45, 25, 20]',
+        :tableColumns=`[
+          { key: 'account', title: 'Account', align: 'left' },
+          { key: 'value', title: 'Value', align: 'right' },
+          { key: 'percent', title: 'Share', align: 'right' },
+        ]`
+        chartLabelKey='account'
+        chartValueKey='value'
+        :input=`[
+          { account: "Binance", value: 350.81, percent: "50.13%" },
+          { account: "Coinbase", value: 190.44, percent: "25.93%" },
+          { account: "Bittrex", value: 90.91, percent: "6.19%" },
+        ]`
       )
 </template>
 
@@ -43,34 +77,16 @@ export default {
 <style lang='sass' scoped>
 .dashboard
   padding-top: 20px
+  padding-bottom: 50px
+  padding-left: 10px
+  padding-right: 10px
   .row
-    display: flex
-    justify-content: center
-    // flex-wrap: wrap
-    padding-left: 10px
-    padding-right: 10px
-    max-width: 1400px
+    display: grid
+    max-width: 1300px
     margin: auto
-    p
-      font-size: 14px
-    @media (max-width: 1100px)
-      .card h2
-        font-size: 18px
-    @media (max-width: 900px)
-      flex-wrap: wrap
-      div.card
-        flex-basis: 40%
-    @media (max-width: 450px)
-      flex-wrap: wrap
-      .card h2
-        font-size: 14px
-      .card p
-        font-size: 12px
     .card
-      flex-grow: 1
-      flex-basis: 1%
       text-align: center
-      border-radius: 3px
+      min-width: 0px
       > *
         margin: 0px
         margin-top: 2px
@@ -80,15 +96,19 @@ export default {
         color: var(--positive-color)
       .negative
         color: var(--negative-color)
+  .row.cards
+    grid-template-columns: 1fr 1fr 1fr 1fr
+    @media (max-width: 650px)
+      grid-template-columns: 1fr 1fr
+    .card
+      background-color: transparent
+      padding: 10px 0px
+      border: none
+    h2
+      @media (max-width: 950px)
+        font-size: 18px
   .row.two
-    .big.card
-      width: 1px
-      flex-basis: 1%
-      flex-grow: 1
-      .chart
-        width: 100%
+    grid-template-columns: 1fr 1fr
     @media (max-width: 800px)
-      flex-wrap: wrap
-      .big.card
-        flex-basis: 100%
+      grid-template-columns: 1fr
 </style>

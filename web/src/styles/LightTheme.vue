@@ -3,7 +3,7 @@
   // $accent-color: #ed127c
   // $accent-color: #ed125b
   // $accent-color: #1fbdbd
-  $accent-color: #1fb782
+  // $accent-color: #1fb782
   $accent-color: #5c5ee6
   --background-color-1: #ffffff
   --background-color-2: #f8f9fc
@@ -21,6 +21,11 @@
 
   --button-text-color: #ffffff
   --button-color: #{ transparentize($accent-color, 0.1) }
+  --stupid-button-border-color: #999999
+  --stupid-button-text-color: #444444
+
+  --table-hover-color: #e6e7eb
+  --table-alternating-color: #6c739314
 
   --light-line-color: #e5e5e5
   --line-color: #d5d6d7
