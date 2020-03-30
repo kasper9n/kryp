@@ -26,6 +26,7 @@
         chartLabelKey='asset'
         chartValueKey='value'
         :input=`[
+            { asset: "BCC", value: 3, amount: "10.32839173", percent: "14.91%" },
             { asset: "BTC", value: 3, amount: "1.32839173", percent: "14.91%" },
             { asset: "ETH", value: 7, amount: "1.32839173", percent: "14.91%" },
             { asset: "AUG", value: 1, amount: "1.32839173", percent: "14.91%" },
@@ -40,7 +41,6 @@
             { asset: "TUSD", value: 1, amount: "1.32839173", percent: "14.91%" },
             { asset: "BCH", value: 1, amount: "1.32839173", percent: "14.91%" },
             { asset: "LTC", value: 1, amount: "1.32839173", percent: "14.91%" },
-            { asset: "EOS", value: 1, amount: "1.32839173", percent: "14.91%" },
             { asset: "BNB", value: 1, amount: "1.32839173", percent: "14.91%" },
         ]`
       )
@@ -108,7 +108,7 @@ export default {
       @media (max-width: 950px)
         font-size: 18px
   .row.two
-    grid-template-columns: 1fr 1fr
+    grid-template-columns: 1fr 0.8fr
     @media (max-width: 800px)
       grid-template-columns: 1fr
 </style>

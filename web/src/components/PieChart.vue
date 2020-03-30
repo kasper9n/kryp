@@ -1,19 +1,16 @@
 <template lang='pug'>
-.container(:class='{"expandable-table": input.length > 5}')
+.container(:class='{"expandable-table": items.length > 5}')
   .chart-container
     canvas(ref='canvas')
   table(:class='{expanded: expanded}')
     tr.header
       td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
         | {{ tableColumn.title }}
-    template(v-for='(item, index) of input')
+    template(v-for='(item, index) of items')
       transition(name='fade')
         tr.row(v-if='expanded || index < 5' :style='"transition-delay: "+5*(index-5)+"ms"')
           td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
             | {{ item[tableColumn.key] }}
-    //- tr.row(v-for='item of input')
-    //-   td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
-    //-     | {{ item[tableColumn.key] }}
   Button.toggle-all(variety='stupid' @click='expanded = !expanded')
     | {{ expanded ? "Show less" : "Show all" }}
 </template>
@@ -110,7 +107,6 @@ export default {
             if (elements && elements.length) {
               segment = elements[0]
               this.chart.update()
-              // selectedIndex = segment._index
               segment._model.outerRadius += 5
             } else {
               if (segment) {
@@ -130,7 +126,7 @@ export default {
             },
           },
           responsive: true,
-          aspectRatio: 2,
+          aspectRatio: 1,
           cutoutPercentage: 70,
           animation: {
             animateRotate: true,
@@ -148,30 +144,15 @@ export default {
     darkTheme () {
       return this.$pocket.darkTheme
     },
-    chartItems () {
+    items () {
       const input = this.input
-
-      // sort to descending
-      const items = input.sort((a, b) => b.value - a.value)
-
-      // add 'Other' value if necessary
-      // const max = 15
-      // if (items.length > max) {
-      //   const otherItem = { label: 'Other', value: 0 }
-      //   for (var i = max - 1; i < items.length; i++) {
-      //     otherItem.value += items[i].value
-      //   }
-      //   items = items.splice(0, max - 1)
-      //   items.push(otherItem)
-      // }
-
-      return items
+      return input.slice(0).sort((a, b) => b.value - a.value)
     },
     chartLabels () {
-      return this.chartItems.map((item) => item[this.chartLabelKey])
+      return this.items.map((item) => item[this.chartLabelKey])
     },
     chartValues () {
-      return this.chartItems.map((item) => item[this.chartValueKey])
+      return this.items.map((item) => item[this.chartValueKey])
     },
   },
   watch: {
@@ -185,19 +166,15 @@ export default {
 <style lang='sass' scoped>
 .chart-container
   margin: auto
-  max-width: 500px
+  width: 250px
+  @media (max-width: 1000px)
+    width: 200px
 canvas
   margin-top: 10px
 .toggle-all
   display: none
   margin-bottom: 0px
 .expandable-table
-  // tr:nth-child(1n+7)
-  //   animation: fade-in-rows 0.15s var(--easing) forwards
-  // table:not(.expanded)
-  //   tr:nth-child(1n+7)
-  //     opacity: 0
-  //     display: none
   .toggle-all
     display: inline-block
 table
