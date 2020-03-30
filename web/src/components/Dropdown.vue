@@ -2,8 +2,8 @@
 .dropdown(
   v-on-clickaway='hide'
   @keydown.esc='hide'
-  @keydown.down='focusNext'
-  @keydown.up='focusPrevious'
+  @keydown.prevent.down='focusNext'
+  @keydown.prevent.up='focusPrevious'
   @keydown.enter='selectHighlighted'
   :data-visible='visible'
   @blur='hide()'
