@@ -107,6 +107,6 @@ export default {
   .separator
     margin-right: auto
 
-.router-link-active
+.router-link-exact-active
   color: var(--accent-color)
 </style>
