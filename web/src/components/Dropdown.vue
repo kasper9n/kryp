@@ -150,6 +150,7 @@ export default {
       margin-top: 2px
   .box
     position: absolute
+    font-weight: 600
     padding: 0px 0px
     background-color: var(--dropdown-background-color)
     box-shadow: var(--highlight-shadow)

@@ -4,7 +4,7 @@
   // $accent-color: #ed125b
   // $accent-color: #1fbdbd
   // $accent-color: #1fb782
-  $accent-color: #5c5ee6
+  $accent-color: #6668f5
   --background-color-1: hsl(0, 0%, 5%)
   --background-color-2: hsl(225, 40%, 0%)
   --background-color-3: hsl(216, 16%, 0%)

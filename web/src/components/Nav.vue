@@ -1,6 +1,6 @@
 <template lang='pug'>
 .nav.logged-in(v-if='$pocket.isInAppArea && $account.loggedIn')
-  router-link.nav-link(to='/app/dashboard')
+  router-link.nav-link(to='/app')
     h2 Cryptrack
   Dropdown.portfolio-picker(
     defaultText='Main'
@@ -27,6 +27,10 @@
       { type: "space" },
     ]`
   )
+  router-link.nav-link(to='/app/dashboard')
+    h4 Dashboard
+  router-link.nav-link(to='/app/transactions')
+    h4 Transactions
   .separator
   router-link.nav-link(to='/app/logout')
     h4 Log out
@@ -44,10 +48,10 @@
   router-link.nav-link(to='/')
     h2 Cryptrack
   .separator
-  router-link.nav-link(to='/Signup')
-    h4 Sign up
   router-link.nav-link(to='/login')
     h4 Log in
+  router-link.nav-button(to='/Signup')
+    Button Sign up
   MoonIcon.dark-theme-toggle(
     v-if='$pocket.darkTheme'
     @click='$pocket.toggleDarkTheme()'
@@ -62,11 +66,13 @@
 
 <script>
 import Dropdown from '@/components/Dropdown.vue'
+import Button from '@/components/Button.vue'
 import { SunIcon, MoonIcon } from 'vue-feather-icons'
 
 export default {
   components: {
     Dropdown,
+    Button,
     SunIcon,
     MoonIcon,
   },
@@ -86,14 +92,20 @@ export default {
   user-select: none
   position: relative
   z-index: 100
+  $nav-item-horizontal-margin: 10px
   .dark-theme-toggle
     cursor: pointer
     padding: 4px
-  .nav-link, .portfolio-picker
-    margin: 0px 10px
+    margin-right: $nav-item-horizontal-margin
+  .nav-link, .portfolio-picker, .nav-button
+    margin: 0px $nav-item-horizontal-margin
   .portfolio-picker
     max-width: 250px
     width: auto
+    font-weight: 700
+  .nav-button
+    button
+      margin: 0px
   .nav-link
     cursor: pointer
     transition: 0.15s var(--easing)
@@ -101,6 +113,8 @@ export default {
     text-decoration: none
     padding: 2px
     h2, h3, h4
+      font-family: 'Muli'
+      font-weight: 700
       margin: 0px
     &:hover
       opacity: 0.75
