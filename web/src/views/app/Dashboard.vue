@@ -1,5 +1,5 @@
 <template lang='pug'>
-.dashboard
+.page
   .row.cards
     Card.card
       p Current value
@@ -75,40 +75,33 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.dashboard
-  padding-top: 20px
-  padding-bottom: 50px
-  padding-left: 10px
-  padding-right: 10px
-  .row
-    display: grid
-    max-width: 1300px
-    margin: auto
-    .card
-      text-align: center
-      min-width: 0px
-      > *
-        margin: 0px
-        margin-top: 2px
-      > :first-child
-        margin-top: 0px
-      .positive
-        color: var(--positive-color)
-      .negative
-        color: var(--negative-color)
-  .row.cards
-    grid-template-columns: 1fr 1fr 1fr 1fr
-    @media (max-width: 650px)
-      grid-template-columns: 1fr 1fr
-    .card
-      background-color: transparent
-      padding: 10px 0px
-      border: none
-    h2
-      @media (max-width: 950px)
-        font-size: 18px
-  .row.two
-    grid-template-columns: 1fr 0.8fr
-    @media (max-width: 800px)
-      grid-template-columns: 1fr
+.row
+  display: grid
+  .card
+    text-align: center
+    min-width: 0px
+    > *
+      margin: 0px
+      margin-top: 2px
+    > :first-child
+      margin-top: 0px
+    .positive
+      color: var(--positive-color)
+    .negative
+      color: var(--negative-color)
+.row.cards
+  grid-template-columns: 1fr 1fr 1fr 1fr
+  @media (max-width: 650px)
+    grid-template-columns: 1fr 1fr
+  .card
+    background-color: transparent
+    padding: 10px 0px
+    border: none
+  h2
+    @media (max-width: 950px)
+      font-size: 18px
+.row.two
+  grid-template-columns: 1fr 0.8fr
+  @media (max-width: 800px)
+    grid-template-columns: 1fr
 </style>

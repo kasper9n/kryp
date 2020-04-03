@@ -1,5 +1,5 @@
 <template lang='pug'>
-.page
+.mini-page
   .centered
     h1.title 404
     p.text Page not found
@@ -15,10 +15,7 @@ export default {
 .link
   display: flex
   align-items: center
-.page
-  padding: 30px
-  max-width: 390px
-  text-align: center
+.mini-page
   display: flex
   flex-direction: column
   justify-content: center

@@ -1,5 +1,5 @@
 <template lang='pug'>
-.login.page
+.mini-page
   h1 Log in
   TextBox.textbox(name='email' placeholder='Email' type='text')
   TextBox.textbox(name='password' placeholder='Password' type='password')
@@ -22,22 +22,17 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.login
-  padding: 30px
-  max-width: var(--page-form-width)
-  text-align: center
-  .textbox
-    width: 100%
-  .row
+.textbox
+  width: 100%
+.row
+  display: flex
+  align-items: center
+  justify-content: space-between
+  a
+    margin-right: 10px
     display: flex
     align-items: center
-    justify-content: space-between
-    a
-      margin-right: 10px
-      display: flex
-      align-items: center
-    .btn
-      margin-top: 0px
-      margin: 0px
-
+  .btn
+    margin-top: 0px
+    margin: 0px
 </style>

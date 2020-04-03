@@ -39,7 +39,5 @@
   --shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.1)
   --highlight-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5)
 
-  --page-form-width: 400px
-
   --easing: cubic-bezier(.4,0,.2,1)
 </style>

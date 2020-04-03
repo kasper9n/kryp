@@ -1,5 +1,5 @@
 <template lang='pug'>
-.signup.page
+.mini-page
   h1 Sign up
   TextBox.textbox(name='email' placeholder='Email' type='text')
   TextBox.textbox(name='password' placeholder='Password' type='password')
@@ -21,14 +21,9 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.signup
-  padding: 30px
-  max-width: var(--page-form-width)
-  text-align: center
-  .textbox
-    width: 100%
-  .btn
-    margin: 0px
-    width: 100%
-
+.textbox
+  width: 100%
+.btn
+  margin: 0px
+  width: 100%
 </style>

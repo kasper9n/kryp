@@ -55,8 +55,17 @@ input
   outline: none
 
 .page
-  max-width: 1150px
+  max-width: 1300px
   margin: auto
+  padding-top: 20px
+  padding-bottom: 50px
+  padding-left: 15px
+  padding-right: 15px
+.mini-page
+  max-width: 400px
+  margin: auto
+  padding: 30px
+  text-align: center
   min-height: calc(100vh - var(--header-height))
 
 .fade-enter-active, .fade-leave-active
