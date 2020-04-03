@@ -8,7 +8,13 @@
         | {{ tableColumn.title }}
     template(v-for='(item, index) of items')
       transition(name='fade')
-        tr.row(v-if='expanded || index < 5' :style='"transition-delay: "+5*(index-5)+"ms"')
+        tr.row(
+          v-if='expanded || index < 5'
+          :style='"transition-delay: "+5*(index-5)+"ms"'
+          :class='{ highlighted: index == hoveredIndex }'
+          @mouseover='tableRowHover($event, index)'
+          @mouseout='tableRowHover($event, index)'
+        )
           td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
             | {{ item[tableColumn.key] }}
   Button.toggle-all(variety='stupid' @click='expanded = !expanded')
@@ -19,6 +25,27 @@
 import Chart from 'chart.js'
 import Button from '@/components/Button.vue'
 Chart.defaults.global.defaultFontFamily = 'Muli'
+
+function getChartColors (suffix = '') {
+  return [
+    '#3d89e1' + suffix,
+    '#546c78' + suffix,
+    '#42ebc1' + suffix,
+    '#00c8ff' + suffix,
+    '#8da4b0' + suffix,
+    '#ce226f' + suffix,
+    '#e053f9' + suffix,
+    '#e9672f' + suffix,
+    '#fbd941' + suffix,
+    '#966a5a' + suffix,
+    '#63d969' + suffix,
+    '#664181' + suffix,
+    '#4450f8' + suffix,
+    '#f53d3d' + suffix,
+    '#c9c9c9' + suffix,
+  ]
+}
+
 export default {
   components: {
     Button,
@@ -27,6 +54,8 @@ export default {
     return {
       chart: null,
       expanded: false,
+      hoveredIndex: null,
+      tableHovered: false,
     }
   },
   props: {
@@ -36,6 +65,27 @@ export default {
     chartValueKey: String,
   },
   methods: {
+    tableRowHover (e, index) {
+      if (e.type === 'mouseover') {
+        const backgroundColors = getChartColors('4d')
+        backgroundColors[index] = backgroundColors[index].slice(0, -2)
+        this.chart.data.datasets[0].backgroundColor = backgroundColors
+        // temporarily disable tooltip to about tooltip glitching/blinking
+        this.chart.options.tooltips.enabled = false
+        this.chart.update()
+
+        // increase radios of the corresponding chart model
+        const meta = this.chart.getDatasetMeta(0)
+        const model = meta.data[index]._model
+        model.outerRadius += 5
+        this.tableHovered = true
+      } else if (this.tableHovered === true) {
+        this.tableHovered = false
+        this.chart.data.datasets[0].backgroundColor = getChartColors('d4')
+        this.chart.options.tooltips.enabled = true
+        this.chart.update()
+      }
+    },
     newChart () {
       if (this.chart !== null) this.chart.destroy()
 
@@ -52,40 +102,8 @@ export default {
             {
               label: 'Value',
               data: this.chartValues,
-              backgroundColor: [
-                '#3d89e1' + 'd4',
-                '#546c78' + 'd4',
-                '#42ebc1' + 'd4',
-                '#00c8ff' + 'd4',
-                '#8da4b0' + 'd4',
-                '#ce226f' + 'd4',
-                '#e053f9' + 'd4',
-                '#e9672f' + 'd4',
-                '#fbd941' + 'd4',
-                '#966a5a' + 'd4',
-                '#63d969' + 'd4',
-                '#664181' + 'd4',
-                '#4450f8' + 'd4',
-                '#f53d3d' + 'd4',
-                '#c9c9c9' + 'd4',
-              ],
-              hoverBackgroundColor: [
-                '#3d89e1',
-                '#546c78',
-                '#42ebc1',
-                '#00c8ff',
-                '#8da4b0',
-                '#ce226f',
-                '#e053f9',
-                '#e9672f',
-                '#fbd941',
-                '#966a5a',
-                '#63d969',
-                '#664181',
-                '#4450f8',
-                '#f53d3d',
-                '#c9c9c9',
-              ],
+              backgroundColor: getChartColors('d4'),
+              hoverBackgroundColor: getChartColors(),
               borderColor: cardBackgroundColor,
               hoverBorderColor: cardBackgroundColor,
               borderWidth: 0,
@@ -103,16 +121,27 @@ export default {
           }],
         },
         options: {
-          onHover: function (evt, elements) {
+          onHover: (evt, elements) => {
             if (elements && elements.length) {
               segment = elements[0]
+
+              // highlight table row
+              this.hoveredIndex = segment._index
+
+              // reset all radiuses
               this.chart.update()
+              // fade all models' backgroundColor
+              this.chart.data.datasets[0].backgroundColor = getChartColors('4d')
+              // increase radius of current model
               segment._model.outerRadius += 5
-            } else {
+            } else if (segment) {
               if (segment) {
                 segment._model.outerRadius -= 5
               }
               segment = null
+              this.hoveredIndex = null
+              this.chart.data.datasets[0].backgroundColor = getChartColors('d4')
+              this.chart.update()
             }
           },
           layout: {
@@ -194,7 +223,7 @@ table
       background-color: var(--table-alternating-color)
     &:nth-child(2n+1)
       background-color: var(--background-color)
-    &.row:hover
+    &.row:hover, &.row.highlighted
       background-color: var(--table-hover-color)
     td
       padding: 6px 5px
