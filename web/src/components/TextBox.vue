@@ -1,5 +1,11 @@
 <template lang='pug'>
-input(:name='name' :placeholder='placeholder' :type='type')
+input(
+  :name='name'
+  :placeholder='placeholder'
+  :type='type'
+  @input='$emit("input", $event)'
+  :class='{compact: compact}'
+)
 </template>
 
 <script>
@@ -8,6 +14,7 @@ export default {
     name: String,
     placeholder: String,
     type: String,
+    compact: Boolean,
   },
 }
 </script>
@@ -22,7 +29,7 @@ input
   font-family: inherit
   font-size: inherit
   color: inherit
-  font-weight: inherit
+  font-weight: 15px
   border-radius: 3px
   border-width: 1px
   border-style: solid
@@ -34,4 +41,8 @@ input
     box-shadow: 0px 0px 0px 1px var(--line-highlight-color)
   &:hover:not(:active):not(:focus)
     border-color: var(--line-hover-color)
+input.compact
+  height: 36px
+  padding: 0px 10px
+  font-size: 13px
 </style>

@@ -7,16 +7,15 @@
       td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
         | {{ tableColumn.title }}
     template(v-for='(item, index) of items')
-      transition(name='fade')
-        tr.row(
-          v-if='expanded || index < 5'
-          :style='"transition-delay: "+5*(index-5)+"ms"'
-          :class='{ highlighted: index == hoveredIndex }'
-          @mouseover='tableRowHover($event, index)'
-          @mouseout='tableRowHover($event, index)'
-        )
-          td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
-            | {{ item[tableColumn.key] }}
+      tr.row(
+        v-if='expanded || index < 5'
+        :class='{ highlighted: index == hoveredIndex }'
+        @mouseover='tableRowHover($event, index)'
+        @mouseout='tableRowHover($event, index)'
+      )
+        //- :style='"transition-delay: "+5*(index-5)+"ms"'
+        td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
+          | {{ item[tableColumn.key] }}
   Button.toggle-all(variety='stupid' @click='expanded = !expanded')
     | {{ expanded ? "Show less" : "Show all" }}
 </template>
@@ -215,7 +214,6 @@ table
   table-layout: auto
   border-collapse: collapse
   tr
-    border-bottom: 1px solid var(--light-line-color)
     &.header
       font-weight: 700
     &:nth-child(2n)
@@ -226,7 +224,7 @@ table
     &.row:hover, &.row.highlighted
       background-color: var(--table-hover-color)
     td
-      padding: 6px 5px
+      padding: 7px 5px
       &:first-child
         padding-left: 15px
       &:last-child

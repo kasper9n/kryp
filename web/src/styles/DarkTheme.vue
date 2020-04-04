@@ -25,7 +25,7 @@
   --stupid-button-text-color: #ffffff
 
   --table-hover-color: #31313f
-  --table-alternating-color: #6c739314
+  --table-alternating-color: #1e1f2a
 
   --light-line-color: hsl(0, 0%, 15%)
   --line-color: hsl(210, 2%, 20%)

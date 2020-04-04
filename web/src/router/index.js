@@ -6,6 +6,7 @@ import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import PageNotFound from '@/views/404.vue'
 import Dashboard from '@/views/app/Dashboard.vue'
+import Transactions from '@/views/app/Transactions.vue'
 
 Vue.use(VueRouter)
 
@@ -29,6 +30,10 @@ const routes = [
   {
     path: '/app/dashboard',
     component: Dashboard,
+  },
+  {
+    path: '/app/transactions',
+    component: Transactions,
   },
   {
     path: '*',

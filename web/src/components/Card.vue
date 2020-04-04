@@ -4,7 +4,7 @@
 </template>
 <style lang='sass' scoped>
 .card
-  padding: 20px 15px
+  padding: 20px 20px
   background-color: var(--card-background-color)
   margin: 8px 8px
   border: 1px solid var(--light-line-color)
