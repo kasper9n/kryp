@@ -92,6 +92,8 @@ export default {
   user-select: none
   position: relative
   z-index: 100
+  width: 100%
+  overflow-x: auto
   $nav-item-horizontal-margin: 10px
   .dark-theme-toggle
     cursor: pointer

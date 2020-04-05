@@ -29,6 +29,7 @@ body
 #app
   font-family: 'Muli', Helvetica, Arial, sans-serif
   font-weight: 600
+  font-size: 15px
   -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
   background-color: var(--background-color-2)
@@ -40,8 +41,6 @@ body
   outline-width: 3px
 #app, a
   color: var(--text-color)
-#app
-  font-size: 15px
 div
   box-sizing: border-box
 a:hover

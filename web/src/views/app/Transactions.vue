@@ -1,7 +1,7 @@
 <template lang='pug'>
 .page
   h1 Transactions
-  Card
+  Card.card
     TextBox.search(placeholder='Search' @input='search' compact)
     table(ref='table')
       tr.header
@@ -77,7 +77,7 @@ export default {
           hide: false,
         },
         {
-          type: 'Gateway Purchase',
+          type: 'External Buy',
           buy: '0.00000001',
           buyAsset: 'BTC',
           sell: '',
@@ -115,25 +115,34 @@ export default {
 
 <style lang='sass' scoped>
 .page
-  max-width: 1150px
+  max-width: 1200px
+  @media (max-width: 1000px)
+    padding-left: 0px
+    padding-right: 0px
+    .card
+      padding: 20px 15px
+      margin-left: 0px
+      margin-right: 0px
+      border-right: none
+      border-left: none
+      border-radius: 0px
 h1
-  margin-left: 8px
-  margin-right: 8px
+  margin-left: 16px
+  margin-right: 16px
 .search
   margin-left: auto
-::v-deep tr td
-  white-space: nowrap
-  width: 10%
-  // &:nth-child(9)
-  //   min-width: 30%
-  &:nth-child(10)
-    width: 0px
 table
+  display: block
   width: 100%
   margin-top: 10px
   font-size: 13px
   table-layout: auto
   border-collapse: collapse
+  overflow-x: scroll
+  @media (max-width: 950px)
+    font-size: 12px
+  @media (max-width: 900px)
+    font-size: 11px
   tr
     &.header
       font-weight: 700
@@ -145,6 +154,10 @@ table
       background-color: var(--table-hover-color)
     td
       padding: 7px 5px
+      max-width: 150px
+      overflow: hidden
+      text-overflow: ellipsis
+      box-sizing: border-box
       &:first-child
         padding-left: 15px
       &:last-child
@@ -155,4 +168,23 @@ table
         text-align: right
       &[data-align='center']
         text-align: center
+      &:nth-child(1)
+        min-width: 100px
+        width: 100px
+      // &:nth-child(2), &:nth-child(4), &:nth-child(6)
+      //   min-width: 80px
+      //   width: 80px
+      &:nth-child(3), &:nth-child(5), &:nth-child(7)
+        width: 10%
+        max-width: 120px
+      &:nth-child(8)
+        width: 10%
+        min-width: 90px
+      &:nth-child(9)
+        width: 15%
+        min-width: 130px
+      &:nth-child(10)
+        width: 0px
+        white-space: nowrap
+        box-sizing: content-box
 </style>
