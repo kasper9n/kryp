@@ -34,34 +34,28 @@
   .separator
   router-link.nav-item.nav-link(to='/app/logout')
     h4 Log out
-  MoonIcon.nav-item.dark-theme-toggle(
-    v-if='$pocket.darkTheme'
-    @click='$pocket.toggleDarkTheme()'
-    size='18'
-  )
-  SunIcon.nav-item.dark-theme-toggle(
-    v-else
-    @click='$pocket.toggleDarkTheme()'
-    size='18'
-  )
+  a
+    .nav-item.icon(
+      @keydown.enter='$pocket.toggleDarkTheme()'
+      @click.enter='$pocket.toggleDarkTheme()'
+    )
+    MoonIcon(v-if='$pocket.darkTheme' size='18')
+    SunIcon(v-else size='18')
 .nav.logged-out(v-else)
   router-link.nav-item.nav-link(to='/')
     h2 Cryptrack
   .separator
   router-link.nav-item.nav-link(to='/login')
     h4 Log in
-  router-link.nav-item.nav-button(to='/signup')
-    Button Sign up
-  MoonIcon.nav-item.dark-theme-toggle(
-    v-if='$pocket.darkTheme'
-    @click='$pocket.toggleDarkTheme()'
-    size='18'
+  .nav-item.nav-button(to='/signup')
+    Button(@click='$router.push("/signup")') Sign up
+  .nav-item.icon(
+    tabindex='0'
+    @keydown.enter='$pocket.toggleDarkTheme()'
+    @click.enter='$pocket.toggleDarkTheme()'
   )
-  SunIcon.nav-item.dark-theme-toggle(
-    v-else
-    @click='$pocket.toggleDarkTheme()'
-    size='18'
-  )
+    MoonIcon(tabindex='-1' v-if='$pocket.darkTheme' size='18')
+    SunIcon(tabindex='-1' v-else size='18')
 </template>
 
 <script>
@@ -90,14 +84,17 @@ export default {
   padding: 0px 30px
   white-space: nowrap
   user-select: none
-  position: relative
   z-index: 100
-  width: 100%
-  overflow-x: auto
   $nav-item-horizontal-margin: 10px
-  .dark-theme-toggle
+  .icon
     cursor: pointer
     padding: 4px
+    transition: 0.15s var(--easing)
+    transition-property: opacity, color
+    &:hover
+      opacity: 0.75
+    svg
+      display: block
   .nav-item
     margin: 0px $nav-item-horizontal-margin
   .portfolio-picker
@@ -112,7 +109,7 @@ export default {
     transition: 0.15s var(--easing)
     transition-property: opacity, color
     text-decoration: none
-    padding: 8px 2px
+    padding: 4px 2px
     h2, h3, h4
       font-family: 'Muli'
       font-weight: 700
@@ -121,7 +118,6 @@ export default {
       opacity: 0.75
   .separator
     margin-right: auto
-
 .router-link-exact-active
   color: var(--accent-color)
 </style>
