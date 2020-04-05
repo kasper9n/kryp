@@ -50,7 +50,7 @@
   .separator
   router-link.nav-item.nav-link(to='/login')
     h4 Log in
-  router-link.nav-item.nav-button(to='/Signup')
+  router-link.nav-item.nav-button(to='/signup')
     Button Sign up
   MoonIcon.nav-item.dark-theme-toggle(
     v-if='$pocket.darkTheme'

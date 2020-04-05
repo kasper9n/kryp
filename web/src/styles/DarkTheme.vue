@@ -3,8 +3,10 @@
   // $accent-color: #ed127c
   // $accent-color: #ed125b
   // $accent-color: #1fbdbd
+  $accent-color: #5c5ee6
   // $accent-color: #1fb782
-  $accent-color: #6668f5
+  // $accent-color: #2b43f7
+  // $accent-color: #f7622b
   --background-color-1: hsl(0, 0%, 5%)
   --background-color-2: hsl(225, 40%, 0%)
   --background-color-3: hsl(216, 16%, 0%)
@@ -14,14 +16,15 @@
   --positive-color: #15b28d
   --negative-color: #e73253
 
-  --text-color: hsl(0, 0%, 100%)
+  --text-color: #ffffff
   --secondary-text-color: hsl(0, 0%, 50%)
 
   --accent-color: #{ $accent-color }
 
   --button-text-color: hsl(0, 0%, 100%)
   --button-color: #{ transparentize($accent-color, 0.1) }
-  --stupid-button-border-color: #999999
+  --medium-button-hover-color: #{ transparentize($accent-color, 0.9) }
+  --stupid-button-border-color: #dddddd
   --stupid-button-text-color: #ffffff
 
   --table-hover-color: #31313f

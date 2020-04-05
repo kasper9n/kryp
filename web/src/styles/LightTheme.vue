@@ -3,8 +3,10 @@
   // $accent-color: #ed127c
   // $accent-color: #ed125b
   // $accent-color: #1fbdbd
-  // $accent-color: #1fb782
   $accent-color: #5c5ee6
+  // $accent-color: #1fb782
+  // $accent-color: #2b43f7
+  // $accent-color: #f7622b
   --background-color-1: #ffffff
   --background-color-2: #f8f9fc
   --background-color-3: #edeff2
@@ -21,8 +23,9 @@
 
   --button-text-color: #ffffff
   --button-color: #{ transparentize($accent-color, 0.1) }
+  --medium-button-hover-color: #{ transparentize($accent-color, 0.9) }
   --stupid-button-border-color: #999999
-  --stupid-button-text-color: #444444
+  --stupid-button-text-color: #555555
 
   --table-hover-color: #e7e9ee
   --table-alternating-color: #f8f9fc

@@ -2,7 +2,10 @@
 .page
   h1 Transactions
   Card.card
-    TextBox.search(placeholder='Search' @input='search' compact)
+    .toolbar
+      Button(variety='compact') New
+      Button(variety='medium') Delete
+      TextBox.search(placeholder='Search' @input='search' compact)
     table(ref='table')
       tr.header
         td(v-for='column of columns' :data-align='column.align')
@@ -16,6 +19,7 @@
 <script>
 import Card from '@/components/Card.vue'
 import TextBox from '@/components/TextBox.vue'
+import Button from '@/components/Button.vue'
 
 function debounce (func, wait, immediate) {
   var timeout
@@ -36,6 +40,7 @@ export default {
   components: {
     Card,
     TextBox,
+    Button,
   },
   data () {
     return {
@@ -129,8 +134,12 @@ export default {
 h1
   margin-left: 16px
   margin-right: 16px
-.search
-  margin-left: auto
+.toolbar
+  display: flex
+  > *
+    margin: 5px
+  .search
+    margin-left: auto
 table
   display: block
   width: 100%
