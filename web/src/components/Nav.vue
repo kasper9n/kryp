@@ -83,6 +83,7 @@ export default {
   padding: 0px 30px
   white-space: nowrap
   user-select: none
+  position: relative
   z-index: 100
   max-width: 1400px
   $nav-item-horizontal-margin: 10px
