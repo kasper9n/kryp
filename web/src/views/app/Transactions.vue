@@ -67,7 +67,6 @@ export default {
           feeAsset: 'USD',
           account: 'Binance',
           time: '2020-03-11 02:32:11',
-          hide: false,
         },
         {
           type: 'Deposit',
@@ -79,7 +78,6 @@ export default {
           feeAsset: 'USD',
           account: 'Binance',
           time: '2019-08-21 11:23:46',
-          hide: false,
         },
         {
           type: 'External Buy',
@@ -91,7 +89,6 @@ export default {
           feeAsset: 'USD',
           account: 'Binance',
           time: '2019-08-21 11:23:46',
-          hide: false,
         },
       ],
     }

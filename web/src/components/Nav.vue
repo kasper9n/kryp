@@ -1,55 +1,52 @@
 <template lang='pug'>
-.nav.logged-in(v-if='$pocket.isInAppArea && $account.loggedIn')
-  router-link.nav-item.nav-link(to='/app')
-    h2 Cryptrack
-  Dropdown.nav-item.portfolio-picker(
-    defaultText='Main'
-    :options=`[
-      { type: "space" },
-      {
-        type: "text",
-        text: "Portfolio",
-      },
-      {
-        text: "Main",
-      },
-      {
-        text: "Crypto",
-      },
-      {
-        text: "Stocks and stuff haha",
-      },
-      { type: "separator" },
-      {
-        type: "button",
-        text: "Create portfolio",
-      },
-      { type: "space" },
-    ]`
+.nav
+  router-link.nav-item.nav-link(
+    :to='$pocket.isInAppArea && $account.loggedIn ? "/app" : "/"'
   )
-  router-link.nav-item.nav-link(to='/app/dashboard')
-    h4 Dashboard
-  router-link.nav-item.nav-link(to='/app/transactions')
-    h4 Transactions
-  .separator
-  router-link.nav-item.nav-link(to='/app/logout')
-    h4 Log out
-  //- button with outline trick so that outline doesnt show on click
-  button.outline-parent.nav-item.icon(
-    @keydown.enter='$pocket.toggleDarkTheme()'
-    @click.enter='$pocket.toggleDarkTheme()'
-  )
-    .outline-child(tabindex='-1')
-      MoonIcon.outline-child(v-if='$pocket.darkTheme' size='18')
-      SunIcon.outline-child(v-else size='18')
-.nav.logged-out(v-else)
-  router-link.nav-item.nav-link(to='/')
     h2 Cryptrack
-  .separator
-  router-link.nav-item.nav-link(to='/login')
-    h4 Log in
-  .nav-item.nav-button(to='/signup')
-    Button(@click='$router.push("/signup")') Sign up
+
+  template(v-if='$pocket.isInAppArea && $account.loggedIn')
+    Dropdown.nav-item.portfolio-picker(
+      v-if='$pocket.isInAppArea && $account.loggedIn'
+      defaultText='Main'
+      :options=`[
+        { type: "space" },
+        {
+          type: "text",
+          text: "Portfolio",
+        },
+        {
+          text: "Main",
+        },
+        {
+          text: "Crypto",
+        },
+        {
+          text: "Stocks and stuff haha",
+        },
+        { type: "separator" },
+        {
+          type: "button",
+          text: "Create portfolio",
+        },
+        { type: "space" },
+      ]`
+    )
+    router-link.nav-item.nav-link(to='/app/dashboard')
+      h4 Dashboard
+    router-link.nav-item.nav-link(to='/app/transactions')
+      h4 Transactions
+    .separator
+    router-link.nav-item.nav-link(to='/app/logout')
+      h4 Log out
+
+  template(v-else)
+    .separator
+    router-link.nav-item.nav-link(to='/login')
+      h4 Log in
+    .nav-item.nav-button(to='/signup')
+      Button(@click='$router.push("/signup")') Sign up
+
   //- button with outline trick so that outline doesnt show on click
   button.outline-parent.nav-item.icon(
     @keydown.enter='$pocket.toggleDarkTheme()'
@@ -87,6 +84,7 @@ export default {
   white-space: nowrap
   user-select: none
   z-index: 100
+  max-width: 1400px
   $nav-item-horizontal-margin: 10px
   button.icon
     background-color: transparent
