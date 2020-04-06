@@ -34,13 +34,14 @@
   .separator
   router-link.nav-item.nav-link(to='/app/logout')
     h4 Log out
-  a
-    .nav-item.icon(
-      @keydown.enter='$pocket.toggleDarkTheme()'
-      @click.enter='$pocket.toggleDarkTheme()'
-    )
-    MoonIcon(v-if='$pocket.darkTheme' size='18')
-    SunIcon(v-else size='18')
+  //- button with outline trick so that outline doesnt show on click
+  button.outline-parent.nav-item.icon(
+    @keydown.enter='$pocket.toggleDarkTheme()'
+    @click.enter='$pocket.toggleDarkTheme()'
+  )
+    .outline-child(tabindex='-1')
+      MoonIcon.outline-child(v-if='$pocket.darkTheme' size='18')
+      SunIcon.outline-child(v-else size='18')
 .nav.logged-out(v-else)
   router-link.nav-item.nav-link(to='/')
     h2 Cryptrack
@@ -49,13 +50,14 @@
     h4 Log in
   .nav-item.nav-button(to='/signup')
     Button(@click='$router.push("/signup")') Sign up
-  .nav-item.icon(
-    tabindex='0'
+  //- button with outline trick so that outline doesnt show on click
+  button.outline-parent.nav-item.icon(
     @keydown.enter='$pocket.toggleDarkTheme()'
     @click.enter='$pocket.toggleDarkTheme()'
   )
-    MoonIcon(tabindex='-1' v-if='$pocket.darkTheme' size='18')
-    SunIcon(tabindex='-1' v-else size='18')
+    .outline-child(tabindex='-1')
+      MoonIcon.outline-child(v-if='$pocket.darkTheme' size='18')
+      SunIcon.outline-child(v-else size='18')
 </template>
 
 <script>
@@ -86,14 +88,19 @@ export default {
   user-select: none
   z-index: 100
   $nav-item-horizontal-margin: 10px
-  .icon
+  button.icon
+    background-color: transparent
+    border: none
+    padding: 0px
     cursor: pointer
-    padding: 4px
     transition: 0.15s var(--easing)
     transition-property: opacity, color
     &:hover
       opacity: 0.75
+    .outline-child
+      transition: box-shadow 0.15s var(--easing)
     svg
+      padding: 4px
       display: block
   .nav-item
     margin: 0px $nav-item-horizontal-margin
@@ -120,4 +127,9 @@ export default {
     margin-right: auto
 .router-link-exact-active
   color: var(--accent-color)
+
+.outline-parent:focus, .outline-parent > .outline-child:focus
+    outline: none
+.outline-parent:focus > .outline-child
+    box-shadow: 0px 0px 0px 3px var(--line-highlight-color)
 </style>

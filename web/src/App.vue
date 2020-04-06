@@ -60,6 +60,8 @@ body
   color: var(--text-color)
 div
   box-sizing: border-box
+svg.feather
+  color: var(--text-color)
 a:hover
   text-decoration: none
 p

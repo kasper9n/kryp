@@ -1,7 +1,6 @@
 <template lang='pug'>
 button.outline-parent(
   :type='type'
-  :primary='primary'
   @click='$emit("click")'
   :data-variety='variety'
 )
@@ -13,7 +12,6 @@ button.outline-parent(
 export default {
   props: {
     type: String,
-    primary: Boolean,
     variety: String,
   },
 }
