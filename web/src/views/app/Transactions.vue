@@ -3,9 +3,9 @@
   h1 Transactions
   Card.card
     .toolbar
-      Button(variety='compact') New
-      Button(variety='medium') Delete
-      TextBox.search(placeholder='Search' @input='search' compact)
+      Button New
+      Button(medium) Delete
+      TextBox.search(compact placeholder='Search' @input='search')
     table(ref='table')
       tr.header
         td(v-for='column of columns' :data-align='column.align')

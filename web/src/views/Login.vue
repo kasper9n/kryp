@@ -1,7 +1,7 @@
 <template lang='pug'>
 .mini-page
   h1 Log in
-  TextBox.textbox(name='email' placeholder='Email' type='text')
+  TextBox.textbox(name='email' placeholder='Email')
   TextBox.textbox(name='password' placeholder='Password' type='password')
   .row
     router-link(to='/reset-password') Forgot password?

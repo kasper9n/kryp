@@ -3,8 +3,9 @@ input(
   :name='name'
   :placeholder='placeholder'
   :type='type'
-  @input='$emit("input", $event)'
-  :class='{compact: compact}'
+  :value='value'
+  @input='$emit("input", $event.target.value)'
+  :class='{ compact }'
 )
 </template>
 
@@ -15,6 +16,18 @@ export default {
     placeholder: String,
     type: String,
     compact: Boolean,
+  },
+  data () {
+    return {
+      value: '',
+    }
+  },
+  methods: {
+    focus () {
+      this.$nextTick(() => {
+        this.$el.focus()
+      })
+    },
   },
 }
 </script>

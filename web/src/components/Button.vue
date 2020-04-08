@@ -2,7 +2,7 @@
 button.outline-parent(
   :type='type'
   @click='$emit("click")'
-  :data-variety='variety'
+  :class='{ medium, stupid }'
 )
   span.outline-child(tabindex='-1')
     slot
@@ -12,7 +12,8 @@ button.outline-parent(
 export default {
   props: {
     type: String,
-    variety: String,
+    medium: Boolean,
+    stupid: Boolean,
   },
 }
 </script>
@@ -47,7 +48,7 @@ button
     opacity: 1
   &:active > span
     transform: translate3d(0, 0, 0) scale(0.95)
-button[data-variety='stupid']
+button.stupid
   span
     background-color: transparent
     border: 2px solid var(--stupid-button-border-color)
@@ -55,7 +56,7 @@ button[data-variety='stupid']
     border-radius: 1000px
     padding: 0px 18px
     height: 32px
-button[data-variety='medium']
+button.medium
   span
     background-color: transparent
     border: 2px solid var(--button-color)

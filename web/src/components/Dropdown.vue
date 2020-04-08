@@ -1,16 +1,16 @@
 <template lang='pug'>
-.dropdown(
+button.dropdown.outline-parent(
   v-on-clickaway='hide'
   @keydown.esc='hide'
   @keydown.prevent.down='focusNext'
   @keydown.prevent.up='focusPrevious'
-  @keydown.enter='selectHighlighted'
+  @keydown.enter='enter'
+  @keydown.space='enter'
   :data-visible='visible'
-  @blur='hide()'
-  @focus='show()'
-  tabindex='0'
 )
-  .textbox(@mousedown='toggle()')
+  //- @blur='hide()'
+  //- @focus='show()'
+  .textbox.outline-child(tabindex='-1' @mousedown='toggle()')
     .text {{ options[selectedIndex].text }}
     ChevronDownIcon.chevron(size='18')
   .box(v-show='visible')
@@ -20,17 +20,18 @@
       .space(v-else-if='option.type === "space"')
       .button(
         v-else-if='option.type === "button"'
-        :class='{highlight: index === focuedIndex}'
-        @mouseover='focuedIndex = index'
-        @mousedown='focuedIndex = index'
-        @mouseout='focuedIndex = null'
+        :class='{highlight: index === focusedIndex}'
+        @mouseover='focusedIndex = index'
+        @mousedown='focusedIndex = index'
+        @mouseout='focusedIndex = null'
+        @click='hide(); option.handler()'
       ) {{ option.text }}
       .option(
         v-else
-        :class='{highlight: index === focuedIndex}'
-        @mouseover='focuedIndex = index'
-        @mousedown='focuedIndex = index'
-        @mouseout='focuedIndex = null'
+        :class='{highlight: index === focusedIndex}'
+        @mouseover='focusedIndex = index'
+        @mousedown='focusedIndex = index'
+        @mouseout='focusedIndex = null'
         @click='select(index)'
       ) {{ option.text }}
 </template>
@@ -53,7 +54,7 @@ export default {
     for (var i = 0; i < this.options.length; i++) {
       if (this.options[i].text === this.defaultText) {
         data.selectedIndex = i
-        data.focuedIndex = i
+        data.focusedIndex = i
       }
     }
 
@@ -66,14 +67,14 @@ export default {
   methods: {
     toggle () {
       this.visible = !this.visible
-      this.focuedIndex = this.selectedIndex
+      this.focusedIndex = this.selectedIndex
     },
     hide () {
       this.visible = false
     },
     show () {
       this.visible = true
-      this.focuedIndex = this.selectedIndex
+      this.focusedIndex = this.selectedIndex
     },
     select (index) {
       this.selectedIndex = index
@@ -81,13 +82,22 @@ export default {
       this.hide()
     },
     selectHighlighted () {
-      this.selectedIndex = this.focuedIndex
-      this.$emit('change', this.options[this.focuedIndex])
+      const highlightedOption = this.options[this.focusedIndex]
+      if (highlightedOption.type === 'button') {
+        highlightedOption.handler()
+      } else {
+        this.selectedIndex = this.focusedIndex
+        this.$emit('change', this.options[this.focusedIndex])
+      }
       this.hide()
+    },
+    enter () {
+      if (this.visible) this.selectHighlighted()
+      else this.show()
     },
     // direction: 1 or -1
     moveFocus (direction) {
-      let index = this.focuedIndex
+      let index = this.focusedIndex
 
       // start from top/bottom if nothing is focused
       if (index === null && direction === 1) index = -1
@@ -98,7 +108,7 @@ export default {
         const nextOption = this.options[nextIndex]
         if (!nextOption) break
         else if (!nextOption.type || nextOption.type === 'button') {
-          this.focuedIndex = nextIndex
+          this.focusedIndex = nextIndex
           break
         }
         index = nextIndex
@@ -115,18 +125,26 @@ export default {
 </script>
 
 <style lang='sass' scoped>
-.dropdown
+button.dropdown
+  background-color: transparent
+  border: none
+  font-family: inherit
+  font-weight: inherit
+  font-size: inherit
+  text-align: left
+  color: inherit
   width: 200px
   position: relative
   outline: none
   $border-width-increase: 1px
   &[data-visible="true"]
     .textbox
-      border-color: var(--line-highlight-color)
-      box-shadow: 0px 0px 0px $border-width-increase var(--line-highlight-color)
+      // border-color: var(--line-highlight-color)
+      // box-shadow: 0px 0px 0px $border-width-increase var(--line-highlight-color)
   &:not([data-visible="true"])
     .textbox:hover
-      border-color: var(--line-color)
+      // border-color: var(--line-color)
+      box-shadow: 0px 0px 0px 1px var(--line-color)
   .textbox
     display: flex
     align-items: center
@@ -137,9 +155,10 @@ export default {
     box-sizing: border-box
     transition: all 0.15s
     border-radius: 3px
-    border-width: 1px
-    border-style: solid
-    border-color: transparent
+    box-shadow: 0px 0px 0px 1px transparent
+    // border-width: 1px
+    // border-style: solid
+    // border-color: transparent
     .text
       overflow: hidden
       text-overflow: ellipsis
@@ -184,4 +203,9 @@ export default {
       &.highlight
         background-color: var(--button-color)
         color: var(--button-text-color)
+
+.outline-parent:focus, .outline-parent > .outline-child:focus
+    outline: none
+.outline-parent:focus > .outline-child, .outline-parent[data-visible='true'] > .outline-child
+    box-shadow: 0px 0px 0px 2px var(--line-highlight-color)
 </style>

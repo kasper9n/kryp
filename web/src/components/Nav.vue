@@ -9,29 +9,10 @@
     Dropdown.nav-item.portfolio-picker(
       v-if='$pocket.isInAppArea && $account.loggedIn'
       defaultText='Main'
-      :options=`[
-        { type: "space" },
-        {
-          type: "text",
-          text: "Portfolio",
-        },
-        {
-          text: "Main",
-        },
-        {
-          text: "Crypto",
-        },
-        {
-          text: "Stocks and stuff haha",
-        },
-        { type: "separator" },
-        {
-          type: "button",
-          text: "Create portfolio",
-        },
-        { type: "space" },
-      ]`
+      :options=`portfolioPickerOptions`
     )
+    CreatePortfolioDialog(ref='createPortfolioDialog')
+
     router-link.nav-item.nav-link(to='/app/dashboard')
       h4 Dashboard
     router-link.nav-item.nav-link(to='/app/transactions')
@@ -49,7 +30,6 @@
 
   //- button with outline trick so that outline doesnt show on click
   button.outline-parent.nav-item.icon(
-    @keydown.enter='$pocket.toggleDarkTheme()'
     @click.enter='$pocket.toggleDarkTheme()'
   )
     .outline-child(tabindex='-1')
@@ -60,14 +40,46 @@
 <script>
 import Dropdown from '@/components/Dropdown.vue'
 import Button from '@/components/Button.vue'
+import TextBox from '@/components/TextBox.vue'
+import CreatePortfolioDialog from '@/components/dialogs/CreatePortfolio.vue'
 import { SunIcon, MoonIcon } from 'vue-feather-icons'
 
 export default {
   components: {
     Dropdown,
     Button,
+    TextBox,
+    CreatePortfolioDialog,
     SunIcon,
     MoonIcon,
+  },
+  data () {
+    return {
+      showCreatePortfolioDialog: false,
+      createPortfolioName: '',
+    }
+  },
+  computed: {
+    portfolioPickerOptions () {
+      const options = []
+      options.push({ type: 'space' })
+      options.push({ type: 'text', text: 'Portfolio' })
+
+      for (const portfolio of this.$portfolios.portfolios) {
+        options.push({ text: portfolio.name })
+      }
+
+      options.push({ type: 'separator' })
+      options.push({
+        type: 'button',
+        text: 'Create portfolio',
+        handler: () => {
+          this.$refs.createPortfolioDialog.open()
+        },
+      })
+      options.push({ type: 'space' })
+      return options
+    },
   },
 }
 </script>
@@ -104,7 +116,7 @@ export default {
   .nav-item
     margin: 0px $nav-item-horizontal-margin
   .portfolio-picker
-    max-width: 250px
+    max-width: 180px
     width: auto
     font-weight: 700
   .nav-button

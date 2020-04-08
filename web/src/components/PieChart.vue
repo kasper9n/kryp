@@ -16,7 +16,7 @@
         //- :style='"transition-delay: "+5*(index-5)+"ms"'
         td(v-for='tableColumn of tableColumns' :data-align='tableColumn.align')
           | {{ item[tableColumn.key] }}
-  Button.toggle-all(variety='stupid' @click='expanded = !expanded')
+  Button.toggle-all(stupid @click='expanded = !expanded')
     | {{ expanded ? "Show less" : "Show all" }}
 </template>
 

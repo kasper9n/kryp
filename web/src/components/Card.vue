@@ -2,6 +2,7 @@
 .card
   slot
 </template>
+
 <style lang='sass' scoped>
 .card
   padding: 20px 20px
