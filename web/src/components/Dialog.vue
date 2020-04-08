@@ -40,6 +40,7 @@ export default {
   align-items: center
   justify-content: center
   .dialog
+    user-select: auto
     background-color: var(--card-background-color)
     // border: 1px solid var(--light-line-color)
     padding: 35px 40px
