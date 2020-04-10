@@ -53,8 +53,7 @@ export default {
       margin-bottom: 20px
   .bottom-bar
     display: flex
-    align-items: right
-    justify-content: right
+    justify-content: flex-end
     margin-top: 20px
     ::v-deep > *
       margin: 0px
