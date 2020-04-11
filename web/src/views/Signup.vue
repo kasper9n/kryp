@@ -4,7 +4,7 @@
   TextBox.textbox(name='email' placeholder='Email' type='text')
   TextBox.textbox(name='password' placeholder='Password' type='password')
   TextBox.textbox(name='password-repeat' placeholder='Confirm' type='password')
-  Button.btn(@click='$account.signup("/app/dashboard")') Create account
+  Button.btn(@click='$account.signup("/overview")') Create account
 </template>
 
 <script>

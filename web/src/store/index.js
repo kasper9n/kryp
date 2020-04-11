@@ -1,7 +1,6 @@
 import router from '@/router/index.js'
 
 const $pocket = {
-  isInAppArea: false,
   darkTheme: false,
   toggleDarkTheme () {
     this.darkTheme = !this.darkTheme
@@ -40,8 +39,8 @@ const $account = {
 
 const $portfolios = {
   defaultId: '464fuh3na3',
-  currentId: null, // set later
-  current: null, // set later
+  currentId: null,
+  current: null,
   getCurrentFromRoute () {
     const currentId = router.currentRoute.params.portfolioId
     return this.portfolios.find(p => p.id === currentId)

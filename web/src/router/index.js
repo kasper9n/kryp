@@ -5,8 +5,8 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import PageNotFound from '@/views/404.vue'
-import Dashboard from '@/views/app/Dashboard.vue'
-import Transactions from '@/views/app/Transactions.vue'
+import Dashboard from '@/views/p/Dashboard.vue'
+import Transactions from '@/views/p/Transactions.vue'
 
 Vue.use(VueRouter)
 
@@ -27,21 +27,16 @@ const routes = [
     component: Login,
   },
   {
-    path: '/app',
-    redirect: {
-      name: 'dashboard',
-      params: { portfolioId: store.$portfolios.currentId },
-    },
-  },
-  {
-    path: '/app/p/:portfolioId/dashboard',
+    path: '/p/:portfolioId/dashboard',
     name: 'dashboard',
     component: Dashboard,
+    meta: { login: true },
   },
   {
-    path: '/app/p/:portfolioId/transactions',
+    path: '/p/:portfolioId/transactions',
     name: 'transactions',
     component: Transactions,
+    meta: { login: true },
   },
   {
     path: '*',
@@ -59,22 +54,16 @@ const router = new VueRouter({
 const guards = [
   (to, from, next) => {
     // logout path
-    if (to.path === '/app/logout') {
+    if (to.path === '/logout') {
       store.$account.logout(() => {
         next({ path: '/login', replace: true })
       })
     }
   },
   (to, from, next) => {
-    // redirect to login if necessary, and set $pocket.isInAppArea
-    if (to.path.startsWith('/app')) {
-      if (store.$account.loggedIn) {
-        store.$pocket.isInAppArea = true
-      } else {
-        next({ path: '/login', replace: true, query: { continue: to.path } })
-      }
-    } else {
-      store.$pocket.isInAppArea = false
+    // redirect to login if necessary
+    if (to.meta.login === true && store.$account.loggedIn !== true) {
+      next({ path: '/login', replace: true, query: { continue: to.path } })
     }
   },
   (to, from, next) => {

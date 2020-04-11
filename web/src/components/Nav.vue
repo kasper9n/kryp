@@ -1,25 +1,24 @@
 <template lang='pug'>
 .nav
   router-link.nav-item.nav-link(
-    :to='$pocket.isInAppArea && $account.loggedIn ? "/app" : "/"'
+    :to='$account.loggedIn ? "/overview" : "/"'
   )
     h2 Cryptrack
 
-  template(v-if='$pocket.isInAppArea && $account.loggedIn')
+  template(v-if='$account.loggedIn')
     Dropdown.nav-item.portfolio-picker(
-      v-if='$pocket.isInAppArea && $account.loggedIn'
       :defaultText='$portfolios.current.name'
       :options=`portfolioPickerOptions`
       @change='portfolioPickerChange'
     )
     CreatePortfolioDialog(ref='createPortfolioDialog')
 
-    router-link.nav-item.nav-link(:to='`/app/p/${$portfolios.currentId}/dashboard`')
+    router-link.nav-item.nav-link(:to='`/p/${$portfolios.currentId}/dashboard`')
       h4 Dashboard
-    router-link.nav-item.nav-link(:to='`/app/p/${$portfolios.currentId}/transactions`')
+    router-link.nav-item.nav-link(:to='`/p/${$portfolios.currentId}/transactions`')
       h4 Transactions
     .separator
-    router-link.nav-item.nav-link(to='/app/logout')
+    router-link.nav-item.nav-link(to='/logout')
       h4 Log out
 
   template(v-else)
