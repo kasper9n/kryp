@@ -56,42 +56,12 @@ export default {
         { key: 'note', title: 'Note', align: 'left' },
         { key: 'time', title: 'Time', align: 'left' },
       ],
-      rows: [
-        {
-          type: 'Trade',
-          buy: '0.00000001',
-          buyAsset: 'BTC',
-          sell: '1.00000000',
-          sellAsset: 'USD',
-          fee: '0.01000000',
-          feeAsset: 'USD',
-          account: 'Binance',
-          time: '2020-03-11 02:32:11',
-        },
-        {
-          type: 'Deposit',
-          buy: '0.00000001',
-          buyAsset: 'BTC',
-          sell: '',
-          sellAsset: '',
-          fee: '0.01000000',
-          feeAsset: 'USD',
-          account: 'Binance',
-          time: '2019-08-21 11:23:46',
-        },
-        {
-          type: 'External Buy',
-          buy: '0.00000001',
-          buyAsset: 'BTC',
-          sell: '',
-          sellAsset: '',
-          fee: '0.01000000',
-          feeAsset: 'USD',
-          account: 'Binance',
-          time: '2019-08-21 11:23:46',
-        },
-      ],
     }
+  },
+  computed: {
+    rows () {
+      return this.$portfolios.current.transactions
+    },
   },
   methods: {
     search: debounce(function (e) {
@@ -103,7 +73,6 @@ export default {
           const match = cellText.toLowerCase().includes(text)
           if (match) {
             row.hide = false
-            // this.hide =
             return
           }
         }

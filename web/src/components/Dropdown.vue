@@ -77,8 +77,10 @@ export default {
       this.focusedIndex = this.selectedIndex
     },
     select (index) {
-      this.selectedIndex = index
-      this.$emit('change', this.options[index])
+      if (this.selectedIndex !== index) {
+        this.selectedIndex = index
+        this.$emit('change', this.options[index].text)
+      }
       this.hide()
     },
     selectHighlighted () {

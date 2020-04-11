@@ -8,14 +8,15 @@
   template(v-if='$pocket.isInAppArea && $account.loggedIn')
     Dropdown.nav-item.portfolio-picker(
       v-if='$pocket.isInAppArea && $account.loggedIn'
-      defaultText='Main'
+      :defaultText='$portfolios.current.name'
       :options=`portfolioPickerOptions`
+      @change='portfolioPickerChange'
     )
     CreatePortfolioDialog(ref='createPortfolioDialog')
 
-    router-link.nav-item.nav-link(to='/app/dashboard')
+    router-link.nav-item.nav-link(:to='`/app/p/${$portfolios.currentId}/dashboard`')
       h4 Dashboard
-    router-link.nav-item.nav-link(to='/app/transactions')
+    router-link.nav-item.nav-link(:to='`/app/p/${$portfolios.currentId}/transactions`')
       h4 Transactions
     .separator
     router-link.nav-item.nav-link(to='/app/logout')
@@ -58,6 +59,18 @@ export default {
       showCreatePortfolioDialog: false,
       createPortfolioName: '',
     }
+  },
+  methods: {
+    portfolioPickerChange (newText) {
+      const portfolioId = this.$portfolios.getIdFromName(newText)
+      if (this.$route.params.portfolioId) {
+        this.$router.push({
+          name: this.$route.name,
+          params: { portfolioId },
+        })
+      }
+      this.$portfolios.setPortfolio(portfolioId)
+    },
   },
   computed: {
     portfolioPickerOptions () {

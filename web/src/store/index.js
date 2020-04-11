@@ -39,6 +39,23 @@ const $account = {
 }
 
 const $portfolios = {
+  defaultId: '464fuh3na3',
+  currentId: null, // set later
+  current: null, // set later
+  getCurrentFromRoute () {
+    const currentId = router.currentRoute.params.portfolioId
+    return this.portfolios.find(p => p.id === currentId)
+  },
+  setPortfolio (id) {
+    this.currentId = id
+    this.current = this.portfolios.find(p => p.id === id)
+  },
+  getIdFromName (name) {
+    return this.portfolios.find(p => p.name === name).id
+  },
+  idExists (id) {
+    return this.portfolios.some(p => p.id === id)
+  },
   portfolios: [
     {
       id: '2n8pgyqnvq',
@@ -47,6 +64,41 @@ const $portfolios = {
     {
       id: '464fuh3na3',
       name: 'Crypto',
+      transactions: [
+        {
+          type: 'Trade',
+          buy: '0.00000001',
+          buyAsset: 'BTC',
+          sell: '1.00000000',
+          sellAsset: 'USD',
+          fee: '0.01000000',
+          feeAsset: 'USD',
+          account: 'Binance',
+          time: '2020-03-11 02:32:11',
+        },
+        {
+          type: 'Deposit',
+          buy: '0.00000001',
+          buyAsset: 'BTC',
+          sell: '',
+          sellAsset: '',
+          fee: '0.01000000',
+          feeAsset: 'USD',
+          account: 'Binance',
+          time: '2019-08-21 11:23:46',
+        },
+        {
+          type: 'External Buy',
+          buy: '0.00000001',
+          buyAsset: 'BTC',
+          sell: '',
+          sellAsset: '',
+          fee: '0.01000000',
+          feeAsset: 'USD',
+          account: 'Binance',
+          time: '2019-08-21 11:23:46',
+        },
+      ],
     },
     {
       id: '9ggukb7jtk',
@@ -60,6 +112,7 @@ const $portfolios = {
     })
   },
 }
+$portfolios.setPortfolio($portfolios.defaultId)
 
 export default {
   $pocket,
