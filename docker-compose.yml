@@ -2,6 +2,7 @@ version: '3.4'
 services:
   web:
     tty: true
+    container_name: web
     build:
       context: ./web
       dockerfile: Dockerfile
@@ -14,25 +15,34 @@ services:
       - api
   api:
     tty: true
+    container_name: api
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: dev-stage
+    command: npm run start-dev
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./api:/go/src/app
+      - ./api:/usr/src/app
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
     depends_on:
       - db
   db:
     tty: true
-    image: mysql:8.0
+    container_name: db
+    image: mongo:4.2-bionic
     environment:
-      MYSQL_DATABASE: db
-      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASSWORD}'
-      MYSQL_USER: cryptrack
-      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: admin
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    command: mongod --auth
+    ports:
+      - 27017:27017
     volumes:
-      - ./db/data:/var/lib/mysql
-    
+      - ./db/data:/data/db
+      - ./db/init-scripts/:/docker-entrypoint-initdb.d/
