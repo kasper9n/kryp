@@ -15,12 +15,16 @@ function err(code, msg, err) {
 
 async function ctxErr(ctx, next) {
   ctx.$err = (code, msg, error) => {
-    errorType = String(500).charAt(0)
-    if (errorType === 5) {
+    errorType = String(code).charAt(0)
+    if (errorType === '5') {
       err(code, msg, error)
       ctx.body = { code, msg: 'Server error' }
-    } else if (errorType === 1) {
+    } else if (errorType === '1') {
       ctx.body = { code, msg, error}
+    } else {
+      err(code, msg, error)
+      ctx.body = { code, msg: 'Server error' }
+      err(5000, `Invalid error code ${code} in last error`, new Error())
     }
   }
   await next()
