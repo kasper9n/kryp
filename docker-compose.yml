@@ -23,6 +23,7 @@ services:
     environment:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      API_SESSION_KEY: ${API_SESSION_KEY}
     volumes:
       - ./api:/usr/src/app
     ports:

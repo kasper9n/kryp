@@ -15,12 +15,11 @@ crypto data api alterantives
 ```
 # when updating, remember to update README.md
 # DO NOT USE SPECIAL CHARS
-
 DB_ROOT_USERNAME=root
 DB_ROOT_PASSWORD=secret
-
 DB_USERNAME=appuser
 DB_PASSWORD=secret
+API_SESSION_KEY=secret
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.
