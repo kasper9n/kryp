@@ -59,3 +59,6 @@ Replace DB_USERNAME and DB_PASSWORD with the corresponding environment variables
 
 ### Deployment
 TBA. Will probably use Docker Contexts
+
+### TODO
+- Use custom, shorter IDs in database

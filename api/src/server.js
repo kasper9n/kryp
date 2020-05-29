@@ -5,6 +5,8 @@ global.$log = logger.log
 async function main() {
   // mongoose
   const mongoose = require('mongoose')
+  mongoose.set('useFindAndModify', false)
+  mongoose.set('useCreateIndex', true)
   const dbuser = process.env.DB_USERNAME
   const dbpass = process.env.DB_PASSWORD
   const url = `mongodb://${dbuser}:${dbpass}@db:27017/cryptrack`

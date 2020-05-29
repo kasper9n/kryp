@@ -4,7 +4,6 @@ const validator = require('validator')
 const User = require("./../mongoose-models.js").User
 
 router.post('/register', async (ctx, next) => {
-  console.log(ctx.request.body)
   let email = ctx.request.body.email
   const password = ctx.request.body.password
   const errors = []
