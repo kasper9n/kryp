@@ -7,7 +7,7 @@ async function main() {
   const mongoose = require('mongoose')
   const dbuser = process.env.DB_USERNAME
   const dbpass = process.env.DB_PASSWORD
-  const url = `mongodb://${dbuser}:${dbpass}@db:27017/admin`
+  const url = `mongodb://${dbuser}:${dbpass}@db:27017/cryptrack`
   const options = { useNewUrlParser: true, useUnifiedTopology: true }
   $log('Mongoose connection initiated...')
   await mongoose.connect(url, options).then(() => {
