@@ -1,6 +1,6 @@
 const logger = require('./logger.js')
-global.$err = logger.err
-global.$log = logger.log
+global.$err = logger.$err
+global.$log = logger.$log
 
 async function main() {
   // mongoose
@@ -29,6 +29,7 @@ async function main() {
 
   // response error handling
   app.use(logger.ctxErr)
+  app.use(logger.ctxSuccess)
 
   // body parser
   const bodyParser = require('koa-bodyparser')

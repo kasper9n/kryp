@@ -30,11 +30,11 @@ router.post('/register', async (ctx, next) => {
 
   try {
     await new User({ email, password }).save()
-    console.log('created new user')
   } catch (error) {
     return ctx.$err(5004, `Error creating new user '${email}'`, error)
   }
 
+  return ctx.$success()
 })
 
 module.exports = router

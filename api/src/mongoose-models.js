@@ -2,26 +2,6 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 module.exports = {}
 
-async function generateId(count, k) {
-  const symbols = 'abcdefghjkmnpqrtuvwxyz1234567890'
-  let str = '';
-
-  for(var i = 0; i < count; i++) {
-    str += symbols[parseInt(Math.random() * (symbols.length))];
-  }
-
-  return str
-  // module.exports.User find id, if it exists, loop
-
-  // base.getID(str, function(err, res) {
-  //   if(!res.length) {
-  //     k(str) // use the continuation
-  //   } else generate(count, k) // otherwise, recurse on generate
-  // });
-}
-
-
-
 const portfolioSchema = new Schema({
   name: '',
   transactions: [],
