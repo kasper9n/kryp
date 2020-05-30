@@ -42,7 +42,10 @@ async function main() {
   // session
   const session = require('koa-session')
   app.keys = [process.env.API_SESSION_KEY]
-  app.use(session({}, app))
+  const sessionConfig = {
+    maxAge: 31557600000, // 365.25 days in ms
+  }
+  app.use(session(sessionConfig, app)) // maxAge
 
   // auth
   require('./auth.js')
