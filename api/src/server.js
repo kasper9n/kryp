@@ -5,17 +5,21 @@ global.$log = logger.$log
 async function main() {
   // mongoose
   const mongoose = require('mongoose')
+  mongoose.set('useNewUrlParser', true)
   mongoose.set('useFindAndModify', false)
   mongoose.set('useCreateIndex', true)
+  mongoose.set('useUnifiedTopology', true)
   const dbuser = process.env.DB_USERNAME
   const dbpass = process.env.DB_PASSWORD
   const url = `mongodb://${dbuser}:${dbpass}@db:27017/cryptrack`
-  const options = { useNewUrlParser: true, useUnifiedTopology: true }
   $log('Mongoose connection initiated...')
-  await mongoose.connect(url, options).then(() => {
-    $log('Mongoose connection success')
+  await mongoose.connect(url, {}).then(() => {
+    $log('Mongoose connected')
   }).catch(error => {
     $err(5001, 'Error when connecting to db', error)
+  })
+  mongoose.connection.on('error', err => {
+    $err(5006, 'Mongoose error occured after initial connection', err)
   })
 
   // app
