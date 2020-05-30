@@ -9,8 +9,8 @@ const portfolioSchema = new Schema({
 module.exports.Portfolio = mongoose.model('Portfolio', portfolioSchema)
 
 const userSchema = new Schema({
-  email: String,
-  password: String,
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   portfolios: [portfolioSchema],
 }, { timestamps: true })
 module.exports.User = mongoose.model('User', userSchema)

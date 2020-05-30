@@ -1,6 +1,7 @@
 const Router = require('@koa/router')
 const router = new Router()
 const validator = require('validator')
+const bcrypt = require("bcryptjs")
 const User = require("./../mongoose-models.js").User
 
 router.post('/register', async (ctx, next) => {
@@ -28,8 +29,30 @@ router.post('/register', async (ctx, next) => {
 
   if (errors.length !== 0) return ctx.$err(1001, 'Input error', errors)
 
+  function generateHash(password) {
+    return new Promise((resolve, reject) => {
+      bcrypt.genSalt(10, (err, salt) => {
+        if (err) return reject(err);
+        bcrypt.hash(password, salt, (err, hashedPassword) => {
+          if (err) return reject(err);
+          resolve(hashedPassword);
+        });
+      });
+    })
+  }
+
+  let hashedPassword
   try {
-    await new User({ email, password }).save()
+    hashedPassword = await generateHash(password)
+  } catch (error) {
+    return ctx.$err(5005, `Error hashing password or generating salt`, error)
+  }
+
+  try {
+    await new User({
+      email,
+      password: hashedPassword,
+      }).save()
   } catch (error) {
     return ctx.$err(5004, `Error creating new user '${email}'`, error)
   }
