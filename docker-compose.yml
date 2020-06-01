@@ -9,6 +9,7 @@ services:
       target: dev-stage
     volumes:
       - ./web:/usr/src/app
+      - /usr/src/app/node_modules
     ports:
       - 3000:3000
     depends_on:
@@ -26,6 +27,7 @@ services:
       API_SESSION_KEY: ${API_SESSION_KEY}
     volumes:
       - ./api:/usr/src/app
+      - /usr/src/app/node_modules
     ports:
       - 80:80
       - 443:443

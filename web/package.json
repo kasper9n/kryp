@@ -2,9 +2,9 @@
   "name": "cryptrack-web",
   "private": true,
   "scripts": {
-    "serve": "../node_modules/.bin/vue-cli-service serve --port 3000",
-    "build": "../node_modules/.bin/vue-cli-service build",
-    "lint": "../node_modules/.bin/vue-cli-service lint"
+    "serve": "vue-cli-service serve --port 3000",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "core-js": "^3.6.4",
