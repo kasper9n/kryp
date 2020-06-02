@@ -78,6 +78,7 @@ h1, h2, h3, h4, h5, h6
   padding-right: 15px
 .mini-page
   max-width: 400px
+  box-sizing: border-box
   margin: auto
   padding: 30px
   text-align: center

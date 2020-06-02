@@ -33,7 +33,7 @@ router.post('/register', async (ctx, next) => {
     return ctx.$err(5003, 'Error checking if user exists', error)
   }
 
-  if (hasError()) return ctx.$err(4001, 'Input error', error)
+  if (hasError()) return ctx.$err(4006, 'Input error', error)
 
   function generateHash(password) {
     return new Promise((resolve, reject) => {
@@ -70,10 +70,10 @@ router.post('/login', async (ctx, next) => {
   let email = ctx.request.body.email
   const password = ctx.request.body.password
 
-  if      (typeof email !== 'string') ctx.$err(4002, 'Email empty')
-  else if (validator.isEmpty(email)) ctx.$err(4003, 'Email empty')
-  else if (typeof password !== 'string') ctx.$err(4004, 'Password empty')
-  else if (validator.isEmpty(password)) ctx.$err(4005, 'Password empty')
+  if      (typeof email !== 'string') return ctx.$err(4002, 'Email empty')
+  else if (validator.isEmpty(email)) return ctx.$err(4003, 'Email empty')
+  else if (typeof password !== 'string') return ctx.$err(4004, 'Password empty')
+  else if (validator.isEmpty(password)) return ctx.$err(4005, 'Password empty')
 
   email = validator.normalizeEmail(email)
 
@@ -83,13 +83,13 @@ router.post('/login', async (ctx, next) => {
   } catch (err) {
     return ctx.$err(5007, 'Error checking if user exists', err)
   }
-  if (!resultUser) return ctx.err(5008, 'Email incorrect')
+  if (!resultUser) return ctx.err(4007, 'Login incorrect')
 
   return passport.authenticate('local', function(err, user, info) {
     if (err) {
       return ctx.$err(5009, 'Error authenticating user', err)
     } else if (user === false) {
-      return ctx.$err(5010, 'Authentication failed')
+      return ctx.$err(4007, 'Login incorrect')
     } else {
       ctx.$success()
       return ctx.login(user)

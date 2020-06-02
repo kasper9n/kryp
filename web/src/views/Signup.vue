@@ -1,43 +1,58 @@
 <template lang='pug'>
-.mini-page
+form.mini-page(
+  @submit.prevent='signup'
+  :action='$pocket.apiUrl'
+  method='post'
+  novalidate='true'
+)
   h1 Sign up
   .page-error(v-if='pageErrorMsg !== ""') {{ pageErrorMsg }}
 
+  label(for='signup-email')
   TextBox.textbox(
+    id='signup-email'
     v-model='email'
     name='email'
     :error='!!emailError'
     placeholder='Email'
-    type='text')
+    type='email'
+  )
   p.error(v-if='emailError === "empty"') Enter an email address
-  p.error(v-if='emailError === "invalid"') Invalid email
+  p.error(v-if='emailError === "invalid"') Invalid email address
   p.error(v-if='emailError === "exists"') Email already exists
 
+  label(for='signup-password')
   TextBox.textbox(
+    id='signup-password'
     v-model='password'
     name='password'
     :error='!!passwordError'
     placeholder='Password'
-    type='password')
+    type='password'
+    autocomplete='new-password'
+  )
   p.error(v-if='passwordError === "empty"') Enter a password
   p.error(v-if='passwordError === "too short"') Password must be 8-100 characters
   p.error(v-if='passwordError === "too long"') Password must be 8-100 characters
 
+  label(for='signup-pwconfirm')
   TextBox.textbox(
+    id='signup-pwconfirm'
     v-model='pwConfirm'
     name='confirm'
     :error='!!pwConfirmError'
     placeholder='Confirm'
-    type='password')
+    type='password'
+    autocomplete='new-password'
+  )
   p.error(v-if='pwConfirmError === "empty"') Confirm your password
   p.error(v-if='pwConfirmError === "incorrect"') Passwords don't match
 
-  Button.btn(@click='signup()' :disabled='inProgress') Create account
+  Button.btn(:disabled='inProgress') Create account
 </template>
 
 <script>
 import validator from 'validator'
-
 import TextBox from '@/components/TextBox.vue'
 import Button from '@/components/Button.vue'
 
@@ -80,17 +95,14 @@ export default {
       if (validator.isEmpty(pwConfirm)) this.pwConfirmError = 'empty'
       else if (pwConfirm !== pw) this.pwConfirmError = 'incorrect'
     },
-    signup: function () {
+    signup: function (e) {
       if (this.inProgress === true) return
-      this.inProgress = true
       this.pageErrorMsg = ''
       this.validateEmail()
       this.validatePassword()
       this.validatePwConfirm()
-      if (this.emailError || this.passwordError || this.pwConfirmError) {
-        this.inProgress = false
-        return
-      }
+      if (this.emailError || this.passwordError || this.pwConfirmError) return
+      this.inProgress = true
       this.$account.signup({
         email: this.email,
         password: this.password,

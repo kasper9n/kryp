@@ -2,13 +2,30 @@ import router from '@/router/index.js'
 import axios from 'axios'
 const apiUrl = process.env.VUE_APP_API_URL
 const xhr = {
-  post: (slug, data) => {
-    return axios.post(apiUrl + slug, data)
+  post: (slug, data = {}) => {
+    let onSuccess
+    if (data.$onSuccess === 'function') onSuccess = data.$onSuccess
+    if (onSuccess) delete data.$onSuccess
+    return new Promise((resolve, reject) => {
+      axios.post(apiUrl + slug, data).then((response) => {
+        if (onSuccess) onSuccess(response.data)
+        resolve(response.data)
+      }, (err) => {
+        let customErr
+        if (err.response) customErr = err.response.data
+        else customErr = { msg: 'Server unreachable' }
+        console.log(`Error sending POST request to ${slug}:`)
+        console.log(customErr)
+        console.dir(err)
+        reject(customErr)
+      })
+    })
   },
 }
 
 const $pocket = {
   darkTheme: false,
+  apiUrl: apiUrl,
   toggleDarkTheme () {
     this.darkTheme = !this.darkTheme
     this.updateTheme()
@@ -23,38 +40,25 @@ const $pocket = {
 const $account = {
   loggedIn: false,
   email: null,
-  firstName: null,
-  lastName: null,
-  login (redirectTo) {
-    this.loggedIn = true
-    this.email = 'example@gmail.com'
-    this.firstName = 'Foo'
-    this.lastName = 'Barson'
-    if (redirectTo) router.push(redirectTo)
+  login (data) {
+    return xhr.post('/login', {
+      email: data.email,
+      password: data.password,
+      $onSuccess: function (response) {
+        this.loggedIn = true
+        this.email = response.user.email
+      },
+    })
   },
   signup (data, redirectTo) {
-    return new Promise((resolve, reject) => {
-      xhr.post('/register', {
-        email: data.email,
-        password: data.password,
-      }).then(() => {
-        resolve()
-      }).catch(err => {
-        let customErr
-        if (err.response) customErr = err.response.data
-        else customErr = { msg: 'Server unreachable' }
-        console.log('Error when signing up:')
-        console.log(customErr)
-        console.dir(err)
-        reject(customErr)
-      })
+    return xhr.post('/register', {
+      email: data.email,
+      password: data.password,
     })
   },
   logout (callback) {
     this.loggedIn = false
     this.email = null
-    this.firstName = null
-    this.lastName = null
     if (callback) callback()
   },
 }
