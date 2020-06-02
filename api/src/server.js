@@ -28,7 +28,7 @@ async function main() {
   const app = new Koa()
 
   app.use(async (ctx, next) => {
-    console.log('Request received')
+    console.log(`Request received: ${ctx.request.method} ${ctx.request.path}`)
     await next()
   })
 
@@ -37,7 +37,7 @@ async function main() {
   app.use(logger.ctxSuccess)
 
   // CORS fix
-  app.use(cors())
+  app.use(cors({ origin: '*' }))
 
   // body parser
   const bodyParser = require('koa-bodyparser')
