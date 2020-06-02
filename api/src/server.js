@@ -66,6 +66,12 @@ async function main() {
   app.use(userRouter.routes())
   app.use(userRouter.allowedMethods())
 
+  // if koa's status is still the default, use the 404 response
+  app.use(async (ctx, next) => {
+    if (ctx.response.status === 404) ctx.$err(404, 'Not found')
+    await next()
+  })
+
   // serve
   app.listen(80)
 }

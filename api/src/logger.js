@@ -4,7 +4,7 @@ function $log(msg) {
   console.log(msg)
 }
 
-// code 1000-1999: user input error
+// code 4000-4999: user input error
 // code 5000-5999: unexpected server error
 function $err(code, msg, err) {
   console.error(
@@ -16,22 +16,28 @@ function $err(code, msg, err) {
 async function ctxSuccess(ctx, next) {
   ctx.$success = (responseObject = {}) => {
     responseObject.error = null
-    ctx.body = responseObject
+    ctx.response.body = responseObject
   }
   await next()
 }
 
 async function ctxErr(ctx, next) {
-  ctx.$err = (code, msg, error) => {
+  ctx.$err = (code, msg, error = true) => {
     errorType = String(code).charAt(0)
     if (errorType === '5') {
       $err(code, msg, error)
-      ctx.body = { code, msg: 'Server error' }
-    } else if (errorType === '1') {
-      ctx.body = { code, msg, error}
+      ctx.response.body = { code, msg: 'Server error' }
+      ctx.response.status = 500
+    } else if (code === 404) {
+      ctx.response.body = { code, msg, error }
+      ctx.response.status = 404
+    } else if (errorType === '4') {
+      ctx.response.body = { code, msg, error }
+      ctx.response.status = 400
     } else {
       $err(code, msg, error)
-      ctx.body = { code, msg: 'Server error' }
+      ctx.response.body = { code, msg: 'Server error' }
+      ctx.response.status = 500
       $err(5000, `Invalid error code ${code} in last error`, new Error())
     }
   }
