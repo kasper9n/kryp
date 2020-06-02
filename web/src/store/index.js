@@ -1,4 +1,11 @@
 import router from '@/router/index.js'
+import axios from 'axios'
+const apiUrl = process.env.VUE_APP_API_URL
+const xhr = {
+  post: (slug, data) => {
+    return axios.post(apiUrl + slug, data)
+  },
+}
 
 const $pocket = {
   darkTheme: false,
@@ -25,8 +32,23 @@ const $account = {
     this.lastName = 'Barson'
     if (redirectTo) router.push(redirectTo)
   },
-  signup (redirectTo) {
-    this.login(redirectTo)
+  signup (data, redirectTo) {
+    return new Promise((resolve, reject) => {
+      xhr.post('/register', {
+        email: data.email,
+        password: data.password,
+      }).then(() => {
+        resolve()
+      }).catch(err => {
+        let customErr
+        if (err.response) customErr = err.response.data
+        else customErr = { msg: 'Server unreachable' }
+        console.log('Error when signing up:')
+        console.log(customErr)
+        console.dir(err)
+        reject(customErr)
+      })
+    })
   },
   logout (callback) {
     this.loggedIn = false

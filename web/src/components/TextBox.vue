@@ -5,22 +5,20 @@ input(
   :type='type'
   :value='value'
   @input='$emit("input", $event.target.value)'
-  :class='{ compact }'
+  @blur='$emit("blur")'
+  :class='{ compact, error }'
 )
 </template>
 
 <script>
 export default {
   props: {
+    value: String,
     name: String,
     placeholder: String,
     type: String,
     compact: Boolean,
-  },
-  data () {
-    return {
-      value: '',
-    }
+    error: Boolean,
   },
   methods: {
     focus () {
@@ -55,6 +53,14 @@ input
     box-shadow: 0px 0px 0px 1px var(--line-highlight-color)
   &:hover:not(:active):not(:focus)
     border-color: var(--line-hover-color)
+input.error
+  border-color: var(--error-color-light)
+  &:focus, &:active
+    border-color: var(--error-color)
+    outline: none
+    box-shadow: 0px 0px 0px 1px var(--error-color)
+  &:hover:not(:active):not(:focus)
+    border-color: var(--error-color)
 input.compact
   height: 36px
   padding: 0px 10px

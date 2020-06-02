@@ -12,14 +12,18 @@ crypto data api alterantives
 1. Install [Docker](https://docs.docker.com/install/)
 2. If Docker didn't come with [Docker Compose](https://docs.docker.com/compose/install/), install that too
 3. Create a `.env` file that looks like this:
-```
+```dotenv
 # when updating, remember to update README.md
 # DO NOT USE SPECIAL CHARS
 DB_ROOT_USERNAME=root
 DB_ROOT_PASSWORD=secret
+
 DB_USERNAME=appuser
 DB_PASSWORD=secret
+
 API_SESSION_KEY=secret
+
+PRODUCTION_API_URL=https://api.cryptrack.io
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.
@@ -61,4 +65,5 @@ Replace DB_USERNAME and DB_PASSWORD with the corresponding environment variables
 TBA. Will probably use Docker Contexts
 
 ### TODO
+- Email confirmation, probably using something like nodemailer
 - Use custom, shorter IDs in database

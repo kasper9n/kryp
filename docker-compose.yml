@@ -7,6 +7,8 @@ services:
       context: ./web
       dockerfile: Dockerfile
       target: dev-stage
+    environment:
+      VUE_APP_API_URL: http://localhost:80
     volumes:
       - ./web:/usr/src/app
       - /usr/src/app/node_modules

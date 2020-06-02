@@ -4,6 +4,7 @@ import store from '@/store'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
+import Confirm from '@/views/Confirm.vue'
 import PageNotFound from '@/views/404.vue'
 import Dashboard from '@/views/p/Dashboard.vue'
 import Transactions from '@/views/p/Transactions.vue'
@@ -20,6 +21,11 @@ const routes = [
     path: '/signup',
     name: 'signup',
     component: Signup,
+  },
+  {
+    path: '/confirm',
+    name: 'confirm',
+    component: Confirm,
   },
   {
     path: '/login',

@@ -35,6 +35,10 @@
   --line-hover-color: #b9babc
   --line-highlight-color: #{ transparentize($accent-color, 0.5) }
 
+  --error-color: hsl(349, 79%, 55%)
+  --error-color-light: hsl(349, 79%, 75%)
+  --error-background-color: hsl(349, 89%, 93%)
+
   --dropdown-background-color: #ffffff
 
   --header-height: 70px
