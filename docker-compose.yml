@@ -8,12 +8,11 @@ services:
       dockerfile: Dockerfile
       target: dev-stage
     environment:
-      VUE_APP_API_URL: http://localhost:80
+      VUE_APP_API_URL: http://localhost:${API_HTTP_PORT}
+      WEB_HTTP_PORT: ${WEB_HTTP_PORT}
     volumes:
       - ./web:/usr/src/app
       - /usr/src/app/node_modules
-    ports:
-      - 3000:3000
     depends_on:
       - api
   api:
@@ -21,18 +20,26 @@ services:
     container_name: api
     build:
       context: ./api
-      dockerfile: Dockerfile
+      dockerfile: ${API_SESSION_KEY:?API_SESSION_KEY}
     command: npm run start-dev
     environment:
+      NODE_ENV: development
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      API_SESSION_KEY: ${API_SESSION_KEY}
+      API_SESSION_KEY: ${API_SESSION_KEY:?API_SESSION_KEY}
+      API_HTTP_PORT: ${API_HTTP_PORT:?API_HTTP_PORT}
+      API_HTTPS_PORT: ${API_HTTPS_PORT:?API_HTTPS_PORT}
+      WEB_HTTP_PORT: ${WEB_HTTP_PORT:?WEB_HTTP_PORT}
+      WEB_HTTPS_PORT: ${WEB_HTTPS_PORT:?WEB_HTTPS_PORT}
+      DB_PORT: ${DB_PORT:?DB_PORT}
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
     ports:
-      - 80:80
-      - 443:443
+      - ${API_HTTP_PORT}:${API_HTTP_PORT}
+      - ${API_HTTPS_PORT}:${API_HTTPS_PORT}
+      - ${WEB_HTTP_PORT}:${WEB_HTTP_PORT} # proxy for `web`
+      - ${WEB_HTTPS_PORT}:${WEB_HTTPS_PORT} # proxy for `web`
     depends_on:
       - db
   db:
@@ -40,14 +47,14 @@ services:
     container_name: db
     image: mongo:4.2-bionic
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME:?DB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: admin
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-    command: mongod --auth
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
+    command: mongod --auth --port ${DB_PORT:?DB_PORT}
     ports:
-      - 27017:27017
+      - ${DB_PORT}:${DB_PORT}
     volumes:
       - ./db/data:/data/db
       - ./db/init-scripts/:/docker-entrypoint-initdb.d/

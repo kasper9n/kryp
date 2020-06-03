@@ -24,9 +24,30 @@ DB_PASSWORD=secret
 API_SESSION_KEY=secret
 
 PRODUCTION_API_URL=https://api.cryptrack.io
+
+API_HTTP_PORT=80
+API_HTTPS_PORT=443
+WEB_HTTP_PORT=8080
+WEB_HTTPS_PORT=8443
+DB_PORT=27017
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.
+
+### Structure
+The project consists of 3 docker containers:
+- `db`: MongoDB database
+- `api`: Node.js backend
+- `web`: Vue.js frontend
+
+### Development environment
+
+`web` has a dev server accessible at `WEB_HTTP_PORT` and `WEB_HTTPS_PORT`. This is served through `api` as a proxy as a workaround for Vue.js only serving at one port.
+
+`web` and `api` serve both HTTP and HTTPS connections. For HTTPS, a self-signed SSL certificates is generated. Browsers will show warnings due to this, but you should be able to bypass thar.
+
+You can test the HTTPS connections by pointing a domain to you using a proxy service like CloudFlare, and forwarding the relevant ports (Recommend [Port Map](https://www.codingmonkeys.de/portmap/) for macOS). Make sure that you only use ports that the proxy service supports.
+
 
 ### Commands
 Start:
@@ -50,19 +71,20 @@ make lint-fix
 ```
 
 ### Connecting to the database
-To connect to the database, for example via a GUI app like MongoDB Compass, you can use the following connection string:
+To connect to the database, for example via a GUI app like MongoDB Compass, use the following connection string:
 ```
-mongodb://<DB_USERNAME>:<DB_PASSWORD>@<HOST>:27017/admin
+mongodb://DB_USERNAME:DB_PASSWORD>@HOST:DB_PORT/admin?authSource=admin
 ```
-- `DB_USERNAME`: The value you wrote in your `.env` file
-- `DB_PASSWORD`: The value you wrote in your `.env` file
-- `HOST`: `localhost` for local development, your server IP for production
-Replace DB_USERNAME and DB_PASSWORD with the corresponding environment variables in your `.env` file. For local development, replace `HOST` with `localhost`.
-
-
+`DB_USERNAME`, `DB_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (You could use a domain name as well, but proxies like CloudFlare only support a few ports).
 
 ### Deployment
-TBA. Will probably use Docker Contexts
+*Unfinished section*
+
+#### Initial setup
+1. Set up a server, for example a DigitalOcean droplet. `api` and `db` will be served from here
+2. `api` uses a self-signed SSL certificate. Use a proxy service like CloudFlare to provide a real SSL certificate.
+3. Deploy `web` to a static site host like Netlify.
+4. Set up domains for `web` and `api`. If your `api` domain is `example.com`, then set `PRODUCTION_API_URL` to `https://example.com` inside `.env`.
 
 ### TODO
 - Email confirmation, probably using something like nodemailer

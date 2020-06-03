@@ -1,4 +1,3 @@
-const cors = require('@koa/cors')
 const logger = require('./logger.js')
 global.$err = logger.$err
 global.$log = logger.$log
@@ -12,7 +11,8 @@ async function main() {
   mongoose.set('useUnifiedTopology', true)
   const dbuser = process.env.DB_USERNAME
   const dbpass = process.env.DB_PASSWORD
-  const url = `mongodb://${dbuser}:${dbpass}@db:27017/cryptrack`
+  const dbPort = process.env.DB_PORT
+  const url = `mongodb://${dbuser}:${dbpass}@db:${dbPort}/cryptrack`
   $log('Mongoose connection initiated...')
   await mongoose.connect(url, {}).then(() => {
     $log('Mongoose connected')
@@ -37,6 +37,7 @@ async function main() {
   app.use(logger.ctxSuccess)
 
   // CORS fix
+  const cors = require('@koa/cors')
   app.use(cors({ origin: '*' }))
 
   // body parser
@@ -72,8 +73,26 @@ async function main() {
     await next()
   })
 
-  // serve
-  app.listen(80)
+  // Serve on https using a self-signed certificate.
+  // - In development, this will show an error. Firefox lets you click past
+  //   that error, so you can use that to check if the website works.
+  // - In production, use a service like Cloudflare to provide encryption. Set
+  //   the encryption mode to "Full" to allow self-signed certificates.
+  const https = require('https')
+  const selfSignedCert = require('./ssl/get-certificate.js')
+  const httpsOptions = { key: selfSignedCert, cert: selfSignedCert }
+  const httpsServer = https.createServer(httpsOptions, app.callback())
+  httpsServer.listen(process.env.API_HTTPS_PORT)
+
+  if (process.env.NODE_ENV === 'development') {
+    // Serve http
+    app.listen(process.env.API_HTTP_PORT)
+
+    // proxy traffic to web service
+    const proxy = require('./proxy.js')
+    proxy.http().listen(process.env.WEB_HTTP_PORT)
+    proxy.https(httpsOptions).listen(process.env.WEB_HTTPS_PORT)
+  }
 }
 
 // log unhandled errors
