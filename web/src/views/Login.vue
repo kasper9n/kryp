@@ -74,21 +74,18 @@ export default {
     login: function (e) {
       if (this.inProgress === true) return
       this.pageErrorMsg = ''
-      console.log(55)
       this.validateEmail()
-      console.log(61)
       this.validatePassword()
-      console.log(66)
       if (this.emailError || this.passwordError) return
-      console.log(6)
       this.inProgress = true
       this.$account.login({
         email: this.email,
         password: this.password,
       }).then(() => {
+        console.log('login success')
+        this.inProgress = false
         // full page reload so password managers detect submission
         window.location.href = '/dashboard'
-        this.inProgress = false
       }, err => {
         if (err.msg === 'Server unreachable') {
           this.pageErrorMsg = 'Unable to reach server'

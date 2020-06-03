@@ -8,8 +8,11 @@ services:
       dockerfile: Dockerfile
       target: dev-stage
     environment:
-      VUE_APP_API_URL: http://localhost:${API_HTTP_PORT}
+      NODE_ENV: development
+      VUE_APP_PRODUCTION_API_URL: ${PRODUCTION_API_URL:?PRODUCTION_API_URL}
       WEB_HTTP_PORT: ${WEB_HTTP_PORT}
+      VUE_APP_API_HTTP_PORT: ${API_HTTP_PORT:?API_HTTP_PORT}
+      VUE_APP_API_HTTPS_PORT: ${API_HTTPS_PORT:?API_HTTPS_PORT}
     volumes:
       - ./web:/usr/src/app
       - /usr/src/app/node_modules

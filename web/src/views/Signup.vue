@@ -107,9 +107,10 @@ export default {
         email: this.email,
         password: this.password,
       }).then(() => {
+        console.log('signup success')
+        this.inProgress = false
         // full page reload so password managers detect submission
         window.location.href = '/confirm'
-        this.inProgress = false
       }, err => {
         if (err.msg === 'Server unreachable') {
           this.pageErrorMsg = 'Unable to reach server'

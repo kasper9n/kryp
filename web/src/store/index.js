@@ -1,6 +1,19 @@
 import router from '@/router/index.js'
 import axios from 'axios'
-const apiUrl = process.env.VUE_APP_API_URL
+let apiUrl
+if (process.env.NODE_ENV === 'production') {
+  apiUrl = process.env.VUE_APP_PRODUCTION_API_URL
+} else {
+  let protocol = 'http'
+  let port = process.env.VUE_APP_API_HTTP_PORT
+  if (location.protocol === 'https:') {
+    protocol = 'https'
+    port = process.env.VUE_APP_API_HTTPS_PORT
+  }
+  apiUrl = `${protocol}://${location.hostname}:${port}`
+  console.log(apiUrl)
+}
+
 const xhr = {
   post: (slug, data = {}) => {
     let onSuccess
