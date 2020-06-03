@@ -20,7 +20,7 @@ services:
     container_name: api
     build:
       context: ./api
-      dockerfile: ${API_SESSION_KEY:?API_SESSION_KEY}
+      dockerfile: Dockerfile
     command: npm run start-dev
     environment:
       NODE_ENV: development
