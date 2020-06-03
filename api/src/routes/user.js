@@ -87,7 +87,7 @@ router.post('/login', async (ctx, next) => {
 
   return passport.authenticate('local', function(err, user, info) {
     if (err) {
-      return ctx.$err(5009, 'Error authenticating user', err)
+      return ctx.$err(5008, 'Error authenticating user', err)
     } else if (user === false) {
       return ctx.$err(4007, 'Login incorrect')
     } else {

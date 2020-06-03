@@ -1,6 +1,7 @@
 const logger = require('./logger.js')
 global.$err = logger.$err
 global.$log = logger.$log
+Error.stackTraceLimit = 30
 
 async function main() {
   // mongoose
@@ -95,7 +96,4 @@ async function main() {
   }
 }
 
-// log unhandled errors
-main().catch((error) => {
-  $err(5002, 'Uncaught error', error)
-})
+main()

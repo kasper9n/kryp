@@ -9,11 +9,17 @@ function requestHandler(clientReq, clientRes) {
     method: clientReq.method,
     headers: clientReq.headers,
   }
-  const proxy = http.request(options, function (res) {
+  const proxyReq = http.request(options, function (res) {
     clientRes.writeHead(res.statusCode, res.headers)
-    res.pipe(clientRes, { end: true })
+    res.pipe(clientRes, { end: true }).on('error', function (err) {
+      $err(5011, 'Proxy request.pipe error (dev environment only)', err)
+    })
+  }).on('error', function (err) {
+    $err(5009, 'Proxy request error (dev environment only)', err)
   })
-  clientReq.pipe(proxy, { end: true })
+  clientReq.pipe(proxyReq, { end: true }).on('error', function (err) {
+    $err(5010, 'Proxy request.pipe error (dev environment only)', err)
+  })
 }
 
 module.exports = {
