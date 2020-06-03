@@ -107,7 +107,8 @@ export default {
         email: this.email,
         password: this.password,
       }).then(() => {
-        this.$router.push('/confirm')
+        // full page reload so password managers detect submission
+        window.location.href = '/confirm'
         this.inProgress = false
       }, err => {
         if (err.msg === 'Server unreachable') {

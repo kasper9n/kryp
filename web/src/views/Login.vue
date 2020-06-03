@@ -86,7 +86,8 @@ export default {
         email: this.email,
         password: this.password,
       }).then(() => {
-        this.$router.push('/dashboard')
+        // full page reload so password managers detect submission
+        window.location.href = '/dashboard'
         this.inProgress = false
       }, err => {
         if (err.msg === 'Server unreachable') {
