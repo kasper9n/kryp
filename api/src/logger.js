@@ -4,7 +4,7 @@ function $log(msg) {
   console.log(msg)
 }
 
-// code 4000-4999: user input error
+// code 4000-4999: client error
 // code 5000-5999: unexpected server error
 function $err(code, msg, err) {
   console.error(
@@ -31,6 +31,9 @@ async function ctxErr(ctx, next) {
     } else if (code === 404) {
       ctx.response.body = { code, msg, error }
       ctx.response.status = 404
+    } else if (code === 401) {
+      ctx.response.body = { code, msg, error }
+      ctx.response.status = 401
     } else if (errorType === '4') {
       ctx.response.body = { code, msg, error }
       ctx.response.status = 400
@@ -44,4 +47,11 @@ async function ctxErr(ctx, next) {
   await next()
 }
 
-module.exports = { $log, $err, ctxSuccess, ctxErr }
+async function ctxAuthErr(ctx, next) {
+  ctx.$authErr = () => {
+    ctx.$err(401, 'Unauthorized')
+  }
+  await next()
+}
+
+module.exports = { $log, $err, ctxSuccess, ctxErr, ctxAuthErr }

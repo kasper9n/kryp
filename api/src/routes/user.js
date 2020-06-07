@@ -98,7 +98,8 @@ router.post('/login', async (ctx, next) => {
 
 })
 
-router.post('/logout', async (ctx, next) => {
+router.all('/logout', async (ctx, next) => {
+  if (!ctx.isAuthenticated()) return ctx.$authErr()
   ctx.logout()
   return ctx.$success()
 })

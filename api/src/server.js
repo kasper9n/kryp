@@ -36,6 +36,7 @@ async function main() {
   // response error handling
   app.use(logger.ctxErr)
   app.use(logger.ctxSuccess)
+  app.use(logger.ctxAuthErr)
 
   // CORS fix
   const cors = require('@koa/cors')
@@ -90,7 +91,7 @@ async function main() {
     app.listen(process.env.API_HTTP_PORT)
 
     // proxy traffic to web service
-    const proxy = require('./proxy.js')
+    const proxy = require('./dev-proxy.js')
     proxy.http().listen(process.env.WEB_HTTP_PORT)
     proxy.https(httpsOptions).listen(process.env.WEB_HTTPS_PORT)
   }
