@@ -58,7 +58,54 @@ router.post('/register', async (ctx, next) => {
     await new User({
       email,
       password: hashedPassword,
-      }).save()
+      portfolios: [
+        {
+          id: '2n8pgyqnvq',
+          name: 'Main',
+        },
+        {
+          id: '464fuh3na3',
+          name: 'Crypto',
+          transactions: [
+            {
+              type: 'Trade',
+              buy: '0.00000001',
+              buyAsset: 'BTC',
+              sell: '1.00000000',
+              sellAsset: 'USD',
+              fee: '0.01000000',
+              feeAsset: 'USD',
+              account: 'Binance',
+              time: '2020-03-11 02:32:11'
+            }, {
+              type: 'Deposit',
+              buy: '0.00000001',
+              buyAsset: 'BTC',
+              sell: '',
+              sellAsset: '',
+              fee: '0.01000000',
+              feeAsset: 'USD',
+              account: 'Binance',
+              time: '2019-08-21 11:23:46'
+            }, {
+              type: 'External Buy',
+              buy: '0.00000001',
+              buyAsset: 'BTC',
+              sell: '',
+              sellAsset: '',
+              fee: '0.01000000',
+              feeAsset: 'USD',
+              account: 'Binance',
+              time: '2019-08-21 11:23:46'
+            },
+          ],
+        },
+        {
+          id: '9ggukb7jtk',
+          name: 'Stocks and stuff haha',
+        },
+      ],
+    }).save()
   } catch (err) {
     return ctx.$err(5004, `Error creating new user '${email}'`, err)
   }
@@ -103,7 +150,7 @@ router.post('/login', async (ctx, next) => {
 
 })
 
-router.all('/logout', async (ctx, next) => {
+router.post('/logout', async (ctx, next) => {
   if (!ctx.isAuthenticated()) return ctx.$authErr()
   ctx.logout()
   return ctx.$success()
@@ -112,10 +159,7 @@ router.all('/logout', async (ctx, next) => {
 router.post('/me', async (ctx, next) => {
   if (!ctx.isAuthenticated()) return ctx.$authErr()
   return ctx.$success({
-    user: {
-      email: ctx.state.user.email,
-      portfolios: ctx.state.user.portfolios,
-    },
+    user: ctx.state.user.toObject()
   })
 })
 

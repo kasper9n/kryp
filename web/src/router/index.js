@@ -114,16 +114,13 @@ router.beforeEach((to, from, next) => {
 router.beforeEach((to, from, next) => {
   // if url has portfolioId param, update id in store or change to valid portfolio
   if (to.params.portfolioId) {
-    if (store.$pocket.idExists(to.params.portfolioId)) {
-      store.$pocket.setPortfolio(to.params.portfolioId)
-      console.log('x/s')
+    if (store.$pocket.getPortfolio(to.params.portfolioId)) {
+      store.$pocket.setPortfolioId(to.params.portfolioId)
       next()
     } else {
-      console.log('x/o')
       next({ path: '/overview', replace: true })
     }
   } else {
-    console.log('x/m')
     next()
   }
 })

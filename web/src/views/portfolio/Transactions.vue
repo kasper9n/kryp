@@ -60,7 +60,7 @@ export default {
   },
   computed: {
     rows () {
-      return this.$pocket.current.transactions
+      return this.$pocket.currentPortfolio.transactions
     },
   },
   methods: {

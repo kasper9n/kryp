@@ -5,12 +5,35 @@ module.exports = {}
 const portfolioSchema = new Schema({
   name: '',
   transactions: [],
-}, { timestamps: true })
+}, {
+  timestamps: true,
+  toObject: {
+    transform: (doc, ret, options) => {
+      console.log('TRANSOFMR p')
+      delete ret.__v
+      ret.id = ret._id
+      delete ret._id
+      return ret
+    }
+  },
+})
 module.exports.Portfolio = mongoose.model('Portfolio', portfolioSchema)
 
 const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   portfolios: [portfolioSchema],
-}, { timestamps: true })
+}, {
+  timestamps: true,
+  toObject: {
+    transform: (doc, ret, options) => {
+      console.log('TRANSOFMR u')
+      delete ret.__v
+      ret.id = ret._id
+      delete ret._id
+      delete ret.password
+      return ret
+    }
+  },
+})
 module.exports.User = mongoose.model('User', userSchema)
