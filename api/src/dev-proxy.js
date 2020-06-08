@@ -1,4 +1,12 @@
 const http = require('http')
+const httpProxy = require('http-proxy')
+
+httpProxy.createProxyServer({
+  target: {
+    protocol: 'http:',
+    host: 'web',
+  },
+})
 
 function requestHandler(clientReq, clientRes) {
   // console.log('proxy serve: ' + clientReq.url)
@@ -24,9 +32,25 @@ function requestHandler(clientReq, clientRes) {
 
 module.exports = {
   http: () => {
-    return http.createServer(requestHandler)
+    return httpProxy.createProxyServer({
+      target: {
+        host: 'web',
+        port: process.env.WEB_HTTP_PORT,
+      },
+      ws: true,
+    })
   },
   https: (httpsOptions) => {
-    return require('https').createServer(httpsOptions, requestHandler)
+    return httpProxy.createProxyServer({
+      target: {
+        host: 'web',
+        port: process.env.WEB_HTTP_PORT,
+      },
+      ws: true,
+      ssl: {
+        key: httpsOptions.key,
+        cert: httpsOptions.cert,
+      },
+    })
   },
 }
