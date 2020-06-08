@@ -13,9 +13,9 @@
     )
     CreatePortfolioDialog(ref='createPortfolioDialog')
 
-    router-link.nav-item.nav-link(:to='`/portfolio/${$pocket.currentId}`')
+    router-link.nav-item.nav-link(:to='`/portfolio/${$pocket.currentPortfolioId}`')
       h4 Dashboard
-    router-link.nav-item.nav-link(:to='`/portfolio/${$pocket.currentId}/transactions`')
+    router-link.nav-item.nav-link(:to='`/portfolio/${$pocket.currentPortfolioId}/transactions`')
       h4 Transactions
     .separator
     router-link.nav-item.nav-link(to='/logout')

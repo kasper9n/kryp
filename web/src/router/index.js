@@ -67,12 +67,12 @@ const guards = [
       }, err => {
         if (err.msg === 'Server unreachable') {
           console.log('server unreachable')
-          store.$pocket.pageErrorMsg = 'Unable to reach server'
+          store.$pocket.setErrorMsg('Unable to reach server')
         } else if (err.msg === 'Unauthorized') {
           // we were already logged out, so treat that as normal
           next({ path: '/login', replace: true })
         } else {
-          store.$pocket.pageErrorMsg = `Unexpected error: ${err.code} ${err.msg}`
+          store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
         }
       })
     }
@@ -85,11 +85,11 @@ const guards = [
       }, err => {
         if (err.msg === 'Server unreachable') {
           console.log('server unreachable')
-          store.$pocket.pageErrorMsg = 'Unable to reach server'
+          store.$pocket.setErrorMsg('Unable to reach server')
         } else if (err.msg === 'Unauthorized') {
           next({ path: '/login', replace: true, query: { continue: to.path } })
         } else {
-          store.$pocket.pageErrorMsg = `Unexpected error: ${err.code} ${err.msg}`
+          store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
         }
       })
     }
@@ -102,7 +102,7 @@ const guards = [
       } else {
         next({
           name: to.name,
-          params: { portfolioId: store.$pocket.currentId },
+          params: { portfolioId: store.$pocket.currentPortfolioId },
         })
       }
     }

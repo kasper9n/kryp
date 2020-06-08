@@ -15,7 +15,7 @@
   Nav
   .page-error(v-if='$pocket.pageErrorMsg !== ""')
     .text {{ $pocket.pageErrorMsg }}
-    XIcon.close-icon(size='16' @click='$pocket.pageErrorMsg = ""')
+    XIcon.close-icon(size='16' @click='store.$pocket.clearErrorMsg("")')
   transition(name='fade' mode='out-in')
     router-view
 </template>

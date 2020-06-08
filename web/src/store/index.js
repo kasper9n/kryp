@@ -50,6 +50,12 @@ const $pocket = {
   darkTheme: localS.get('darkTheme') || false,
   apiUrl: apiUrl,
   pageErrorMsg: '',
+  setErrorMsg (value) {
+    this.pageErrorMsg = value
+  },
+  clearErrorMsg () {
+    this.pageErrorMsg = ''
+  },
   toggleDarkTheme () {
     this.darkTheme = !this.darkTheme
     localS.set('darkTheme', this.darkTheme)
@@ -95,15 +101,14 @@ const $pocket = {
     })
   },
   // portfolios
-  defaultId: '464fuh3na3',
-  currentId: null,
+  defaultPortfolioId: '464fuh3na3',
+  currentPortfolioId: null,
   current: null,
   getCurrentFromRoute () {
-    const currentId = router.currentRoute.params.portfolioId
-    return this.portfolios.find(p => p.id === currentId)
+    return this.portfolios.find(p => p.id === router.currentRoute.params.portfolioId)
   },
   setPortfolio (id) {
-    this.currentId = id
+    this.currentPortfolioId = id
     this.current = this.portfolios.find(p => p.id === id)
   },
   getIdFromName (name) {
@@ -168,7 +173,7 @@ const $pocket = {
     })
   },
 }
-$pocket.setPortfolio($pocket.defaultId)
+$pocket.setPortfolio($pocket.defaultPortfolioId)
 
 export default {
   $pocket,
