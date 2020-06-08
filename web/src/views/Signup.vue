@@ -103,7 +103,7 @@ export default {
       this.validatePwConfirm()
       if (this.emailError || this.passwordError || this.pwConfirmError) return
       this.inProgress = true
-      this.$account.signup({
+      this.$pocket.signup({
         email: this.email,
         password: this.password,
       }).then(() => {

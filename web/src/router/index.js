@@ -61,7 +61,7 @@ const guards = [
   (to, from, next) => {
     // logout path
     if (to.path === '/logout') {
-      store.$account.logout().then(() => {
+      store.$pocket.logout().then(() => {
         console.log('logout success')
         next({ path: '/login', replace: true })
       }, err => {
@@ -79,8 +79,8 @@ const guards = [
   },
   (to, from, next) => {
     // redirect to login if necessary
-    if (to.meta.login === true && store.$account.loggedIn !== true) {
-      store.$account.init().then(() => {
+    if (to.meta.login === true && store.$pocket.loggedIn !== true) {
+      store.$pocket.init().then(() => {
         console.log('init success')
       }, err => {
         if (err.msg === 'Server unreachable') {
@@ -97,12 +97,12 @@ const guards = [
   (to, from, next) => {
     // if url has portfolioId param, update id in store or change to valid portfolio
     if (to.params.portfolioId) {
-      if (store.$portfolios.idExists(to.params.portfolioId)) {
-        store.$portfolios.setPortfolio(to.params.portfolioId)
+      if (store.$pocket.idExists(to.params.portfolioId)) {
+        store.$pocket.setPortfolio(to.params.portfolioId)
       } else {
         next({
           name: to.name,
-          params: { portfolioId: store.$portfolios.currentId },
+          params: { portfolioId: store.$pocket.currentId },
         })
       }
     }

@@ -78,7 +78,7 @@ export default {
       this.validatePassword()
       if (this.emailError || this.passwordError) return
       this.inProgress = true
-      this.$account.login({
+      this.$pocket.login({
         email: this.email,
         password: this.password,
       }).then(() => {

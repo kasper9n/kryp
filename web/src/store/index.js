@@ -61,9 +61,6 @@ const $pocket = {
     if (this.darkTheme === true) dataset.theme = 'dark'
     else dataset.theme = 'light'
   },
-}
-
-const $account = {
   loggedIn: false,
   email: null,
   init () {
@@ -98,9 +95,7 @@ const $account = {
       },
     })
   },
-}
-
-const $portfolios = {
+  // portfolios
   defaultId: '464fuh3na3',
   currentId: null,
   current: null,
@@ -174,10 +169,8 @@ const $portfolios = {
     })
   },
 }
-$portfolios.setPortfolio($portfolios.defaultId)
+$pocket.setPortfolio($pocket.defaultId)
 
 export default {
   $pocket,
-  $account,
-  $portfolios,
 }

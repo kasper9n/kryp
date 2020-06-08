@@ -1,21 +1,21 @@
 <template lang='pug'>
 .nav
   router-link.nav-item.nav-link(
-    :to='$account.loggedIn ? "/overview" : "/"'
+    :to='$pocket.loggedIn ? "/overview" : "/"'
   )
     h2 Cryptrack
 
-  template(v-if='$account.loggedIn')
+  template(v-if='$pocket.loggedIn')
     Dropdown.nav-item.portfolio-picker(
-      :defaultText='$portfolios.current.name'
+      :defaultText='$pocket.current.name'
       :options=`portfolioPickerOptions`
       @change='portfolioPickerChange'
     )
     CreatePortfolioDialog(ref='createPortfolioDialog')
 
-    router-link.nav-item.nav-link(:to='`/p/${$portfolios.currentId}/dashboard`')
+    router-link.nav-item.nav-link(:to='`/p/${$pocket.currentId}/dashboard`')
       h4 Dashboard
-    router-link.nav-item.nav-link(:to='`/p/${$portfolios.currentId}/transactions`')
+    router-link.nav-item.nav-link(:to='`/p/${$pocket.currentId}/transactions`')
       h4 Transactions
     .separator
     router-link.nav-item.nav-link(to='/logout')
@@ -61,14 +61,14 @@ export default {
   },
   methods: {
     portfolioPickerChange (newText) {
-      const portfolioId = this.$portfolios.getIdFromName(newText)
+      const portfolioId = this.$pocket.getIdFromName(newText)
       if (this.$route.params.portfolioId) {
         this.$router.push({
           name: this.$route.name,
           params: { portfolioId },
         })
       }
-      this.$portfolios.setPortfolio(portfolioId)
+      this.$pocket.setPortfolio(portfolioId)
     },
   },
   computed: {
@@ -77,7 +77,7 @@ export default {
       options.push({ type: 'space' })
       options.push({ type: 'text', text: 'Portfolio' })
 
-      for (const portfolio of this.$portfolios.portfolios) {
+      for (const portfolio of this.$pocket.portfolios) {
         options.push({ text: portfolio.name })
       }
 
