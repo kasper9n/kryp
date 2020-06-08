@@ -61,15 +61,37 @@ const guards = [
   (to, from, next) => {
     // logout path
     if (to.path === '/logout') {
-      store.$account.logout(() => {
+      store.$account.logout().then(() => {
+        console.log('logout success')
         next({ path: '/login', replace: true })
+      }, err => {
+        if (err.msg === 'Server unreachable') {
+          console.log('server unreachable')
+          store.$pocket.pageErrorMsg = 'Unable to reach server'
+        } else if (err.msg === 'Unauthorized') {
+          // we were already logged out, so treat that as normal
+          next({ path: '/login', replace: true })
+        } else {
+          store.$pocket.pageErrorMsg = `Unexpected error: ${err.code} ${err.msg}`
+        }
       })
     }
   },
   (to, from, next) => {
     // redirect to login if necessary
     if (to.meta.login === true && store.$account.loggedIn !== true) {
-      next({ path: '/login', replace: true, query: { continue: to.path } })
+      store.$account.init().then(() => {
+        console.log('init success')
+      }, err => {
+        if (err.msg === 'Server unreachable') {
+          console.log('server unreachable')
+          store.$pocket.pageErrorMsg = 'Unable to reach server'
+        } else if (err.msg === 'Unauthorized') {
+          next({ path: '/login', replace: true, query: { continue: to.path } })
+        } else {
+          store.$pocket.pageErrorMsg = `Unexpected error: ${err.code} ${err.msg}`
+        }
+      })
     }
   },
   (to, from, next) => {

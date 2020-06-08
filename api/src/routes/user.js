@@ -85,13 +85,18 @@ router.post('/login', async (ctx, next) => {
   }
   if (!resultUser) return ctx.err(4007, 'Login incorrect')
 
-  return passport.authenticate('local', function(err, user, info) {
+  return passport.authenticate('local', { session: false }, function(err, user, info) {
     if (err) {
       return ctx.$err(5008, 'Error authenticating user', err)
     } else if (user === false) {
       return ctx.$err(4007, 'Login incorrect')
     } else {
-      ctx.$success()
+      ctx.$success({
+        user: {
+          email: user.email,
+          portfolios: user.portfolios,
+        },
+      })
       return ctx.login(user)
     }
   })(ctx)
@@ -102,6 +107,16 @@ router.all('/logout', async (ctx, next) => {
   if (!ctx.isAuthenticated()) return ctx.$authErr()
   ctx.logout()
   return ctx.$success()
+})
+
+router.post('/me', async (ctx, next) => {
+  if (!ctx.isAuthenticated()) return ctx.$authErr()
+  return ctx.$success({
+    user: {
+      email: ctx.state.user.email,
+      portfolios: ctx.state.user.portfolios,
+    },
+  })
 })
 
 module.exports = router

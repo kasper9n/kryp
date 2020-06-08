@@ -40,7 +40,7 @@ async function main() {
 
   // CORS fix
   const cors = require('@koa/cors')
-  app.use(cors({ origin: '*' }))
+  app.use(cors({ credentials: true }))
 
   // body parser
   const bodyParser = require('koa-bodyparser')

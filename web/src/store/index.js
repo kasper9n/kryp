@@ -17,10 +17,12 @@ if (process.env.NODE_ENV === 'production') {
 const xhr = {
   post: (slug, data = {}) => {
     let onSuccess
-    if (data.$onSuccess === 'function') onSuccess = data.$onSuccess
+    if (typeof data.$onSuccess === 'function') onSuccess = data.$onSuccess
     if (onSuccess) delete data.$onSuccess
     return new Promise((resolve, reject) => {
-      axios.post(apiUrl + slug, data).then((response) => {
+      axios.post(apiUrl + slug, data, {
+        withCredentials: true,
+      }).then((response) => {
         if (onSuccess) onSuccess(response.data)
         resolve(response.data)
       }, (err) => {
@@ -39,6 +41,8 @@ const xhr = {
 const $pocket = {
   darkTheme: false,
   apiUrl: apiUrl,
+  barProgress: null,
+  pageErrorMsg: '',
   toggleDarkTheme () {
     this.darkTheme = !this.darkTheme
     this.updateTheme()
@@ -53,11 +57,19 @@ const $pocket = {
 const $account = {
   loggedIn: false,
   email: null,
+  init () {
+    return xhr.post('/me', {
+      $onSuccess: response => {
+        this.loggedIn = true
+        this.email = response.user.email
+      },
+    })
+  },
   login (data) {
     return xhr.post('/login', {
       email: data.email,
       password: data.password,
-      $onSuccess: function (response) {
+      $onSuccess: response => {
         this.loggedIn = true
         this.email = response.user.email
       },
@@ -70,9 +82,12 @@ const $account = {
     })
   },
   logout (callback) {
-    this.loggedIn = false
-    this.email = null
-    if (callback) callback()
+    return xhr.post('/logout', {
+      $onSuccess: response => {
+        this.loggedIn = false
+        this.email = null
+      },
+    })
   },
 }
 

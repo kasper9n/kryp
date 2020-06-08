@@ -13,6 +13,9 @@
     |   outline-color: var(--line-highlight-color);
     | }
   Nav
+  .page-error(v-if='$pocket.pageErrorMsg !== ""')
+    .text {{ $pocket.pageErrorMsg }}
+    XIcon.close-icon(size='16' @click='$pocket.pageErrorMsg = ""')
   transition(name='fade' mode='out-in')
     router-view
 </template>
@@ -21,6 +24,7 @@
 import Nav from '@/components/Nav.vue'
 import LightTheme from '@/styles/LightTheme.vue'
 import DarkTheme from '@/styles/DarkTheme.vue'
+import { XIcon } from 'vue-feather-icons'
 
 export default {
   name: 'home',
@@ -28,6 +32,7 @@ export default {
     Nav,
     LightTheme,
     DarkTheme,
+    XIcon,
   },
   data () {
     return {
@@ -83,6 +88,28 @@ h1, h2, h3, h4, h5, h6
   padding: 30px
   text-align: center
   min-height: calc(100vh - var(--header-height))
+
+.page-error
+  display: flex
+  position: fixed
+  bottom: 15px
+  left: 15px
+  max-width: 400px
+  color: var(--negative-color)
+  font-size: 13px
+  text-align: left
+  background-color: var(--error-background-color)
+  border-radius: 3px
+  padding: 10px 0px
+  padding-left: 20px
+  box-shadow: var(--shadow)
+  z-index: 110
+  .close-icon
+    color: var(--negative-color)
+    display: absolute
+    flex-shrink: 0
+    margin: 0px 8px
+    cursor: pointer
 
 .fade-enter-active, .fade-leave-active
   transition: all 0.1s ease-in-out
