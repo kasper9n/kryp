@@ -84,7 +84,7 @@ export default {
       }).then(() => {
         console.log('login success')
         this.inProgress = false
-        this.$router.push(this.$route.query.continue || '/p/x/dashboard')
+        this.$router.push(this.$route.query.continue || '/portfolio/x')
       }, err => {
         if (err.msg === 'Server unreachable') {
           this.pageErrorMsg = 'Unable to reach server'

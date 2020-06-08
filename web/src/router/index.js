@@ -6,8 +6,8 @@ import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import Confirm from '@/views/Confirm.vue'
 import PageNotFound from '@/views/404.vue'
-import Dashboard from '@/views/p/Dashboard.vue'
-import Transactions from '@/views/p/Transactions.vue'
+import Dashboard from '@/views/portfolio/Dashboard.vue'
+import Transactions from '@/views/portfolio/Transactions.vue'
 
 Vue.use(VueRouter)
 
@@ -33,13 +33,13 @@ const routes = [
     component: Login,
   },
   {
-    path: '/p/:portfolioId/dashboard',
+    path: '/portfolio/:portfolioId',
     name: 'dashboard',
     component: Dashboard,
     meta: { login: true },
   },
   {
-    path: '/p/:portfolioId/transactions',
+    path: '/portfolio/:portfolioId/transactions',
     name: 'transactions',
     component: Transactions,
     meta: { login: true },
