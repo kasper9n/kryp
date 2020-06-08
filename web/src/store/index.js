@@ -11,7 +11,6 @@ if (process.env.NODE_ENV === 'production') {
     port = process.env.VUE_APP_API_HTTPS_PORT
   }
   apiUrl = `${protocol}://${location.hostname}:${port}`
-  console.log(apiUrl)
 }
 
 const xhr = {

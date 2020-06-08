@@ -84,8 +84,7 @@ export default {
       }).then(() => {
         console.log('login success')
         this.inProgress = false
-        // full page reload so password managers detect submission
-        window.location.href = this.$route.query.continue || '/p/x/dashboard'
+        this.$router.push(this.$route.query.continue || '/p/x/dashboard')
       }, err => {
         if (err.msg === 'Server unreachable') {
           this.pageErrorMsg = 'Unable to reach server'

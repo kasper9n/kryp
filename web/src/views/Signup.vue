@@ -109,8 +109,7 @@ export default {
       }).then(() => {
         console.log('signup success')
         this.inProgress = false
-        // full page reload so password managers detect submission
-        window.location.href = '/confirm'
+        this.$router.push('/confirm')
       }, err => {
         if (err.msg === 'Server unreachable') {
           this.pageErrorMsg = 'Unable to reach server'
