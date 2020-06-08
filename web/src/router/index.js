@@ -5,6 +5,7 @@ import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import Confirm from '@/views/Confirm.vue'
+import Overview from '@/views/Overview.vue'
 import PageNotFound from '@/views/404.vue'
 import Dashboard from '@/views/portfolio/Dashboard.vue'
 import Transactions from '@/views/portfolio/Transactions.vue'
@@ -33,6 +34,12 @@ const routes = [
     component: Login,
   },
   {
+    path: '/overview',
+    name: 'overview',
+    component: Overview,
+    meta: { login: true },
+  },
+  {
     path: '/portfolio/:portfolioId',
     name: 'dashboard',
     component: Dashboard,
@@ -57,69 +64,68 @@ const router = new VueRouter({
   routes,
 })
 
-const guards = [
-  (to, from, next) => {
-    // logout path
-    if (to.path === '/logout') {
-      store.$pocket.logout().then(() => {
-        console.log('logout success')
-        next({ path: '/login', replace: true })
-      }, err => {
-        if (err.msg === 'Server unreachable') {
-          console.log('server unreachable')
-          store.$pocket.setErrorMsg('Unable to reach server')
-        } else if (err.msg === 'Unauthorized') {
-          // we were already logged out, so treat that as normal
-          next({ path: '/login', replace: true })
-        } else {
-          store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
-        }
-      })
-    }
-  },
-  (to, from, next) => {
-    // redirect to login if necessary
-    if (to.meta.login === true && store.$pocket.loggedIn !== true) {
-      store.$pocket.init().then(() => {
-        console.log('init success')
-      }, err => {
-        if (err.msg === 'Server unreachable') {
-          console.log('server unreachable')
-          store.$pocket.setErrorMsg('Unable to reach server')
-        } else if (err.msg === 'Unauthorized') {
-          next({ path: '/login', replace: true, query: { continue: to.path } })
-        } else {
-          store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
-        }
-      })
-    }
-  },
-  (to, from, next) => {
-    // if url has portfolioId param, update id in store or change to valid portfolio
-    if (to.params.portfolioId) {
-      if (store.$pocket.idExists(to.params.portfolioId)) {
-        store.$pocket.setPortfolio(to.params.portfolioId)
-      } else {
-        next({
-          name: to.name,
-          params: { portfolioId: store.$pocket.currentPortfolioId },
-        })
-      }
-    }
-  },
-]
 router.beforeEach((to, from, next) => {
-  let done = false
-  function nextWrapper (arg) {
-    next(arg)
-    done = true
+  // logout path
+  if (to.path === '/logout') {
+    store.$pocket.logout().then(() => {
+      console.log('logout success')
+      next({ path: '/login', replace: true })
+    }, err => {
+      if (err.msg === 'Server unreachable') {
+        console.log('server unreachable')
+        store.$pocket.setErrorMsg('Unable to reach server')
+        next(false)
+      } else if (err.msg === 'Unauthorized') {
+        // we were already logged out, so treat that as normal
+        next({ path: '/login', replace: true })
+      } else {
+        store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
+        next(false)
+      }
+    })
+  } else {
+    next()
   }
+})
 
-  for (const guard of guards) {
-    if (done) break
-    guard(to, from, nextWrapper)
+router.beforeEach((to, from, next) => {
+  // redirect to login if necessary
+  if (to.meta.login === true && store.$pocket.loggedIn !== true) {
+    store.$pocket.init().then(() => {
+      console.log('init success')
+      next()
+    }, err => {
+      if (err.msg === 'Server unreachable') {
+        console.log('server unreachable')
+        store.$pocket.setErrorMsg('Unable to reach server')
+        next(false)
+      } else if (err.msg === 'Unauthorized') {
+        next({ path: '/login', replace: true, query: { continue: to.path } })
+      } else {
+        store.$pocket.setErrorMsg(`Unexpected error: ${err.code} ${err.msg}`)
+        next(false)
+      }
+    })
+  } else {
+    next()
   }
-  next()
+})
+
+router.beforeEach((to, from, next) => {
+  // if url has portfolioId param, update id in store or change to valid portfolio
+  if (to.params.portfolioId) {
+    if (store.$pocket.idExists(to.params.portfolioId)) {
+      store.$pocket.setPortfolio(to.params.portfolioId)
+      console.log('x/s')
+      next()
+    } else {
+      console.log('x/o')
+      next({ path: '/overview', replace: true })
+    }
+  } else {
+    console.log('x/m')
+    next()
+  }
 })
 
 export default router
