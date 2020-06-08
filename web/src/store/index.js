@@ -38,13 +38,22 @@ const xhr = {
   },
 }
 
+const localS = {
+  get: (name) => {
+    return JSON.parse(localStorage.getItem(name))
+  },
+  set: (name, value) => {
+    localStorage.setItem(name, JSON.stringify(value))
+  },
+}
+
 const $pocket = {
-  darkTheme: false,
+  darkTheme: localS.get('darkTheme') || false,
   apiUrl: apiUrl,
-  barProgress: null,
   pageErrorMsg: '',
   toggleDarkTheme () {
     this.darkTheme = !this.darkTheme
+    localS.set('darkTheme', this.darkTheme)
     this.updateTheme()
   },
   updateTheme () {
