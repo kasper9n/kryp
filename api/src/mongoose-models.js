@@ -9,7 +9,6 @@ const portfolioSchema = new Schema({
   timestamps: true,
   toObject: {
     transform: (doc, ret, options) => {
-      console.log('TRANSOFMR p')
       delete ret.__v
       ret.id = ret._id
       delete ret._id
@@ -27,7 +26,6 @@ const userSchema = new Schema({
   timestamps: true,
   toObject: {
     transform: (doc, ret, options) => {
-      console.log('TRANSOFMR u')
       delete ret.__v
       ret.id = ret._id
       delete ret._id

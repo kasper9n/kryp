@@ -13,11 +13,11 @@ router.post('/register', async (ctx, next) => {
     if (Object.keys(error).length !== 0) return true
   }
 
-  if      (typeof email !== 'string') error.email = 'empty'
+  if      (typeof email !== 'string') error.email = 'non-existant'
   else if (validator.isEmpty(email)) error.email = 'empty'
   else if (!validator.isEmail(email)) error.email = 'invalid'
 
-  if      (typeof password !== 'string') error.password = 'empty'
+  if      (typeof password !== 'string') error.password = 'non-existant'
   else if (validator.isEmpty(password)) error.password = 'empty'
   else if (!validator.isLength(password, {min: 8})) error.password = 'too short'
   else if (!validator.isLength(password, {max: 100})) error.password = 'too long'
@@ -117,9 +117,9 @@ router.post('/login', async (ctx, next) => {
   let email = ctx.request.body.email
   const password = ctx.request.body.password
 
-  if      (typeof email !== 'string') return ctx.$err(4002, 'Email empty')
+  if      (typeof email !== 'string') return ctx.$err(4002, 'Email non-existant')
   else if (validator.isEmpty(email)) return ctx.$err(4003, 'Email empty')
-  else if (typeof password !== 'string') return ctx.$err(4004, 'Password empty')
+  else if (typeof password !== 'string') return ctx.$err(4004, 'Password non-existant')
   else if (validator.isEmpty(password)) return ctx.$err(4005, 'Password empty')
 
   email = validator.normalizeEmail(email)
@@ -139,10 +139,7 @@ router.post('/login', async (ctx, next) => {
       return ctx.$err(4007, 'Login incorrect')
     } else {
       ctx.$success({
-        user: {
-          email: user.email,
-          portfolios: user.portfolios,
-        },
+        user: user.toObject(),
       })
       return ctx.login(user)
     }

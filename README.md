@@ -1,11 +1,5 @@
 # Cryptrack
 
-crypto data api alterantives
-- https://www.coinapi.io/
-- https://min-api.cryptocompare.com
-- https://coinmarketcap.com/api/
-- https://iexcloud.io/pricing/
-
 ## Dev instructions
 
 ### Getting started
@@ -89,3 +83,15 @@ mongodb://DB_USERNAME:DB_PASSWORD>@HOST:DB_PORT/admin?authSource=admin
 ### TODO
 - Email confirmation, probably using something like nodemailer
 - Use custom, shorter IDs in database
+
+crypto data api alterantives
+- https://www.coinapi.io/
+- https://min-api.cryptocompare.com
+- https://coinmarketcap.com/api/
+- https://iexcloud.io/pricing/
+
+sync ideas, to replace server
+- https://syncthing.net
+- https://peerjs.com
+- https://gun.eco
+- https://zeromq.org
