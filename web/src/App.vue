@@ -13,7 +13,7 @@
     |   outline-color: var(--line-highlight-color);
     | }
   Nav
-  .page-error(v-if='$pocket.pageErrorMsg !== ""')
+  #global-page-error(v-if='$pocket.pageErrorMsg !== ""')
     .text {{ $pocket.pageErrorMsg }}
     XIcon.close-icon(size='16' @click='store.$pocket.clearErrorMsg("")')
   transition(name='fade' mode='out-in')
@@ -89,7 +89,7 @@ h1, h2, h3, h4, h5, h6
   text-align: center
   min-height: calc(100vh - var(--header-height))
 
-.page-error
+#global-page-error
   display: flex
   position: fixed
   bottom: 15px
