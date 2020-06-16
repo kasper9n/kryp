@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router from '@/router/index.js'
 let apiUrl
 if (process.env.NODE_ENV === 'production') {
   apiUrl = process.env.VUE_APP_PRODUCTION_API_URL
@@ -173,6 +174,7 @@ const $pocket = {
     return this.portfolios.find(p => p.id === id)
   },
   setPortfolioId (id) {
+    localS.set('lastPortfolioId', id)
     this.currentPortfolio = this.getPortfolio(id)
   },
   createPortfolio (name) {

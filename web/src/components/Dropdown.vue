@@ -53,11 +53,11 @@ export default {
   },
   props: {
     options: Array,
-    value: String,
+    value: String, // id
   },
   computed: {
     selectedIndex () {
-      // get the index of the value
+      // get the index of the value (aka id)
       const x = this.options.findIndex(option => option.id === this.value)
       return x
     },
