@@ -12,12 +12,12 @@
     |   outline-width: 3px;
     |   outline-color: var(--line-highlight-color);
     | }
-  Nav
+  Nav(v-if='$pocket.loaded')
   #global-page-error(v-if='$pocket.pageErrorMsg !== ""')
     .text {{ $pocket.pageErrorMsg }}
     XIcon.close-icon(size='16' @click='store.$pocket.clearErrorMsg("")')
   transition(name='fade' mode='out-in')
-    router-view
+    router-view(v-if='$pocket.loaded')
 </template>
 
 <script>

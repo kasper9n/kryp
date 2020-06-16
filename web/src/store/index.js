@@ -47,6 +47,7 @@ const localS = {
 }
 
 const $pocket = {
+  loaded: false,
   darkTheme: localS.get('darkTheme') || false,
   apiUrl: apiUrl,
   pageErrorMsg: '',
@@ -99,6 +100,8 @@ const $pocket = {
 
     this.email = response.user.email
     this.loggedIn = true // must be last
+
+    this.loaded = true
   },
   signup (data, redirectTo) {
     return xhr.post('/register', {
