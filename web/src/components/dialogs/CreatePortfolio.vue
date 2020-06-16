@@ -1,6 +1,6 @@
 <template lang='pug'>
 Dialog(ref='dialog' title='Create portfolio')
-  TextBox.textbox(compact ref='input' placeholder='Name' :value='name')
+  TextBox.textbox(compact ref='input' placeholder='Name' v-model='name')
   template(v-slot:buttons)
     Button(medium @click='close()') Cancel
     Button(@click='close(); $pocket.createPortfolio(name)') Create
