@@ -46,23 +46,21 @@ export default {
     ChevronDownIcon,
   },
   data: function () {
-    const data = {
+    return {
       visible: false,
+      focusedIndex: null, // initialized by open()
     }
-
-    // get the index of the defaultText prop
-    for (var i = 0; i < this.options.length; i++) {
-      if (this.options[i].text === this.defaultText) {
-        data.selectedIndex = i
-        data.focusedIndex = i
-      }
-    }
-
-    return data
   },
   props: {
     options: Array,
-    defaultText: String,
+    value: String,
+  },
+  computed: {
+    selectedIndex () {
+      // get the index of the value
+      const x = this.options.findIndex(option => option.id === this.value)
+      return x
+    },
   },
   methods: {
     toggle () {
@@ -78,8 +76,7 @@ export default {
     },
     select (index) {
       if (this.selectedIndex !== index) {
-        this.selectedIndex = index
-        this.$emit('change', this.options[index].text)
+        this.$emit('input', this.options[index].id)
       }
       this.hide()
     },
@@ -88,8 +85,7 @@ export default {
       if (highlightedOption.type === 'button') {
         highlightedOption.handler()
       } else {
-        this.selectedIndex = this.focusedIndex
-        this.$emit('change', this.options[this.focusedIndex])
+        this.$emit('input', this.options[this.focusedIndex].id)
       }
       this.hide()
     },

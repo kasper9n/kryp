@@ -7,9 +7,8 @@
 
   template(v-if='$pocket.loggedIn')
     Dropdown.nav-item.portfolio-picker(
-      :defaultText='$pocket.currentPortfolio.name'
+      v-model='selectedPortfolioName'
       :options=`portfolioPickerOptions`
-      @change='portfolioPickerChange'
     )
     CreatePortfolioDialog(ref='createPortfolioDialog')
 
@@ -59,26 +58,29 @@ export default {
       createPortfolioName: '',
     }
   },
-  methods: {
-    portfolioPickerChange (newText) {
-      const portfolio = this.$pocket.portfolios.find(p => p.name === newText)
-      if (this.$route.params.portfolioId) {
-        this.$router.push({
-          name: this.$route.name,
-          params: { portfolioId: portfolio.id },
-        })
-      }
-      this.$pocket.setPortfolioId(portfolio.id)
-    },
-  },
   computed: {
+    selectedPortfolioName: {
+      get () {
+        return this.$pocket.currentPortfolio.id
+      },
+      set (id) {
+        if (this.$route.params.portfolioId) {
+          this.$router.push({
+            name: this.$route.name,
+            params: { portfolioId: id },
+          })
+        } else {
+          this.$pocket.setPortfolioId(id)
+        }
+      },
+    },
     portfolioPickerOptions () {
       const options = []
       options.push({ type: 'space' })
       options.push({ type: 'text', text: 'Portfolio' })
 
       for (const portfolio of this.$pocket.portfolios) {
-        options.push({ text: portfolio.name })
+        options.push({ text: portfolio.name, id: portfolio.id })
       }
 
       options.push({ type: 'separator' })
