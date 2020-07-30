@@ -17,6 +17,7 @@
     "@koa/router": "~9.0.1",
     "validator": "~13.0.0",
     "@koa/cors": "~3.1.0",
+    "del": "~5.1.0",
     "selfsigned": "~1.10.7"
   },
   "devDependencies": {

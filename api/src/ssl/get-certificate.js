@@ -1,5 +1,6 @@
 const selfsigned = require('selfsigned')
 const fs = require('fs')
+const del = require('del')
 
 const certOptions = {
   days: 365,
@@ -57,7 +58,7 @@ const certOptions = {
 }
 
 const certificatePath = __dirname + '/certificate.pem'
-const certificateExists = fs.existsSync(certificatePath)
+let certificateExists = fs.existsSync(certificatePath)
 
 if (certificateExists) {
   const certificateTtl = 1000 * 60 * 60 * 24
