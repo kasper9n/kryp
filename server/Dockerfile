@@ -1,15 +1,14 @@
 FROM golang:1.14-alpine AS dev-stage
 WORKDIR /go/src/app
 RUN apk add git mercurial \
-  && go get github.com/githubnemo/CompileDaemon
-# RUN go mod init krypserver
-# COPY go.mod go.sum ./
-# RUN go mod download
+  && go get github.com/canthefason/go-watcher \
+  && go install github.com/canthefason/go-watcher/cmd/watcher
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
 RUN go build -o /goapp
 RUN chmod +x /goapp
-# RUN ./goapp
-ENTRYPOINT CompileDaemon -command="/goapp" -log-prefix=false -build="go build -o /goapp"
+ENTRYPOINT watcher -i -o /goapp
 
 FROM scratch AS bin
 COPY --from=dev-stage /goapp /

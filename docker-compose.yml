@@ -7,6 +7,8 @@ services:
       context: ./server
       dockerfile: Dockerfile
       target: dev-stage
+    environment:
+      SERVER_PORT: ${SERVER_PORT:?SERVER_PORT}
     volumes:
       - ./server:/go/src/app
     ports:

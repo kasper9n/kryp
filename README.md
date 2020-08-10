@@ -19,3 +19,27 @@ SERVER_PORT=80
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.
+
+### Commands
+
+Start:
+```
+docker-compose up
+```
+
+Rebuild the Docker images (e.g for when Dockerfile or npm dependencies change):
+```
+docker-compose build
+```
+
+Open server shell. Lets you to run `go get`, `go mod` commands, such as for installing/updating dependencies.
+```
+make server-sh
+```
+
+### Connecting to the database
+To connect to the database, for example via a GUI app like MongoDB Compass, use the following connection string:
+```
+mongodb://DB_USERNAME:DB_PASSWORD>@HOST:DB_PORT/admin?authSource=admin
+```
+`DB_USERNAME`, `DB_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (You could use a domain name as well, but proxies like CloudFlare only support a few ports).
