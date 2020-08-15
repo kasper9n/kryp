@@ -32,7 +32,7 @@ Rebuild the Docker images (e.g for when Dockerfile or npm dependencies change):
 docker-compose build
 ```
 
-Open server shell. Lets you to run `go get`, `go mod` commands, such as for installing/updating dependencies.
+Open server shell. For instance, this lets you run `go get` and `go mod` to manage dependencies - Just remember to run `docker-compose build` afterwards:
 ```
 make server-sh
 ```
@@ -40,6 +40,6 @@ make server-sh
 ### Connecting to the database
 To connect to the database, for example via a GUI app like MongoDB Compass, use the following connection string:
 ```
-mongodb://DB_USERNAME:DB_PASSWORD>@HOST:DB_PORT/admin?authSource=admin
+mongodb://DB_ROOT_USERNAME:DB_ROOT_PASSWORD>@HOST:DB_PORT/admin
 ```
-`DB_USERNAME`, `DB_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (You could use a domain name as well, but proxies like CloudFlare only support a few ports).
+`DB_ROOT_USERNAME`, `DB_ROOT_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (If you use a domain name, proxies like CloudFlare may block the port).

@@ -9,6 +9,9 @@ services:
       target: dev-stage
     environment:
       SERVER_PORT: ${SERVER_PORT:?SERVER_PORT}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
+      DB_PORT: ${DB_PORT:?DB_PORT}
     volumes:
       - ./server:/go/src/app
     ports:
