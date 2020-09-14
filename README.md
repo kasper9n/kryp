@@ -9,7 +9,6 @@
 ```dotenv
 # when updating, remember to update README.md
 # DO NOT USE SPECIAL CHARS
-DB_ROOT_USERNAME=root
 DB_ROOT_PASSWORD=secret
 DB_USERNAME=appuser
 DB_PASSWORD=secret
@@ -40,6 +39,6 @@ make server-sh
 ### Connecting to the database
 To connect to the database, for example via a GUI app like MongoDB Compass, use the following connection string:
 ```
-mongodb://DB_ROOT_USERNAME:DB_ROOT_PASSWORD>@HOST:DB_PORT/admin
+mongodb://root:DB_ROOT_PASSWORD@HOST:DB_PORT/kryp
 ```
-`DB_ROOT_USERNAME`, `DB_ROOT_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (If you use a domain name, proxies like CloudFlare may block the port).
+`DB_ROOT_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (If you use a domain name, proxies like CloudFlare may block the port).
