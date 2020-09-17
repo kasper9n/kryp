@@ -8,14 +8,31 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/op/go-logging"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+var log = logging.MustGetLogger("example")
+var format1 = logging.MustStringFormatter(
+	`%{color}[Kryp] %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+)
+
 func main() {
+
+	backend := logging.NewLogBackend(os.Stderr, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format1)
+	backendLeveled := logging.AddModuleLevel(backend)
+	backendLeveled.SetLevel(logging.ERROR, "")
+
+	logging.SetBackend(backendFormatter)
 	fmt.Println("")
-	fmt.Println("[Kryp] Starting server...")
+	log.Info("Starting server...")
+
+	log.Error("oh geez an intimate error")
+	log.Error("another err ohno")
+	log.Info("look at that")
 
 	connectDB()
 
@@ -29,8 +46,8 @@ func main() {
 		})
 	})
 
-	fmt.Println("[Kryp] Listening on port " + os.Getenv("SERVER_PORT"))
 	http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), r)
+	log.Info("Listening on port " + os.Getenv("SERVER_PORT"))
 }
 
 func connectDB() {
@@ -41,14 +58,14 @@ func connectDB() {
 	const db = "kryp"
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s/%s", user, pass, host, port, db)
 	const timeoutSecs = 30
-	fmt.Printf("[Kryp] Connecting to DB with %vs timeout...\n", timeoutSecs)
+	log.Infof("Connecting to DB with %vs timeout...", timeoutSecs)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutSecs*time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		fmt.Printf("[Kryp err1] %s", err)
+		log.Errorf("%s", err)
 		panic(err)
 	}
 
@@ -60,10 +77,10 @@ func connectDB() {
 
 	// Ping the primary
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		fmt.Printf("[Kryp err2] %s", err)
+		log.Errorf("%s", err)
 		panic(err)
 	}
 
-	fmt.Println("[Kryp] Connected to db")
+	log.Info("Connected to db")
 
 }
