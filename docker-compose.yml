@@ -15,7 +15,6 @@ services:
       DB_PORT: ${DB_PORT:?DB_PORT}
     volumes:
       - ./app:/usr/src/app
-      - /usr/src/app/node_modules
     ports:
       - ${DEV_RELOAD_PORT}:${DEV_RELOAD_PORT} # only for dev
       - ${SERVER_PORT}:${SERVER_PORT}

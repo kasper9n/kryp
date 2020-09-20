@@ -1,13 +1,13 @@
 FROM node:14.11-alpine AS dev-stage
 WORKDIR /usr/src/app
 COPY package.json ./
-RUN yarn install
 COPY . .
-CMD ["yarn", "run", "dev"]
+CMD ["sh", "-c", "yarn install --no-progress && yarn run dev"]
 
 FROM node:14.11-alpine AS build-stage
 COPY --from=dev-stage /usr/src/app /usr/src/app
 WORKDIR /usr/src/app
+RUN yarn install
 RUN yarn run build
 
 FROM node:14.11-alpine AS production-stage
