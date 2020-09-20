@@ -30,23 +30,20 @@ func main() {
 	fmt.Println("")
 	log.Info("Starting server...")
 
-	log.Error("oh geez an intimate error")
-	log.Error("another err ohno")
-	log.Info("look at that")
-
 	connectDB()
 
-	r := gin.New()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
+	router.GET("/ping", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
 
-	http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), r)
+	http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), router)
 	log.Info("Listening on port " + os.Getenv("SERVER_PORT"))
 }
 
