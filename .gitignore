@@ -1,2 +1,5 @@
 .env
 mongodb
+app/node_modules
+app/src/node_modules/@sapper/
+app/__sapper__

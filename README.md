@@ -15,6 +15,7 @@ DB_PASSWORD=secret
 DB_PORT=27017
 
 SERVER_PORT=80
+DEV_RELOAD_PORT=38273
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.
@@ -29,11 +30,6 @@ docker-compose up
 Rebuild the Docker images (e.g for when Dockerfile or npm dependencies change):
 ```
 docker-compose build
-```
-
-Open server shell. For instance, this lets you run `go get` and `go mod` to manage dependencies - Just remember to run `docker-compose build` afterwards:
-```
-make server-sh
 ```
 
 ### Connecting to the database
