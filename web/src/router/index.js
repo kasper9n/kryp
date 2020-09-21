@@ -90,8 +90,8 @@ router.beforeEach((to, from, next) => {
 
 router.beforeEach((to, from, next) => {
   // redirect to login if necessary
-  if (to.meta.login === true && store.$pocket.loggedIn !== true) {
-    store.$pocket.init().then(() => {
+  if (store.$pocket.loggedIn !== true) {
+    store.$pocket.init(to.meta.login).then(() => {
       console.log('init success')
       next()
     }, err => {

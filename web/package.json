@@ -1,5 +1,5 @@
 {
-  "name": "cryptrack-web",
+  "name": "kryp-web",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --port $WEB_HTTP_PORT",

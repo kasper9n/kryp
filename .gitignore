@@ -1,4 +1,4 @@
 .env
 mongodb
-api/cryptrack-api
+api/kryp-api
 **/certificate.pem

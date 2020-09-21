@@ -124,15 +124,19 @@ router.post('/login', async (ctx, next) => {
 
   email = validator.normalizeEmail(email)
 
+  console.log('1')
   let resultUser
   try {
     resultUser = await User.findOne({ email: email })
   } catch (err) {
     return ctx.$err(5007, 'Error checking if user exists', err)
   }
+  console.log('2')
   if (!resultUser) return ctx.$err(4007, 'Login incorrect')
+  console.log('3')
 
   return passport.authenticate('local', { session: false }, function(err, user, info) {
+    console.log('4')
     if (err) {
       return ctx.$err(5008, 'Error authenticating user', err)
     } else if (user === false) {

@@ -13,7 +13,7 @@ async function main() {
   const dbuser = process.env.DB_USERNAME
   const dbpass = process.env.DB_PASSWORD
   const dbPort = process.env.DB_PORT
-  const url = `mongodb://${dbuser}:${dbpass}@db:${dbPort}/cryptrack`
+  const url = `mongodb://${dbuser}:${dbpass}@db:${dbPort}/kryp`
   $log('Mongoose connection initiated...')
   await mongoose.connect(url, {}).then(() => {
     $log('Mongoose connected')

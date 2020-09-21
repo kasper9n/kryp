@@ -21,7 +21,7 @@ const MetaPlugin = {
   },
 }
 Vue.use(MetaPlugin, {
-  titleTemplate: '%s - Cryptrack',
+  titleTemplate: '%s - Kryp',
 })
 
 Vue.use(VuePocket, store)

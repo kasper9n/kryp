@@ -3,7 +3,7 @@
   router-link.nav-item.nav-link(
     :to='$pocket.loggedIn ? "/overview" : "/"'
   )
-    h2 Cryptrack
+    h2 Kryp
 
   template(v-if='$pocket.loggedIn')
     Dropdown.nav-item.portfolio-picker(

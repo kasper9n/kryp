@@ -1,4 +1,4 @@
-# Cryptrack
+# Kryp
 
 ## Dev instructions
 
@@ -15,7 +15,7 @@ DB_PASSWORD=secret
 
 API_SESSION_KEY=secret
 
-PRODUCTION_API_URL=https://api.cryptrack.io
+PRODUCTION_API_URL=https://api.kryp.io
 
 API_HTTP_PORT=80
 API_HTTPS_PORT=443

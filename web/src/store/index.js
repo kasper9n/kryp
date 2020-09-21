@@ -72,12 +72,19 @@ const $pocket = {
   email: null,
 
   // account
-  init () {
-    return xhr.post('/me', {
-      $onSuccess: response => {
-        this.handleInitResponse(response)
-      },
-    })
+  init (login) {
+    if (login) {
+      return xhr.post('/me', {
+        $onSuccess: response => {
+          this.handleInitResponse(response)
+        },
+      })
+    } else {
+      return new Promise((resolve) => {
+        this.loaded = true
+        resolve()
+      })
+    }
   },
   login (data) {
     return xhr.post('/login', {
