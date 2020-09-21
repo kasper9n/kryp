@@ -130,7 +130,7 @@ router.post('/login', async (ctx, next) => {
   } catch (err) {
     return ctx.$err(5007, 'Error checking if user exists', err)
   }
-  if (!resultUser) return ctx.err(4007, 'Login incorrect')
+  if (!resultUser) return ctx.$err(4007, 'Login incorrect')
 
   return passport.authenticate('local', { session: false }, function(err, user, info) {
     if (err) {
