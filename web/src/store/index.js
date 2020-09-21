@@ -1,4 +1,4 @@
-import axios from 'axios'
+// import axios from 'axios'
 import router from '@/router/index.js'
 let apiUrl
 if (process.env.NODE_ENV === 'production') {
@@ -13,30 +13,30 @@ if (process.env.NODE_ENV === 'production') {
   apiUrl = `${protocol}://${location.hostname}:${port}`
 }
 
-const xhr = {
-  post: (slug, data = {}) => {
-    let onSuccess
-    if (typeof data.$onSuccess === 'function') onSuccess = data.$onSuccess
-    if (onSuccess) delete data.$onSuccess
-    return new Promise((resolve, reject) => {
-      axios.post(apiUrl + slug, data, {
-        withCredentials: true,
-      }).then((response) => {
-        console.log(response.data)
-        if (onSuccess) onSuccess(response.data)
-        resolve(response.data)
-      }, (err) => {
-        let customErr
-        if (err.response) customErr = err.response.data
-        else customErr = { msg: 'Server unreachable' }
-        console.log(`Error sending POST request to ${slug}:`)
-        console.log(customErr)
-        console.dir(err)
-        reject(customErr)
-      })
-    })
-  },
-}
+// const xhr = {
+//   post: (slug, data = {}) => {
+//     let onSuccess
+//     if (typeof data.$onSuccess === 'function') onSuccess = data.$onSuccess
+//     if (onSuccess) delete data.$onSuccess
+//     return new Promise((resolve, reject) => {
+//       axios.post(apiUrl + slug, data, {
+//         withCredentials: true,
+//       }).then((response) => {
+//         console.log(response.data)
+//         if (onSuccess) onSuccess(response.data)
+//         resolve(response.data)
+//       }, (err) => {
+//         let customErr
+//         if (err.response) customErr = err.response.data
+//         else customErr = { msg: 'Server unreachable' }
+//         console.log(`Error sending POST request to ${slug}:`)
+//         console.log(customErr)
+//         console.dir(err)
+//         reject(customErr)
+//       })
+//     })
+//   },
+// }
 
 const localS = {
   get: (name) => {
@@ -73,27 +73,41 @@ const $pocket = {
 
   // account
   init (login) {
-    if (login) {
-      return xhr.post('/me', {
-        $onSuccess: response => {
-          this.handleInitResponse(response)
-        },
-      })
-    } else {
-      return new Promise((resolve) => {
+    return new Promise((resolve) => {
+      if (login) {
+        // xhr.post('/me', {
+        //   $onSuccess: response => {
+        //     this.handleInitResponse(response)
+        //   },
+        // })
+        this.handleInitResponse({
+          user: {
+            user: {
+              email: 'hardcoded@example.com',
+            },
+          },
+        })
+        resolve()
+      } else {
         this.loaded = true
         resolve()
-      })
-    }
+      }
+    })
   },
   login (data) {
-    return xhr.post('/login', {
-      email: data.email,
-      password: data.password,
-      $onSuccess: response => {
-        this.handleInitResponse(response)
-      },
+    return new Promise((resolve, reject) => {
+      resolve({
+        email: data.email,
+        password: data.password,
+      })
     })
+    // return xhr.post('/login', {
+    //   email: data.email,
+    //   password: data.password,
+    //   $onSuccess: response => {
+    //     this.handleInitResponse(response)
+    //   },
+    // })
   },
   handleInitResponse (response) {
     this.portfolios = [
@@ -160,18 +174,29 @@ const $pocket = {
     this.loaded = true
   },
   signup (data, redirectTo) {
-    return xhr.post('/register', {
-      email: data.email,
-      password: data.password,
+    return new Promise((resolve, reject) => {
+      resolve({
+        email: data.email,
+        password: data.password,
+      })
     })
+    // return xhr.post('/register', {
+    //   email: data.email,
+    //   password: data.password,
+    // })
   },
   logout (callback) {
-    return xhr.post('/logout', {
-      $onSuccess: response => {
-        this.loggedIn = false
-        this.email = null
-      },
+    return new Promise((resolve, reject) => {
+      this.loggedIn = false
+      this.email = null
+      resolve()
     })
+    // return xhr.post('/logout', {
+    //   $onSuccess: response => {
+    //     this.loggedIn = false
+    //     this.email = null
+    //   },
+    // })
   },
 
   // portfolios
