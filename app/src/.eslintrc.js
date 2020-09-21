@@ -19,10 +19,14 @@ module.exports = {
     },
   ],
   rules: {
-    'comma-dangle': ['error', 'always-multiline'],
-    'linebreak-style': ['error', 'unix'],
-    indent: ['error', 2],
-    quotes: ['error', 'single'],
-    semi: ['error', 'never'],
+    'comma-dangle': [ 'error', 'always-multiline' ],
+    'linebreak-style': [ 'error', 'unix' ],
+    indent: [ 'error', 2 ],
+    quotes: [ 'error', 'single' ],
+    semi: [ 'error', 'never' ],
+    'no-unused-vars': [
+      'error',
+      { args: 'none' },
+    ],
   },
 }

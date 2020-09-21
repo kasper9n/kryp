@@ -15,9 +15,9 @@ services:
       DB_PORT: ${DB_PORT:?DB_PORT}
     volumes:
       # for development:
-      - ./app:/usr/src/app
+      - ./app:/app
       # for production:
-      # - /usr/src/app/node_modules
+      # - /app/node_modules
     ports:
       - ${DEV_RELOAD_PORT}:${DEV_RELOAD_PORT} # only for dev
       - ${SERVER_PORT}:${SERVER_PORT}
