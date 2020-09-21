@@ -6,7 +6,7 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-      target: production-stage # prod: production-stage
+      target: dev-stage # prod: production-stage
     environment:
       SERVER_PORT: ${SERVER_PORT:?SERVER_PORT}
       DEV_RELOAD_PORT: ${DEV_RELOAD_PORT:?DEV_RELOAD_PORT}
