@@ -6,7 +6,7 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-      target: dev-stage # prod: production-stage
+      target: production-stage # prod: production-stage
     environment:
       SERVER_PORT: ${SERVER_PORT:?SERVER_PORT}
       DEV_RELOAD_PORT: ${DEV_RELOAD_PORT:?DEV_RELOAD_PORT}
@@ -14,7 +14,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
       DB_PORT: ${DB_PORT:?DB_PORT}
     volumes:
+      # for development:
       - ./app:/usr/src/app
+      # for production:
+      # - /usr/src/app/node_modules
     ports:
       - ${DEV_RELOAD_PORT}:${DEV_RELOAD_PORT} # only for dev
       - ${SERVER_PORT}:${SERVER_PORT}

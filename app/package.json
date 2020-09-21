@@ -2,9 +2,9 @@
   "private": true,
   "scripts": {
     "dev": "sapper dev --port $SERVER_PORT --dev-port $DEV_RELOAD_PORT",
-    "build": "sapper build --legacy --port $SERVER_PORT",
+    "build": "sapper build --legacy",
     "export": "sapper export --legacy",
-    "start": "node __sapper__/build"
+    "start": "PORT=$SERVER_PORT node __sapper__/build"
   },
   "dependencies": {
     "compression": "^1.7.1",
