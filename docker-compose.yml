@@ -48,16 +48,14 @@ services:
   db:
     tty: true
     container_name: db
-    image: mongo:4.2-bionic
+    image: bitnami/mongodb:4.2
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USERNAME:?DB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: admin
-      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
-    command: mongod --auth --port ${DB_PORT:?DB_PORT}
+      MONGODB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD}
+      MONGODB_USERNAME: ${DB_USERNAME:?DB_USERNAME}
+      MONGODB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
+      MONGODB_DATABASE: kryp
+      MONGODB_EXTRA_FLAGS: --auth --port ${DB_PORT:?DB_PORT}
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - ./db/data:/data/db
-      - ./db/init-scripts/:/docker-entrypoint-initdb.d/
+      - ./mongodb:/bitnami/mongodb

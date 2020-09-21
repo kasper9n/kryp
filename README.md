@@ -9,9 +9,7 @@
 ```dotenv
 # when updating, remember to update README.md
 # DO NOT USE SPECIAL CHARS
-DB_ROOT_USERNAME=root
 DB_ROOT_PASSWORD=secret
-
 DB_USERNAME=appuser
 DB_PASSWORD=secret
 
@@ -67,9 +65,9 @@ make lint-fix
 ### Connecting to the database
 To connect to the database, for example via a GUI app like MongoDB Compass, use the following connection string:
 ```
-mongodb://DB_USERNAME:DB_PASSWORD>@HOST:DB_PORT/admin?authSource=admin
+mongodb://root:DB_ROOT_PASSWORD@HOST:DB_PORT/kryp
 ```
-`DB_USERNAME`, `DB_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (You could use a domain name as well, but proxies like CloudFlare only support a few ports).
+`DB_ROOT_PASSWORD` and `DB_PORT` correspond to the values in your `.env` file. `HOST` is `localhost` for development, and your server IP for production (You could use a domain name as well, but proxies like CloudFlare only support a few ports).
 
 ### Deployment
 *Unfinished section*
