@@ -15,7 +15,6 @@ DB_PASSWORD=secret
 DB_PORT=27017
 
 SERVER_PORT=80
-DEV_RELOAD_PORT=38273
 ```
 
 [lazydocker](https://github.com/jesseduffield/lazydocker) is a pretty nice CLI GUI for managing docker-compose.

@@ -9,7 +9,6 @@ services:
       target: dev-stage # prod: production-stage
     environment:
       SERVER_PORT: ${SERVER_PORT:?SERVER_PORT}
-      DEV_RELOAD_PORT: ${DEV_RELOAD_PORT:?DEV_RELOAD_PORT}
       DB_USERNAME: ${DB_USERNAME:?DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD}
       DB_PORT: ${DB_PORT:?DB_PORT}
@@ -19,10 +18,9 @@ services:
       # for production:
       # - /app/node_modules
     ports:
-      - ${DEV_RELOAD_PORT}:${DEV_RELOAD_PORT} # only for dev
       - ${SERVER_PORT}:${SERVER_PORT}
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
   db:
     tty: true
     container_name: db
