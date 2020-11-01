@@ -1,3 +1,3 @@
 <template lang='pug'>
-  p Dashboard
+  p 404
 </template>

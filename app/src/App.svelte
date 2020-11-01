@@ -1,25 +1,31 @@
-<script>
-  export let name = '';
-  import { Router } from "@roxi/routify";
-  import { routes } from "../.routify/routes.js";
-  import Nested from './Nested.svelte';
+<script lang='ts'>
+  import { Router } from '@roxi/routify'
+  import { routes } from '../.routify/routes.js'
+  import NavBar from './Navbar.svelte'
 </script>
 
 <style lang='sass'>
-  .note
-    color: #ff3e00
-  h1
-    color: blue
+  :global
+    b, h1, h2, h3, h4, h5, h6
+      font-weight: 500
+    body
+      margin: 0px 30px
+      background-color: var(--bg-color-2)
+    #app
+      max-width: 1200px
+      margin: auto
+      font-size: 15px
+      font-family: 'Jost', sans-serif
+      color: var(--text-color)
+  :root
+    --bg-color-1: #ffffff
+    --bg-color-2: #f8f9fc
+    --text-color: #444444
+    --shadow: 0px 0px 5px 0px rgba(0,0,0,0.1)
 </style>
 
-
 <template lang='pug'>
-  h1.note This is the svelte-preproces example - built with svite
-  hr
-  h1 Hello!
-  br
-  input(bind:value="{name}")
-  br
-  Nested('{name}')
-  Router('{routes}')
+  NavBar
+  .page
+    Router('{routes}')
 </template>
