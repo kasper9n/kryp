@@ -13,9 +13,12 @@ module.exports = {
     'svelte3',
   ],
   ignorePatterns: ['**/node_modules'],
+  settings: {
+    'svelte3/ignore-styles': () => true,
+  },
   overrides: [
     {
-      files: ['src/*.svelte'],
+      files: ['*.svelte'],
       processor: 'svelte3/svelte3',
     },
   ],
@@ -25,9 +28,10 @@ module.exports = {
     indent: [ 'error', 2 ],
     quotes: [ 'error', 'single' ],
     semi: [ 'error', 'never' ],
-    'no-unused-vars': [
-      'error',
-      { args: 'none' },
-    ],
+    'no-unused-vars': 0, // disabled because of bug https://github.com/sveltejs/eslint-plugin-svelte3/pull/65
+    // 'no-unused-vars': [
+    //   'error',
+    //   { args: 'none' },
+    // ],
   },
 }

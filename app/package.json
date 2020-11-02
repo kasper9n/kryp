@@ -7,7 +7,8 @@
     "build": "run-p build:routify build:svite",
     "build:routify": "routify run --single-build",
     "build:svite": "svite build -ts",
-    "lint": "svelte-check && tsc --noEmit"
+    "lint": "svelte-check && tsc --noEmit",
+    "eslint": "eslint src/*"
   },
   "dependencies": {
     "@roxi/routify": "^2.0.2"
@@ -16,12 +17,15 @@
     "npm-run-all": "^4.1.5",
     "pug": "^3.0.0",
     "sass": "^1.26.11",
-    "svelte": "3.29.0",
-    "svelte-check": "^1.0.55",
+    "svelte": "3.29.4",
+    "svelte-check": "^1.1.6",
     "svelte-hmr": "0.11.1",
     "svelte-preprocess": "4.4.2",
     "svite": "^0.7.2",
+    "rollup": "2.33.0",
     "typescript": "^4.0.3",
+    "eslint": "^7.12.1",
+    "eslint-plugin-svelte3": "^2.7.3",
     "tslib": "^2.0.1",
     "@tsconfig/svelte": "^1.0.10"
   }
