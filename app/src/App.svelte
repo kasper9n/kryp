@@ -1,13 +1,21 @@
-<script lang='ts'>
+<script>
   import { Router } from '@roxi/routify'
   import { routes } from '../.routify/routes.js'
   import NavBar from './Navbar.svelte'
+  import { goto } from '@roxi/routify'
+
+  document.addEventListener('click', (e) => {
+    if (e.target.nodeName === 'ROUTER-LINK' && e.target.hasAttribute('to')) {
+      $goto(e.target.getAttribute('to'))
+    }
+  })
 </script>
 
 <style lang='sass'>
   :global
     b, h1, h2, h3, h4, h5, h6
-      font-weight: 500
+      font-family: 'Overpass'
+      font-weight: 600
     body
       margin: 0px 30px
       background-color: var(--bg-color-2)
@@ -15,7 +23,7 @@
       max-width: 1200px
       margin: auto
       font-size: 15px
-      font-family: 'Jost', sans-serif
+      font-family: 'Inter', sans-serif
       color: var(--text-color)
   :root
     --bg-color-1: #ffffff
