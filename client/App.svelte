@@ -3,6 +3,7 @@
   import Home from './pages/Home.svelte'
   import Wallets from './pages/Wallets.svelte'
   import Transactions from './pages/Transactions.svelte'
+  import NotFound from './pages/NotFound.svelte'
   import Navbar from './Navbar.svelte'
   import NavLink from './NavLink.svelte'
 
@@ -72,10 +73,12 @@
     <NavLink to="/transactions">
       <div class="nav-item">Transactions</div>
     </NavLink>
+    <a use:link href="/idkwhat" class="nav-item">404</a>
   </div>
   <div>
-    <Route path="/" component="{Home}">Home</Route>
-    <Route path="/wallets" component="{Wallets}">wallettttts</Route>
+    <Route path="/" component="{Home}"></Route>
+    <Route path="/wallets" component="{Wallets}"></Route>
     <Route path="/transactions" component="{Transactions}"></Route>
+    <Route component="{NotFound}"></Route>
   </div>
 </Router>
