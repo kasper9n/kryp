@@ -1,30 +1,40 @@
 <script>
-  // import { Route, active } from 'tinro/cmp/index.js'
   import { Router, navigate, Route, link } from 'svelte-routing'
+  import Home from './pages/Home.svelte'
+  import Wallets from './pages/Wallets.svelte'
   import Transactions from './pages/Transactions.svelte'
-  import Task from './pages/Transactions.svelte'
   import Navbar from './Navbar.svelte'
+  import NavLink from './NavLink.svelte'
 
   export let url = ""
-
-  // document.addEventListener('click', (e) => {
-  //   const href = e.target.getAttribute('href')
-  //   if (e.target.nodeName === 'A' && href && href.startsWith('/')) {
-  //     e.preventDefault()
-  //     navigate(href)
-  //   }
-  // }, true)
-
-  // function isActive(x, y, z) {
-  //   // const isActive = href === "/" ? isCurrent : isPartiallyCurrent || isCurrent
-  //   console.log(x)
-
-  //   return false
-  //   // return isActive
-  // }
 </script>
 
 <style>
+  :root {
+    --bg-color-1: #ffffff;
+    --bg-color-2: #f8f9fc;
+    --text-color: #444444;
+    --shadow: 0px 0px 5px 0px rgba(0,0,0,0.1);
+  }
+  :global(body) {
+    margin: 0px 30px;
+    background-color: var(--bg-color-2);
+  }
+  :global(#app) {
+    max-width: 1200px;
+    margin: auto;
+    font-size: 15px;
+    font-family: "Inter", sans-serif;
+    color: var(--text-color);
+  }
+  :global(b), :global(h1), :global(h2), :global(h3), :global(h4), :global(h5), :global(h6) {
+    font-family: "Overpass";
+    font-weight: 600;
+  }
+  :global(a) {
+    color: inherit;
+    text-decoration: none;
+  }
   .navbar {
     display: flex;
     align-items: center;
@@ -37,25 +47,35 @@
   }
   .nav-item {
     padding: 4px 8px;
-    margin-right: 26px;
     cursor: pointer;
   }
-  .active {
-    color: #00f07c;
+  .nav-item:hover {
+    opacity: 0.75
+  }
+  .spacer {
+    width: 26px
   }
 </style>
 
 <Router url="{url}">
   <div class="navbar">
     <a use:link href="/" class="nav-item logo">Kryp</a>
-    <a use:link href="/" class="nav-item">Dashboard</a>
-    <a use:link href="/wallets" class="nav-item">Wallets</a>
-    <a use:link href="/transactions" class="nav-item">Transactions</a>
+    <div class="spacer"></div>
+    <NavLink to="/">
+      <div class="nav-item">Dashboard</div>
+    </NavLink>
+    <div class="spacer"></div>
+    <NavLink to="/wallets">
+      <div class="nav-item">Wallets</div>
+    </NavLink>
+    <div class="spacer"></div>
+    <NavLink to="/transactions">
+      <div class="nav-item">Transactions</div>
+    </NavLink>
   </div>
   <div>
-    <Route path="/">Home</Route>
-    <Route path="/wallets">wallettttts</Route>
-    <Route path="/transactions">txxxxx</Route>
-    <!-- <Route path="blog" component="{Blog}" /> -->
+    <Route path="/" component="{Home}">Home</Route>
+    <Route path="/wallets" component="{Wallets}">wallettttts</Route>
+    <Route path="/transactions" component="{Transactions}"></Route>
   </div>
 </Router>
