@@ -2,7 +2,7 @@
   import { Router, navigate, Route, link } from 'svelte-routing'
   import Home from './pages/Home.svelte'
   import Wallets from './pages/Wallets.svelte'
-  import Transactions from './pages/Transactions.svelte'
+  import Transactions from './transactions/Page.svelte'
   import NotFound from './pages/NotFound.svelte'
   import Navbar from './Navbar.svelte'
   import NavLink from './NavLink.svelte'
