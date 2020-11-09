@@ -1,55 +1,85 @@
 <script>
-  export let action
   import Transactions from '../../lib/Transactions.js'
+  let action
   let visible = false
-  export function open() {
+  let txId
+  let tx
+  reset()
+  function reset() {
+    txId = null
+    tx = {
+      type: 'Trade',
+      date: 'Aug 28 21:27 PM',
+      txHash: '',
+      note: '',
+      fromWallet: '',
+      fromAmount: '',
+      fromAsset: '',
+      feeAmount: '',
+      feeAsset: '',
+      toWallet: '',
+      toAmount: '',
+      toAsset: '',
+    }
+  }
+  export const open = (actionArg, newTx) => {
+    action = actionArg
+    if (action === 'add') reset()
+    else if (action === 'edit') {
+      txId = newTx._id
+      tx = {
+        type: newTx.type || 'Trade',
+        date: newTx.date || 'Aug 27 21:27 PM',
+        txHash: newTx.txHash || '',
+        note: newTx.note || '',
+        fromWallet: newTx.fromWallet || '',
+        fromAmount: newTx.fromAmount || '',
+        fromAsset: newTx.fromAsset || '',
+        feeAmount: newTx.feeAmount || '',
+        feeAsset: newTx.feeAsset || '',
+        toWallet: newTx.toWallet || '',
+        toAmount: newTx.toAmount || '',
+        toAsset: newTx.toAsset || '',
+      }
+    }
     visible = true
   }
   let tradeTypes = [
-    { id: 0, text: 'Trade' },
-    { id: 1, text: 'Transfer' },
-    { id: 2, text: 'Deposit' },
-    { id: 3, text: 'Withdrawal' },
+    'Trade',
+    'Transfer',
+    'Deposit',
+    'Withdrawal',
   ]
-  let tradeType = tradeTypes[0]
-  let date = 'Aug 28 21:27PM'
-  let txHash = ''
-  let note = ''
-  let fromWallet = ''
-  let from = ''
-  let fromCur = ''
-  let fee = ''
-  let feeCur = ''
-  let toWallet = ''
-  let to = ''
-  let toCur = ''
-  function save(e) {
-    Transactions.insert({
-      type: tradeType.text,
-      date,
-      txHash,
-      note,
-
-      fromWallet,
-      from,
-      fromCur,
-
-      fee,
-      feeCur,
-
-      to,
-      toCur,
-      toWallet,
-    })
+  function save() {
+    if (action === 'add') {
+      Transactions.insert(tx)
+    } else if (action === 'edit') {
+      Transactions.update(
+        {_id: txId },
+        tx,
+      )
+    }
     visible = false
+    reset()
   }
-  function bgClick() {
+  function bgClick(e) {
     visible = false
   }
 </script>
 
 <style>
   .bg {
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+  }
+  h2 {
+    margin-top: 0px;
+  }
+  .container {
+    pointer-events: none;
     top: 0px;
     left: 0px;
     width: 100vw;
@@ -62,8 +92,9 @@
     justify-content: center;
   }
   .box {
+    pointer-events: all;
     background-color: #ffffff;
-    padding: 10px;
+    padding: 20px;
     width: 500px;
   }
   .row {
@@ -73,56 +104,60 @@
     margin-top: 12px;
     margin-bottom: 0px;
   }
+  input.asset {
+    width: 50px
+  }
 </style>
 
 {#if visible}
-  <div class="bg" on:click|self={bgClick}>
-    <div class="box">
+  <div class="bg" on:click={bgClick}></div>
+  <div class="container" on:submit|preventDefault>
+    <form class="box">
       {#if action === 'add'}
         <h2>Add transaction</h2>
       {:else if action === 'edit'}
         <h2>Edit transaction</h2>
       {/if}
       <h4>Transaction Type</h4>
-      <select bind:value={tradeType}>
+      <select bind:value={tx.type}>
         {#each tradeTypes as tradeType}
           <option value={tradeType}>
-            {tradeType.text}
+            {tradeType}
           </option>
         {/each}
       </select>
       <h4>Date</h4>
       <div class="row">
-        <input type="text" bind:value={date}>
+        <input type="text" bind:value={tx.date}>
       </div>
       <h4>From</h4>
       <div class="row">
-        <input type="text" bind:value={fromWallet} placeholder='Wallet'>
-        <input type="text" bind:value={fromCur} placeholder='Amount'>
-        <input type="text" bind:value={from} placeholder='Asset'>
+        <input type="text" class="amount" bind:value={tx.fromAmount} placeholder='Amount'>
+        <input type="text" class="asset" bind:value={tx.fromAsset} placeholder='Asset'>
+        <input type="text" class="wallet" bind:value={tx.fromWallet} placeholder='Wallet'>
       </div>
       <h4>To</h4>
       <div class="row">
-        <input type="text" bind:value={toWallet} placeholder='Wallet'>
-        <input type="text" bind:value={toCur} placeholder='Amount'>
-        <input type="text" bind:value={to} placeholder='Asset'>
+        <input type="text" class="amount" bind:value={tx.toAmount} placeholder='Amount'>
+        <input type="text" class="asset" bind:value={tx.toAsset} placeholder='Asset'>
+        <input type="text" class="wallet" bind:value={tx.toWallet} placeholder='Wallet'>
       </div>
       <h4>Fee</h4>
       <div class="row">
-        <input type="text" bind:value={feeCur} placeholder='Amount'>
-        <input type="text" bind:value={fee} placeholder='Asset'>
+        <input type="text" class="amount" bind:value={tx.feeAmount} placeholder='Amount'>
+        <input type="text" class="asset" bind:value={tx.feeAsset} placeholder='Asset'>
       </div>
       <h4>Transaction Hash</h4>
       <div class="row">
-        <input type="text" bind:value={txHash}>
+        <input type="text" bind:value={tx.txHash}>
       </div>
       <h4>Note</h4>
       <div class="row">
-        <textarea value={note}></textarea>
+        <textarea bind:value={tx.note}></textarea>
       </div>
       <div class="row">
-        <button on:click={save}>Save</button>
+        <button type='submit' on:click={save}>Save</button>
       </div>
-    </div>
+    </form>
   </div>
 {/if}
