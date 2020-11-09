@@ -7,7 +7,7 @@
   import Navbar from './Navbar.svelte'
   import NavLink from './NavLink.svelte'
 
-  export let url = ""
+  export let url = ''
 </script>
 
 <style>

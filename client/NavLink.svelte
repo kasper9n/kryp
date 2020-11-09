@@ -1,11 +1,11 @@
 <script>
-  import { Link } from "svelte-routing";
+  import { Link } from 'svelte-routing'
 
-  export let to = "";
+  export let to = ''
 
   function getProps({ location, href, isPartiallyCurrent, isCurrent }) {
-    const isActive = href === "/" ? isCurrent : isPartiallyCurrent || isCurrent
-    if (isActive) return { class: "active" }
+    const isActive = href === '/' ? isCurrent : isPartiallyCurrent || isCurrent
+    if (isActive) return { class: 'active' }
     else return {}
   }
 </script>
