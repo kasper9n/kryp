@@ -55,7 +55,7 @@
       Transactions.insert(tx)
     } else if (action === 'edit') {
       Transactions.update(
-        {_id: txId },
+        { _id: txId },
         tx,
       )
     }

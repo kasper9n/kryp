@@ -1,6 +1,5 @@
 <script>
   import Transactions from '../../lib/Transactions.js'
-  import Transaction from './Tx.svelte'
   import TxDialog from './TxDialog.svelte'
   let open
   $: transactions = Transactions.find({})
@@ -32,16 +31,30 @@
   <button on:click={addTx}>Add transaction</button>
 </div>
 
-{#each $transactions as tx}
-  <div class="row">
-    <div class='type'>{tx.type}</div>
-    <div>from: {tx.fromAmount} {tx.fromAsset} {tx.fromWallet}</div>
-    <div>to: {tx.toAmount} {tx.toAsset} {tx.toWallet}</div>
-    <div>fee: {tx.feeAmount} {tx.feeAsset}</div>
-    <div>txHash: {tx.txHash}</div>
-    <div>note: {tx.note}</div>
-    <div>date: {tx.date}</div>
-    <button on:click={editTx(tx)}>Edit</button>
-    <button on:click={deleteTx(tx)}>Delete</button>
-  </div>
-{/each}
+<table>
+  <tr>
+    <th>Type</th>
+    <th>From</th>
+    <th>To</th>
+    <th>Fee</th>
+    <th>txHash</th>
+    <th>Note</th>
+    <th>Date</th>
+    <th></th>
+  </tr>
+  {#each $transactions as tx}
+    <tr>
+      <td>{tx.type}</td>
+      <td>{tx.fromAmount} {tx.fromAsset} {tx.fromWallet}</td>
+      <td>{tx.toAmount} {tx.toAsset} {tx.toWallet}</td>
+      <td>{tx.feeAmount} {tx.feeAsset}</td>
+      <td>{tx.txHash}</td>
+      <td>{tx.note}</td>
+      <td>{tx.date}</td>
+      <td>
+        <button on:click={editTx(tx)}>Edit</button>
+        <button on:click={deleteTx(tx)}>Delete</button>
+      </td>
+    </tr>
+  {/each}
+</table>

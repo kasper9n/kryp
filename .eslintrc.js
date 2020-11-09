@@ -23,15 +23,23 @@ module.exports = {
     },
   ],
   rules: {
-    'comma-dangle': [ 'error', 'always-multiline' ],
-    'linebreak-style': [ 'error', 'unix' ],
-    indent: [ 'error', 2 ],
-    quotes: [ 'error', 'single' ],
-    semi: [ 'error', 'never' ],
+    indent: ['error', 2],
+    quotes: ['error', 'single'],
+    'comma-dangle': ['error', 'always-multiline'],
+    semi: ['error', 'never'],
     'no-unused-vars': 0, // disabled because of bug https://github.com/sveltejs/eslint-plugin-svelte3/pull/65
     // 'no-unused-vars': [
     //   'error',
     //   { args: 'none' },
     // ],
+    'linebreak-style': ['error', 'unix'],
+    'no-extra-parens': ['error', 'all'],
+    'no-loss-of-precision': ['error'],
+    'space-before-function-paren': ['error', 'never'],
+    'object-curly-spacing': ['error', 'always'],
+    'array-bracket-spacing': ['error', 'never', {
+      // arraysInArrays: true,
+      // objectsInArrays: true,
+    }],
   },
 }

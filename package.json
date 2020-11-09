@@ -12,12 +12,12 @@
     "@babel/runtime": "^7.11.2",
     "jquery": "^3.5.1",
     "meteor-node-stubs": "^1.0.1",
-    "svelte": "^3.29.4"
+    "svelte": "^3.29.4",
+    "svelte-routing": "^1.4.2"
   },
   "devDependencies": {
     "eslint": "^7.13.0",
-    "eslint-plugin-svelte3": "^2.7.3",
-    "svelte-routing": "^1.4.2"
+    "eslint-plugin-svelte3": "^2.7.3"
   },
   "meteor": {
     "mainModule": {
