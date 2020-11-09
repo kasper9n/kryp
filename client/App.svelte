@@ -76,9 +76,9 @@
     <a use:link href="/idkwhat" class="nav-item">404</a>
   </div>
   <div>
-    <Route path="/" component="{Home}"></Route>
-    <Route path="/wallets" component="{Wallets}"></Route>
-    <Route path="/transactions" component="{Transactions}"></Route>
-    <Route component="{NotFound}"></Route>
+    <Route path="/"><Home/></Route>
+    <Route path="/wallets"><Wallets/></Route>
+    <Route path="/transactions"><Transactions/></Route>
+    <Route><NotFound/></Route>
   </div>
 </Router>
