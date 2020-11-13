@@ -1,20 +1,26 @@
 <script>
-  import Transactions from '../../lib/Transactions.js'
+  import { Transactions } from '../../lib/Transactions.js'
+  import { Meteor } from 'meteor/meteor'
   import TxDialog from './TxDialog.svelte'
   let open
   $: transactions = Transactions.find({})
   let txDialogOptions
 
   function addTx() {
-    // txDialogOptions = {action: 'add'}
     open('add')
   }
   function editTx(transaction) {
-    // txDialogOptions = {action: 'edit'}
     open('edit', transaction)
   }
   function deleteTx(transaction) {
-    Transactions.remove(transaction._id)
+    Meteor.call('transactions.delete', {
+      id: transaction._id,
+    }, (err, res) => {
+      if (err) {
+        console.log('!!!!!!!!!!! deleteTx() err:')
+        console.log(err)
+      }
+    })
   }
 </script>
 
@@ -37,7 +43,7 @@
     <th>From</th>
     <th>To</th>
     <th>Fee</th>
-    <th>txHash</th>
+    <th>Hash</th>
     <th>Note</th>
     <th>Date</th>
     <th></th>
@@ -48,7 +54,7 @@
       <td>{tx.fromAmount} {tx.fromAsset} {tx.fromWallet}</td>
       <td>{tx.toAmount} {tx.toAsset} {tx.toWallet}</td>
       <td>{tx.feeAmount} {tx.feeAsset}</td>
-      <td>{tx.txHash}</td>
+      <td>{tx.hash}</td>
       <td>{tx.note}</td>
       <td>{tx.date}</td>
       <td>

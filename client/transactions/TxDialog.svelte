@@ -1,5 +1,5 @@
 <script>
-  import Transactions from '../../lib/Transactions.js'
+  import { Meteor } from 'meteor/meteor'
   let action
   let visible = false
   let txId
@@ -10,7 +10,7 @@
     tx = {
       type: 'Trade',
       date: 'Aug 28 21:27 PM',
-      txHash: '',
+      hash: '',
       note: '',
       fromWallet: '',
       fromAmount: '',
@@ -30,7 +30,7 @@
       tx = {
         type: newTx.type || 'Trade',
         date: newTx.date || 'Aug 27 21:27 PM',
-        txHash: newTx.txHash || '',
+        hash: newTx.hash || '',
         note: newTx.note || '',
         fromWallet: newTx.fromWallet || '',
         fromAmount: newTx.fromAmount || '',
@@ -44,23 +44,31 @@
     }
     visible = true
   }
-  let tradeTypes = [
+  let txTypes = [
     'Trade',
     'Transfer',
     'Deposit',
     'Withdrawal',
   ]
+  let errors = {}
   function save() {
-    if (action === 'add') {
-      Transactions.insert(tx)
-    } else if (action === 'edit') {
-      Transactions.update(
-        { _id: txId },
-        tx,
-      )
+    if (action === 'add' || action === 'edit') {
+      Meteor.call('transactions.'+action, {
+        transaction: tx,
+        id: txId,
+      }, (err, res) => {
+        if (err) {
+          console.log(err)
+          errors = {}
+          for (const detail of err.details) {
+            errors[detail.context.key] = detail.type
+          }
+        } else {
+          visible = false
+          reset()
+        }
+      })
     }
-    visible = false
-    reset()
   }
   function bgClick(e) {
     visible = false
@@ -105,14 +113,14 @@
     margin-bottom: 0px;
   }
   input.asset {
-    width: 50px
+    width: 70px
   }
 </style>
 
 {#if visible}
   <div class="bg" on:click={bgClick}></div>
-  <div class="container" on:submit|preventDefault>
-    <form class="box">
+  <div class="container">
+    <form class="box" on:submit|preventDefault>
       {#if action === 'add'}
         <h2>Add transaction</h2>
       {:else if action === 'edit'}
@@ -120,40 +128,68 @@
       {/if}
       <h4>Transaction Type</h4>
       <select bind:value={tx.type}>
-        {#each tradeTypes as tradeType}
-          <option value={tradeType}>
-            {tradeType}
+        {#each txTypes as txType}
+          <option value={txType}>
+            {txType}
           </option>
         {/each}
       </select>
+      {#if errors.type} <p>{errors.type}</p> {/if}
       <h4>Date</h4>
       <div class="row">
         <input type="text" bind:value={tx.date}>
+        {#if errors.date} <p>{errors.date}</p> {/if}
       </div>
       <h4>From</h4>
       <div class="row">
-        <input type="text" class="amount" bind:value={tx.fromAmount} placeholder='Amount'>
-        <input type="text" class="asset" bind:value={tx.fromAsset} placeholder='Asset'>
-        <input type="text" class="wallet" bind:value={tx.fromWallet} placeholder='Wallet'>
+        <div>
+          <input type="text" class="amount" bind:value={tx.fromAmount} placeholder='Amount'>
+          {#if errors.fromAmount} <p>{errors.fromAmount}</p> {/if}
+        </div>
+        <div>
+          <input type="text" class="asset" bind:value={tx.fromAsset} placeholder='Asset'>
+          {#if errors.fromAsset} <p>{errors.fromAsset}</p> {/if}
+        </div>
+        <div>
+          <input type="text" class="wallet" bind:value={tx.fromWallet} placeholder='Wallet'>
+          {#if errors.fromWallet} <p>{errors.fromWallet}</p> {/if}
+        </div>
       </div>
       <h4>To</h4>
       <div class="row">
-        <input type="text" class="amount" bind:value={tx.toAmount} placeholder='Amount'>
-        <input type="text" class="asset" bind:value={tx.toAsset} placeholder='Asset'>
-        <input type="text" class="wallet" bind:value={tx.toWallet} placeholder='Wallet'>
+        <div>
+          <input type="text" class="amount" bind:value={tx.toAmount} placeholder='Amount'>
+          {#if errors.toAmount} <p>{errors.toAmount}</p> {/if}
+        </div>
+        <div>
+          <input type="text" class="asset" bind:value={tx.toAsset} placeholder='Asset'>
+          {#if errors.toAsset} <p>{errors.toAsset}</p> {/if}
+        </div>
+        <div>
+          <input type="text" class="wallet" bind:value={tx.toWallet} placeholder='Wallet'>
+          {#if errors.toWallet} <p>{errors.toWallet}</p> {/if}
+        </div>
       </div>
       <h4>Fee</h4>
       <div class="row">
-        <input type="text" class="amount" bind:value={tx.feeAmount} placeholder='Amount'>
-        <input type="text" class="asset" bind:value={tx.feeAsset} placeholder='Asset'>
+        <div>
+          <input type="text" class="amount" bind:value={tx.feeAmount} placeholder='Amount'>
+          {#if errors.feeAmount} <p>{errors.feeAmount}</p> {/if}
+        </div>
+        <div>
+          <input type="text" class="asset" bind:value={tx.feeAsset} placeholder='Asset'>
+          {#if errors.feeAsset} <p>{errors.feeAsset}</p> {/if}
+        </div>
       </div>
       <h4>Transaction Hash</h4>
       <div class="row">
-        <input type="text" bind:value={tx.txHash}>
+        <input type="text" bind:value={tx.hash}>
+        {#if errors.hash} <p>{errors.hash}</p> {/if}
       </div>
       <h4>Note</h4>
       <div class="row">
         <textarea bind:value={tx.note}></textarea>
+        {#if errors.note} <p>{errors.note}</p> {/if}
       </div>
       <div class="row">
         <button type='submit' on:click={save}>Save</button>

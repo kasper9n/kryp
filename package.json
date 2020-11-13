@@ -9,11 +9,14 @@
     "eslint": "eslint ."
   },
   "dependencies": {
-    "@babel/runtime": "^7.11.2",
+    "@babel/runtime": "^7.12.5",
+    "joi": "^17.3.0",
     "jquery": "^3.5.1",
     "meteor-node-stubs": "^1.0.1",
-    "svelte": "^3.29.4",
-    "svelte-routing": "^1.4.2"
+    "simpl-schema": "^1.10.2",
+    "svelte": "^3.29.6",
+    "svelte-routing": "^1.4.2",
+    "validator": "^13.1.17"
   },
   "devDependencies": {
     "eslint": "^7.13.0",
