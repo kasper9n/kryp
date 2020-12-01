@@ -53,9 +53,9 @@
       <td>{tx.type}</td>
       <td>{tx.fromAmount} {tx.fromAsset} {tx.fromWallet}</td>
       <td>{tx.toAmount} {tx.toAsset} {tx.toWallet}</td>
-      <td>{tx.feeAmount} {tx.feeAsset}</td>
-      <td>{tx.hash}</td>
-      <td>{tx.note}</td>
+      <td>{tx.feeAmount || ''} {tx.feeAsset || ''}</td>
+      <td>{tx.hash || ''}</td>
+      <td>{tx.note || ''}</td>
       <td>{tx.date}</td>
       <td>
         <button on:click={editTx(tx)}>Edit</button>
