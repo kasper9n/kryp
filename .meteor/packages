@@ -24,3 +24,5 @@ hot-module-replacement
 fourseven:scss
 zodern:melte
 insecure
+accounts-base
+accounts-password

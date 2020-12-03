@@ -58,6 +58,7 @@
         id: txId,
       }, (err, res) => {
         if (err) {
+          console.log(err)
           errors = err.details
         } else {
           visible = false
