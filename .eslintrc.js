@@ -24,7 +24,7 @@ module.exports = {
   ],
   rules: {
     indent: ['error', 2],
-    quotes: ['error', 'single'],
+    quotes: ['error', 'single', { 'avoidEscape': true }],
     'comma-dangle': ['error', 'always-multiline'],
     semi: ['error', 'never'],
     'no-unused-vars': 0, // disabled because of bug https://github.com/sveltejs/eslint-plugin-svelte3/pull/65

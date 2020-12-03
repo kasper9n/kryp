@@ -58,11 +58,7 @@
         id: txId,
       }, (err, res) => {
         if (err) {
-          console.log(err)
-          errors = {}
-          for (const detail of err.details) {
-            errors[detail.context.key] = detail.type
-          }
+          errors = err.details
         } else {
           visible = false
           reset()
