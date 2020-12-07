@@ -1,5 +1,4 @@
 <script>
-  import { Accounts } from 'meteor/accounts-base'
   import { Meteor } from 'meteor/meteor'
   let email = ''
   let password = ''
@@ -20,10 +19,10 @@
       password,
     }, (err, res) => {
       if (err) {
-        console.log(err)
+        console.log('signup error', err)
         errors = err.details
       } else {
-        console.log('success', res)
+        console.log('signup success', res)
       }
     })
   }
