@@ -4,6 +4,7 @@
   import Wallets from './pages/Wallets.svelte'
   import Transactions from './transactions/Page.svelte'
   import Login from './pages/Login.svelte'
+  import Logout from './pages/Logout.svelte'
   import Signup from './pages/Signup.svelte'
   import NotFound from './pages/NotFound.svelte'
   import NavLink from './NavLink.svelte'
@@ -75,6 +76,10 @@
       <div class="nav-item">Transactions</div>
     </NavLink>
     <div class="spacer"></div>
+    <NavLink to="/logout">
+      <div class="nav-item">Log out</div>
+    </NavLink>
+    <div class="spacer"></div>
     <NavLink to="/login">
       <div class="nav-item">Login</div>
     </NavLink>
@@ -86,11 +91,12 @@
     <a use:link href="/idkwhat" class="nav-item">404</a>
   </div>
   <div>
+    <Route><NotFound/></Route>
     <Route path="/"><Home/></Route>
     <Route path="/wallets"><Wallets/></Route>
     <Route path="/transactions"><Transactions/></Route>
+    <Route path="/logout"><Logout/></Route>
     <Route path="/login"><Login/></Route>
     <Route path="/signup"><Signup/></Route>
-    <Route><NotFound/></Route>
   </div>
 </Router>
