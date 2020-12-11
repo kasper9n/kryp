@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from 'meteor/meteor'
+  import { navigate } from 'svelte-routing'
   let email = ''
   let password = ''
   let errors = {}
@@ -36,6 +37,7 @@
         console.log('error logging in', err)
       } else {
         console.log('login success')
+        navigate('/')
       }
     })
   }
