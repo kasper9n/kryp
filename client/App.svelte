@@ -8,8 +8,13 @@
   import Signup from './pages/Signup.svelte'
   import NotFound from './pages/NotFound.svelte'
   import NavLink from './NavLink.svelte'
+  import { Meteor } from 'meteor/meteor'
+  import { useTracker } from 'meteor/rdb:svelte-meteor-data'
 
   export let url = ''
+
+  let userId
+  $: userId = useTracker(() => Meteor.user())
 </script>
 
 <style>
@@ -67,26 +72,29 @@
     <NavLink to="/">
       <div class="nav-item">Dashboard</div>
     </NavLink>
-    <div class="spacer"></div>
-    <NavLink to="/wallets">
-      <div class="nav-item">Wallets</div>
-    </NavLink>
-    <div class="spacer"></div>
-    <NavLink to="/transactions">
-      <div class="nav-item">Transactions</div>
-    </NavLink>
-    <div class="spacer"></div>
-    <NavLink to="/logout">
-      <div class="nav-item">Log out</div>
-    </NavLink>
-    <div class="spacer"></div>
-    <NavLink to="/login">
-      <div class="nav-item">Login</div>
-    </NavLink>
-    <div class="spacer"></div>
-    <NavLink to="/signup">
-      <div class="nav-item">Signup</div>
-    </NavLink>
+    {#if $userId}
+      <div class="spacer"></div>
+      <NavLink to="/wallets">
+        <div class="nav-item">Wallets</div>
+      </NavLink>
+      <div class="spacer"></div>
+      <NavLink to="/transactions">
+        <div class="nav-item">Transactions</div>
+      </NavLink>
+      <div class="spacer"></div>
+      <NavLink to="/logout">
+        <div class="nav-item">Log out</div>
+      </NavLink>
+    {:else}
+      <div class="spacer"></div>
+      <NavLink to="/login">
+        <div class="nav-item">Login</div>
+      </NavLink>
+      <div class="spacer"></div>
+      <NavLink to="/signup">
+        <div class="nav-item">Signup</div>
+      </NavLink>
+    {/if}
     <div class="spacer"></div>
     <a use:link href="/idkwhat" class="nav-item">404</a>
   </div>
