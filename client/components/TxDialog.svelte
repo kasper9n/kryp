@@ -52,8 +52,8 @@
   ]
   let errors = {}
   function save() {
-    let method = 'add'
-    if (action === 'edit') method = 'edit'
+    let method = 'transactions.add'
+    if (action === 'edit') method = 'transactions.edit'
     Meteor.call(method, {
       transaction: tx,
       id: txId,
