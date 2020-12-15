@@ -1,7 +1,8 @@
+<title>Transactions - Kryp</title>
 <script>
   import { Transactions } from '../../lib/Transactions.js'
   import { Meteor } from 'meteor/meteor'
-  import TxDialog from './TxDialog.svelte'
+  import TxDialog from '../components/TxDialog.svelte'
   let open
   $: transactions = Transactions.find({})
   let txDialogOptions

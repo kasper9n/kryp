@@ -1,3 +1,4 @@
+<title>Login - Kryp</title>
 <script>
   import { Meteor } from 'meteor/meteor'
   import { navigate } from 'svelte-routing'

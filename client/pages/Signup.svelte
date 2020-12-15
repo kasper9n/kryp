@@ -1,3 +1,4 @@
+<title>Signup - Kryp</title>
 <script>
   import { Meteor } from 'meteor/meteor'
   let email = ''

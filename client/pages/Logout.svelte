@@ -1,3 +1,4 @@
+<title>Log out - Kryp</title>
 <script>
   import { navigate } from 'svelte-routing'
   import { Meteor } from 'meteor/meteor'
