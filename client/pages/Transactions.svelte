@@ -1,10 +1,10 @@
 <title>Transactions - Kryp</title>
 <script>
-  import { Transactions } from '../../lib/Transactions.js'
   import { Meteor } from 'meteor/meteor'
   import TxDialog from '../components/TxDialog.svelte'
+  import * as stores from '../stores'
   let open
-  $: transactions = Transactions.find({})
+  $: transactions = stores.transactions
   let txDialogOptions
 
   function addTx() {
@@ -18,8 +18,7 @@
       id: transaction._id,
     }, (err, res) => {
       if (err) {
-        console.log('!!!!!!!!!!! deleteTx() err:')
-        console.log(err)
+        console.log('deleteTx() err:', err)
       }
     })
   }
@@ -30,7 +29,6 @@
     display: flex;
   }
 </style>
-
 
 <h1>Transactions</h1>
 <TxDialog {...txDialogOptions} bind:open={open} />

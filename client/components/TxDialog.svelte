@@ -1,4 +1,5 @@
 <script>
+  import './dialog.css'
   import { Meteor } from 'meteor/meteor'
   let action
   let visible = false
@@ -52,67 +53,25 @@
   ]
   let errors = {}
   function save() {
-    if (action === 'add' || action === 'edit') {
-      Meteor.call('transactions.'+action, {
-        transaction: tx,
-        id: txId,
-      }, (err, res) => {
-        if (err) {
-          console.log(err)
-          errors = err.details
-        } else {
-          visible = false
-          reset()
-        }
-      })
-    }
+    let method = 'add'
+    if (action === 'edit') method = 'edit'
+    Meteor.call(method, {
+      transaction: tx,
+      id: txId,
+    }, (err, res) => {
+      if (err) {
+        console.log(err)
+        errors = err.details
+      } else {
+        visible = false
+        reset()
+      }
+    })
   }
   function bgClick(e) {
     visible = false
   }
 </script>
-
-<style>
-  .bg {
-    top: 0px;
-    left: 0px;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-  }
-  h2 {
-    margin-top: 0px;
-  }
-  .container {
-    pointer-events: none;
-    top: 0px;
-    left: 0px;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    background-color: rgba(0, 0, 0, 0.66);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  .box {
-    pointer-events: all;
-    background-color: #ffffff;
-    padding: 20px;
-    width: 500px;
-  }
-  .row {
-    display: flex;
-  }
-  h4 {
-    margin-top: 12px;
-    margin-bottom: 0px;
-  }
-  input.asset {
-    width: 70px
-  }
-</style>
 
 {#if visible}
   <div class="bg" on:click={bgClick}></div>
