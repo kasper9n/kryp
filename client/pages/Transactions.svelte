@@ -2,9 +2,9 @@
 <script>
   import { Meteor } from 'meteor/meteor'
   import TxDialog from '../components/TxDialog.svelte'
-  import * as stores from '../stores'
+  import { dateFormat, formatDate, parseDate, transactions as storeTxs } from '../stores.js'
   let open
-  $: transactions = stores.transactions
+  $: transactions = storeTxs
 
   function addTx() {
     open('add')
@@ -54,7 +54,7 @@
       <td>{tx.feeAmount || ''} {tx.feeAsset || ''}</td>
       <td>{tx.hash || ''}</td>
       <td>{tx.note || ''}</td>
-      <td>{tx.date}</td>
+      <td>{formatDate(new Date(tx.date), dateFormat)}</td>
       <td>
         <button on:click={editTx(tx)}>Edit</button>
         <button on:click={deleteTx(tx)}>Delete</button>
