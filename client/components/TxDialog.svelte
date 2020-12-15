@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from 'meteor/meteor'
+  import DateTime from './DateTime.svelte'
   let errors = {}
   let action
   let visible = false
@@ -10,7 +11,7 @@
     txId = null
     tx = {
       type: 'Trade',
-      date: 'Aug 28 21:27 PM',
+      date: new Date().getTime(),
       hash: '',
       note: '',
       fromWallet: '',
@@ -31,7 +32,7 @@
       txId = newTx._id
       tx = {
         type: newTx.type || 'Trade',
-        date: newTx.date || 'Aug 27 21:27 PM',
+        date: newTx.date || new Date().getTime(),
         hash: newTx.hash || '',
         note: newTx.note || '',
         fromWallet: newTx.fromWallet || '',
@@ -132,7 +133,7 @@
       {#if errors.type} <p>{errors.type}</p> {/if}
       <h4>Date</h4>
       <div class="row">
-        <input type="text" bind:value={tx.date}>
+        <DateTime bind:value={tx.date} />
         {#if errors.date} <p>{errors.date}</p> {/if}
       </div>
       <h4>From</h4>
