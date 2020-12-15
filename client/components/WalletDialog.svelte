@@ -60,7 +60,11 @@
         {#if errors.name} <p>{errors.name}</p> {/if}
       </div>
       <div class="row">
-        <button type='submit' on:click={save}>Save</button>
+        <button type='submit' on:click={save}>
+          {#if action === 'add'} Add
+          {:else if action === 'edit'} Save
+          {/if}
+          </button>
       </div>
     </form>
   </div>
