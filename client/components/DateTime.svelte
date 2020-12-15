@@ -15,7 +15,6 @@
     try {
       value = parse(e.target.value, dateFormat, referenceDate).getTime()
     } catch {
-      console.log('setting to null')
       value = null
     }
   }
