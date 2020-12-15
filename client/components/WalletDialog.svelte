@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from 'meteor/meteor'
+  let errors = {}
   let action
   let visible = false
   let walletId
@@ -12,17 +13,17 @@
     }
   }
   export const open = (actionArg, newWallet) => {
+    errors = {}
     action = actionArg
     if (action === 'add') reset()
     else if (action === 'edit') {
       walletId = newWallet._id
       wallet = {
-        type: newWallet.name || 'Trade',
+        name: newWallet.name || '',
       }
     }
     visible = true
   }
-  let errors = {}
   function save() {
     let method = 'wallets.add'
     if (action === 'edit') method = 'wallets.edit'

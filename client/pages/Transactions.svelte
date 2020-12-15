@@ -5,7 +5,6 @@
   import * as stores from '../stores'
   let open
   $: transactions = stores.transactions
-  let txDialogOptions
 
   function addTx() {
     open('add')
@@ -31,7 +30,7 @@
 </style>
 
 <h1>Transactions</h1>
-<TxDialog {...txDialogOptions} bind:open={open} />
+<TxDialog bind:open={open} />
 <div class="action-menu">
   <button on:click={addTx}>Add transaction</button>
 </div>

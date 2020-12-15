@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from 'meteor/meteor'
+  let errors = {}
   let action
   let visible = false
   let txId
@@ -23,6 +24,7 @@
     }
   }
   export const open = (actionArg, newTx) => {
+    errors = {}
     action = actionArg
     if (action === 'add') reset()
     else if (action === 'edit') {
@@ -50,7 +52,6 @@
     'Deposit',
     'Withdrawal',
   ]
-  let errors = {}
   function save() {
     let method = 'transactions.add'
     if (action === 'edit') method = 'transactions.edit'

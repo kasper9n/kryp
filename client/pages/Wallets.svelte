@@ -5,7 +5,6 @@
   import * as stores from '../stores'
   let open
   $: wallets = stores.wallets
-  let WalletDialogOptions
 
   function addWallet() {
     open('add')
@@ -31,7 +30,7 @@
 </style>
 
 <h1>wallets</h1>
-<WalletDialog {...WalletDialogOptions} bind:open={open} />
+<WalletDialog bind:open={open} />
 <div class="action-menu">
   <button on:click={addWallet}>Add wallet</button>
 </div>
