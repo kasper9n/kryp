@@ -5,12 +5,14 @@ module.exports = {
     browser: true,
   },
   extends: 'eslint:recommended',
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
   },
   plugins: [
     'svelte3',
+    '@typescript-eslint',
   ],
   ignorePatterns: ['**/node_modules'],
   settings: {
