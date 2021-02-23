@@ -1,6 +1,6 @@
 import { Accounts } from 'meteor/accounts-base'
 import { Meteor } from 'meteor/meteor'
-import is from './is.js'
+import { mError, is } from './general'
 
 Meteor.methods({
   'accounts.create'({ email, password }) {
@@ -13,14 +13,14 @@ Meteor.methods({
     }
     const vResult = is.valid(schema, options)
     if (vResult.errors) {
-      throw new Meteor.Error(1000, 'Input error', vResult.errors)
+      throw mError(1000, 'Input error', vResult.errors)
     } else {
       try {
         const userId = Accounts.createUser(options)
         return
       } catch(err) {
         if (err.reason === 'Email already exists.') {
-          throw new Meteor.Error(1000, 'Input error', { email: 'available' })
+          throw mError(1000, 'Input error', { email: 'available' })
         }
       }
     }

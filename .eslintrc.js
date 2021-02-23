@@ -4,19 +4,21 @@ module.exports = {
     node: true,
     browser: true,
   },
-  extends: 'eslint:recommended',
+  extends: ['eslint:recommended', 'plugin:meteor/recommended'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
   },
   plugins: [
+    'meteor',
     'svelte3',
     '@typescript-eslint',
   ],
   ignorePatterns: ['**/node_modules'],
   settings: {
     'svelte3/ignore-styles': () => true,
+    'svelte3/typescript': require('typescript'),
   },
   overrides: [
     {
