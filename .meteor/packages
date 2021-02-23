@@ -20,8 +20,8 @@ shell-server@0.5.0            # Server-side component of the `meteor shell` comm
 autopublish@1.0.7             # Publish all data to the clients (for prototyping)
 insecure@1.0.7                # Allow all DB writes from clients (for prototyping)
 
-rdb:svelte-meteor-data
-static-html
-svelte:compiler
+rdb:svelte-meteor-data@0.3.0
+static-html@1.2.2
+svelte:compiler@3.31.2
 accounts-base@1.7.1
 accounts-password@1.6.3
