@@ -1,5 +1,6 @@
 <script>
   import { Meteor } from 'meteor/meteor'
+  import { calculate } from '../calculate.ts'
   import DateTime from './DateTime.svelte'
   let errors = {}
   let action
@@ -10,7 +11,7 @@
   function reset() {
     txId = null
     tx = {
-      type: 'Trade',
+      type: 'trade',
       date: new Date().getTime(),
       hash: '',
       note: '',
@@ -31,7 +32,7 @@
     else if (action === 'edit') {
       txId = newTx._id
       tx = {
-        type: newTx.type || 'Trade',
+        type: newTx.type || 'trade',
         date: newTx.date || new Date().getTime(),
         hash: newTx.hash || '',
         note: newTx.note || '',
@@ -48,10 +49,10 @@
     visible = true
   }
   let txTypes = [
-    'Trade',
-    'Transfer',
-    'Deposit',
-    'Withdrawal',
+    { value: 'trade', text: 'Trade' },
+    { value: 'transfer', text: 'Transfer' },
+    { value: 'deposit', text: 'Deposit' },
+    { value: 'withdrawal', text: 'Withdrawal' },
   ]
   function save() {
     let method = 'transactions.add'
@@ -66,6 +67,7 @@
       } else {
         visible = false
         reset()
+        calculate()
       }
     })
   }
@@ -125,8 +127,8 @@
       <h4>Transaction Type</h4>
       <select bind:value={tx.type}>
         {#each txTypes as txType}
-          <option value={txType}>
-            {txType}
+          <option value={txType.value}>
+            {txType.text}
           </option>
         {/each}
       </select>
