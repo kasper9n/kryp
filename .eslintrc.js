@@ -41,9 +41,7 @@ module.exports = {
     'no-loss-of-precision': ['error'],
     'space-before-function-paren': ['error', 'never'],
     'object-curly-spacing': ['error', 'always'],
-    'array-bracket-spacing': ['error', 'never', {
-      // arraysInArrays: true,
-      // objectsInArrays: true,
-    }],
+    'meteor/audit-argument-checks': [0],
+    'array-bracket-spacing': ['error', 'never', {}],
   },
 }
