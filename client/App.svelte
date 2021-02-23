@@ -6,6 +6,7 @@
   import Login from './pages/Login.svelte'
   import Logout from './pages/Logout.svelte'
   import Signup from './pages/Signup.svelte'
+  import Settings from './pages/Settings.svelte'
   import NotFound from './pages/NotFound.svelte'
   import NavLink from './NavLink.svelte'
   import { Meteor } from 'meteor/meteor'
@@ -57,6 +58,9 @@
     padding: 4px 8px;
     cursor: pointer;
   }
+  .navbar-split {
+    margin-left: auto
+  }
   .nav-item:hover {
     opacity: 0.75
   }
@@ -85,6 +89,12 @@
       <NavLink to="/logout">
         <div class="nav-item">Log out</div>
       </NavLink>
+      <div class="navbar-split"></div>
+      <a use:link href="/idkwhat" class="nav-item">404</a>
+      <div class="spacer"></div>
+      <NavLink to="/settings">
+        <div class="nav-item">Settings</div>
+      </NavLink>
     {:else}
       <div class="spacer"></div>
       <NavLink to="/login">
@@ -95,8 +105,6 @@
         <div class="nav-item">Signup</div>
       </NavLink>
     {/if}
-    <div class="spacer"></div>
-    <a use:link href="/idkwhat" class="nav-item">404</a>
   </div>
   <div>
     <Route><NotFound/></Route>
@@ -106,5 +114,6 @@
     <Route path="/logout"><Logout/></Route>
     <Route path="/login"><Login/></Route>
     <Route path="/signup"><Signup/></Route>
+    <Route path="/settings"><Settings/></Route>
   </div>
 </Router>
