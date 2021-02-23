@@ -6,7 +6,7 @@ const app = new App({
 
 export default app
 
-// recreate the whole app if an HMR update touches this module
+// HMR
 if (import.meta && import.meta.hot) {
   import.meta.hot.dispose(() => {
     app.$destroy()

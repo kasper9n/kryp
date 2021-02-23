@@ -4,14 +4,13 @@ module.exports = {
     node: true,
     browser: true,
   },
-  extends: ['eslint:recommended', 'plugin:meteor/recommended'],
+  extends: ['eslint:recommended'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
   },
   plugins: [
-    'meteor',
     'svelte3',
     '@typescript-eslint',
   ],
@@ -41,7 +40,6 @@ module.exports = {
     'no-loss-of-precision': ['error'],
     'space-before-function-paren': ['error', 'never'],
     'object-curly-spacing': ['error', 'always'],
-    'meteor/audit-argument-checks': [0],
     'array-bracket-spacing': ['error', 'never', {}],
   },
 }
