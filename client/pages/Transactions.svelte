@@ -3,6 +3,7 @@
   import { Meteor } from 'meteor/meteor'
   import TxDialog from '../components/TxDialog.svelte'
   import { dateFormat, formatDate, parseDate, transactions as storeTxs } from '../stores.js'
+  import { calculate } from '../calculate.ts'
   let open
   $: transactions = storeTxs
 
@@ -18,6 +19,8 @@
     }, (err, res) => {
       if (err) {
         console.log('deleteTx() err:', err)
+      } else {
+        calculate()
       }
     })
   }
