@@ -1,27 +1,24 @@
 {
   "name": "kryp",
+  "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "snowpack dev",
-    "build": "snowpack build",
-    "lint": "prettier --write *.js *.json src public types",
-    "check": "svelte-check"
+    "dev": "svelte-kit dev",
+    "build": "svelte-kit build",
+    "preview": "svelte-kit preview",
+    "lint": "prettier --check *.js *.json src",
+    "format": "prettier --write *.js *.json src"
   },
   "devDependencies": {
-    "@snowpack/plugin-svelte": "^3.5.2",
-    "@snowpack/plugin-typescript": "^1.2.1",
-    "@types/snowpack-env": "^2.3.3",
-    "date-fns": "^2.19.0",
-    "prettier": "^2.2.1",
+    "@sveltejs/kit": "next",
+    "prettier": "~2.2.1",
     "prettier-plugin-svelte": "^2.2.0",
-    "sass": "^1.32.8",
-    "snowpack": "^3.0.13",
     "svelte": "^3.37.0",
-    "svelte-check": "^1.2.6",
-    "svelte-pathfinder": "^3.1.3",
-    "svelte-preprocess": "^4.6.9",
-    "svelte-routing": "^1.5.0",
-    "typescript": "^4.2.3"
+    "svelte-preprocess": "^4.7.2",
+    "tslib": "^2.2.0",
+    "typescript": "^4.2.4",
+    "vite": "^2.2.3"
   },
   "prettier": {
     "printWidth": 100,
@@ -33,8 +30,5 @@
     "svelteAllowShorthand": true,
     "svelteBracketNewLine": false,
     "svelteIndentScriptAndStyle": true
-  },
-  "dependencies": {
-    "gun": "^0.2020.520"
   }
 }

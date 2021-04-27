@@ -9,8 +9,6 @@
 
 ### Commands
 
-Start:
-
-```
-npm run dev
-```
+- `npm run dev`: Start in dev mode
+- `npm run build`: Build
+- `npm run preview`: Preview production app
