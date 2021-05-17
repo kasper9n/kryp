@@ -164,7 +164,6 @@
     class="edit-cell"
     class:hide={hideEditBox}
     bind:this={editCell}
-    contenteditable="true"
     on:keydown={keydown}
     on:blur={editBoxBlur}
     bind:value={editText} />
@@ -173,10 +172,10 @@
     <thead>
       <tr>
         <th>Type</th>
-        <th>From</th>
+        <th>Sell</th>
         <th>Cur.</th>
         <th>Wallet</th>
-        <th>To</th>
+        <th>Buy</th>
         <th>Cur.</th>
         <th>Wallet</th>
         <th>Fee</th>
@@ -221,6 +220,8 @@
   td
     padding: 6px 10px
     border: 1px solid #e7e8e8
+    &.amount
+      text-align: right
   thead
     th
       text-align: center

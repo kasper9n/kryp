@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "svelte-kit dev",
-    "build": "svelte-kit build",
+    "dev": "tauri dev",
+    "dev:web": "svelte-kit dev --port 5000",
+    "tauri": "tauri",
+    "build": "tauri build",
+    "build:web": "svelte-kit build",
     "preview": "svelte-kit preview",
     "lint": "prettier --check *.js *.json src",
     "format": "prettier --write *.js *.json src"
@@ -31,5 +34,9 @@
     "svelteAllowShorthand": true,
     "svelteBracketNewLine": false,
     "svelteIndentScriptAndStyle": true
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.0.0-beta.1",
+    "@tauri-apps/cli": "^1.0.0-beta.2"
   }
 }
