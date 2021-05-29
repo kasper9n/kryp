@@ -3,7 +3,9 @@
   windows_subsystem = "windows"
 )]
 
-mod tax;
+use tauri::{api, CustomMenuItem, Menu, MenuItem, WindowBuilder, WindowUrl};
+
+mod prices;
 
 fn main() {
   let menu = vec![
@@ -65,5 +67,5 @@ fn main() {
       _ => {}
     })
     .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .expect("error running application");
 }

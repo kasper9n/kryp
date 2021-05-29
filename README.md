@@ -12,3 +12,11 @@
 - `npm run dev`: Start in dev mode
 - `npm run build`: Build
 - `npm run preview`: Preview production app
+
+### ToDo
+- https://www.coingecko.com/en/api
+- https://www.quandl.com/tools/api
+- https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
+- https://exchangerate.host/
+- https://openexchangerates.org/
+- https://www.amdoren.com/currency-api/
