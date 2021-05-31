@@ -3,9 +3,48 @@
   windows_subsystem = "windows"
 )]
 
-use tauri::{api, CustomMenuItem, Menu, MenuItem, WindowBuilder, WindowUrl};
+use crate::tax::{runtest, Tax};
+use std::sync::{Arc, Mutex};
+use tauri::{api, command, CustomMenuItem, Menu, MenuItem, State, WindowBuilder, WindowUrl};
 
 mod prices;
+mod tax;
+
+#[macro_export]
+macro_rules! throw {
+  ($($arg:tt)*) => {{
+    return Err(format!($($arg)*).to_owned())
+  }};
+}
+
+#[derive(Debug, Default)]
+struct Kryp {
+  current: Option<Tax>,
+}
+
+#[derive(Default)]
+struct Database(Arc<Mutex<Kryp>>);
+
+#[command]
+fn open(file_path: String, kryp: State<Database>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().unwrap();
+  if let None = kryp.current {
+    kryp.current = Some(Tax::load(&file_path)?);
+  }
+  println!("fp {}", file_path);
+  println!("tax {:?}", kryp.current);
+  Ok(())
+}
+
+#[command]
+fn error_popup(msg: String) {
+  api::dialog::message("Error", msg);
+}
+
+#[command]
+fn calculate() {
+  runtest();
+}
 
 fn main() {
   let menu = vec![
@@ -46,6 +85,7 @@ fn main() {
     ),
   ];
 
+  let ctx = tauri::generate_context!();
   tauri::Builder::default()
     .create_window("main".into(), WindowUrl::default(), |win, webview| {
       let win = win
@@ -59,6 +99,8 @@ fn main() {
         .fullscreen(false);
       return (win, webview);
     })
+    .manage(Database(Default::default()))
+    .invoke_handler(tauri::generate_handler![calculate, open, error_popup])
     .menu(menu)
     .on_menu_event(|event| match event.menu_item_id().as_str() {
       "learn-more" => {
@@ -66,6 +108,6 @@ fn main() {
       }
       _ => {}
     })
-    .run(tauri::generate_context!())
+    .run(ctx)
     .expect("error running application");
 }

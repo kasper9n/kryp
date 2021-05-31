@@ -88,6 +88,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "atomicwrites"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4830ac690261d0b47f06e86d18c47eaa65d0184e576cf9b62c3a49b28cb876b"
+dependencies = [
+ "nix 0.20.0",
+ "tempfile",
+ "winapi",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1499,6 +1510,7 @@ dependencies = [
 name = "kryp"
 version = "0.1.0"
 dependencies = [
+ "atomicwrites",
  "chrono",
  "csv",
  "reqwest",
@@ -1775,6 +1787,18 @@ dependencies = [
  "cfg-if 0.1.10",
  "libc",
  "void",
+]
+
+[[package]]
+name = "nix"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa9b4819da1bc61c0ea48b63b7bc8604064dd43013e7cc325df098d49cd7c18a"
+dependencies = [
+ "bitflags 1.2.1",
+ "cc",
+ "cfg-if 1.0.0",
+ "libc",
 ]
 
 [[package]]
@@ -3801,7 +3825,7 @@ dependencies = [
  "fastrand",
  "futures",
  "nb-connect",
- "nix",
+ "nix 0.17.0",
  "once_cell",
  "polling",
  "scoped-tls",

@@ -1,15 +1,14 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
 use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
   collections::{BTreeMap, HashMap},
   ops::RangeInclusive,
   thread, time,
 };
 
-const BASE: &str = "USD";
-
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PriceData {
   assets: HashMap<String, PriceDataAsset>,
 }
@@ -20,24 +19,39 @@ impl PriceData {
       assets: HashMap::new(),
     };
   }
-  pub fn asset(&mut self, symbol: &str, prices: BTreeMap<i64, f64>) -> &mut PriceDataAsset {
-    let currency = symbol.to_uppercase();
-    let entry = self.assets.entry(currency.clone());
-    let kind = match &currency as &str {
+  pub fn symbol_kind(&mut self, symbol: &str) -> AssetKind {
+    return match symbol {
       "USD" | "EUR" | "NOK" => AssetKind::Fiat,
       _ => AssetKind::Crypto,
     };
+  }
+  pub fn asset(&mut self, symbol: &str) -> &mut PriceDataAsset {
+    let symbol = symbol.to_uppercase();
+    let kind = self.symbol_kind(&symbol);
+    let entry = self.assets.entry(symbol.clone());
     let interval = match kind {
       AssetKind::Fiat => Interval::Daily,
       AssetKind::Crypto => Interval::HourlyOrDaily,
     };
     let price_data_asset = entry.or_insert(PriceDataAsset {
-      symbol: currency.clone(),
+      symbol: symbol.clone(),
       kind,
       interval,
-      prices,
+      prices: BTreeMap::new(),
     });
     return price_data_asset;
+  }
+  pub fn get_value(&mut self, amount: Decimal, asset: &str, date: i64, base: &str) -> Decimal {
+    if asset == base {
+      return amount;
+    } else if asset == "USD" {
+      let usd_price = self.get_price_dec(asset, date);
+      return amount * usd_price;
+    } else {
+      let usd_price = self.get_price_dec(asset, date);
+      let price = usd_price / self.get_price_dec(base, date);
+      return amount * price;
+    }
   }
   pub fn get_price_dec(&mut self, currency: &str, date: i64) -> Decimal {
     let price = self.get_price(currency, date);
@@ -45,10 +59,10 @@ impl PriceData {
   }
   pub fn get_price(&mut self, currency: &str, date: i64) -> f64 {
     let currency = currency.to_uppercase();
-    if currency == BASE {
+    if currency == "USD" {
       return 1.0;
     }
-    let price_data_asset = self.asset(&currency, BTreeMap::new());
+    let price_data_asset = self.asset(&currency);
     match price_data_asset.local_price(date, false) {
       Some(price) => return price.1,
       None => {
@@ -62,6 +76,7 @@ impl PriceData {
   }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PriceDataAsset {
   pub symbol: String,
   pub kind: AssetKind,
@@ -95,6 +110,8 @@ impl PriceDataAsset {
   async fn fetch_fiat(&mut self, date: i64) -> Result<(), reqwest::Error> {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
+    let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
+    println!("{} {}", self.symbol, start_dt_str);
     let end_dt = start_dt + Duration::days(365);
 
     type PriceMap = HashMap<String, String>;
@@ -104,20 +121,20 @@ impl PriceDataAsset {
       timeseries: bool,
       rates: HashMap<String, PriceMap>,
     }
+    thread::sleep(time::Duration::from_millis(500));
     let request_url = format!(
       "https://api.exchangerate.host/timeseries?base={symbol}&symbols={base}&places=8&start_date={from}&end_date={to}",
       symbol = self.symbol,
-      base = BASE,
-      from = start_dt.format("%Y-%m-%d").to_string(),
+      base = "USD",
+      from = start_dt_str,
       to = end_dt.format("%Y-%m-%d").to_string(),
     );
-    println!("{}", request_url);
+    // println!("{}", request_url);
     let timeseries_res = reqwest::get(request_url).await?;
     if !timeseries_res.status().is_success() {
       panic!("Error fetching coins {}", self.symbol);
     }
     let timeseries: Timeseries = timeseries_res.json().await?;
-    thread::sleep(time::Duration::from_millis(500));
     if !timeseries.success || !timeseries.timeseries {
       panic!("Unknown error fetching prices");
     }
@@ -136,6 +153,8 @@ impl PriceDataAsset {
   async fn fetch_crypto(&mut self, date: i64) -> Result<(), reqwest::Error> {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 1; // 1 day before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
+    let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
+    println!("{} {}", self.symbol, start_dt_str);
     let end_dt = start_dt + Duration::days(30);
 
     #[derive(Deserialize, Debug)]
@@ -144,6 +163,7 @@ impl PriceDataAsset {
       symbol: String,
       name: String,
     }
+    thread::sleep(time::Duration::from_millis(600));
     let request_url = "https://api.coingecko.com/api/v3/coins/list";
     let coins_res = reqwest::get(request_url).await?;
     if !coins_res.status().is_success() {
@@ -154,7 +174,6 @@ impl PriceDataAsset {
       }
     }
     let coins: Vec<Coin> = coins_res.json().await?;
-    thread::sleep(time::Duration::from_millis(600));
 
     let mut coin_id_map: HashMap<String, String> = HashMap::new();
     for coin in coins {
@@ -176,15 +195,16 @@ impl PriceDataAsset {
     struct MarketChart {
       prices: Vec<(i64, f64)>,
     }
+    thread::sleep(time::Duration::from_millis(600));
     let request_url = format!(
       "https://api.coingecko.com/api/v3/coins/{id}/market_chart/range?vs_currency={base}&from={from}&to={to}",
       id = id,
-      base = BASE,
+      base = "USD",
       from = start_dt.timestamp(),
       to = end_dt.timestamp(),
     );
+    // println!("{}", request_url);
     let market_chart_res = reqwest::get(request_url).await?;
-    thread::sleep(time::Duration::from_millis(600));
     if !market_chart_res.status().is_success() {
       if market_chart_res.status() == 429 {
         panic!("Rate limit, please try again");
@@ -202,16 +222,18 @@ impl PriceDataAsset {
   }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Interval {
   Daily = 0,
   HourlyOrDaily = 1,
 }
+#[derive(Serialize, Deserialize, Debug)]
 pub enum AssetKind {
   Fiat = 0,
   Crypto = 1,
 }
 
-#[allow(unused_macros)]
+#[cfg(test)]
 macro_rules! map(
   ($($k:expr => $v:expr),* $(,)?) => {
     std::iter::Iterator::collect(std::array::IntoIter::new([$(($k, $v),)*]))
@@ -221,13 +243,11 @@ macro_rules! map(
 #[test]
 fn crypto() {
   let mut pd = PriceData::new();
-  let eth_pda = pd.asset(
-    "ETH",
-    map! {
-      1600000000000 => 5.2,
-      1600009000000 => 6.1
-    },
-  );
+  let mut eth_pda = pd.asset("ETH");
+  eth_pda.prices = map! {
+    1600000000000 => 5.2,
+    1600009000000 => 6.1
+  };
   assert_eq!(eth_pda.local_price(1600000000000, false).unwrap().1, 5.2);
   assert_eq!(eth_pda.local_price(1600008000000, false).unwrap().1, 6.1);
   assert_eq!(eth_pda.local_price(1610000000000, false), None);
@@ -248,7 +268,8 @@ fn fetch() {
   let mut pd = PriceData::new();
   let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
   let nok_price = pd.get_price("NOK", date.timestamp_millis());
-  assert!(tolerance_pct(8.89, 0.2).contains(&nok_price));
+  println!("nok_price {}", nok_price);
+  assert!(tolerance_pct(0.1125, 0.2).contains(&nok_price));
   let eth_price = pd.get_price("ETH", date.timestamp_millis());
   assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
 }
