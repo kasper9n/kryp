@@ -31,3 +31,4 @@ custom-protocol = [ "tauri/custom-protocol" ]
 # version: https://github.com/rust-lang/cargo/pull/9298
 # https://jakedeichert.com/blog/reducing-rust-incremental-compilation-times-on-macos-by-70-percent/
 split-debuginfo = "unpacked"
+# opt-level = 3

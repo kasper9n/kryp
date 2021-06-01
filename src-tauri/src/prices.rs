@@ -2,11 +2,10 @@ use chrono::{Duration, NaiveDate, NaiveDateTime};
 use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
-use std::{
-  collections::{BTreeMap, HashMap},
-  ops::RangeInclusive,
-  thread, time,
-};
+use std::collections::{BTreeMap, HashMap};
+#[cfg(test)]
+use std::ops::RangeInclusive;
+use std::{thread, time};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceData {
@@ -256,7 +255,7 @@ fn crypto() {
 
 /// Get a range from -x% to +x% of value. For example, a 50% tolerance
 /// around 10 gives you 5..15 (not 5..20, which might be better for prices)
-#[allow(dead_code)]
+#[cfg(test)]
 fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
   let min = num - num * tolerance_percent / 100.0;
   let max = num + num * tolerance_percent / 100.0;

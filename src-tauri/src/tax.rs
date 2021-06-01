@@ -4,11 +4,10 @@ use atomicwrites::{AllowOverwrite, AtomicFile};
 use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
-use std::{
-  fs::File,
-  io::{Read, Write},
-  time::Instant,
-};
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::Path;
+use std::time::Instant;
 
 fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
@@ -69,7 +68,7 @@ impl Tax {
         }
         TxType::Transfer => {
           if transaction.fee_asset != "" {
-            panic!("Unsupported: Transfer fee. Use a lower Buy value instead"); // TODO
+            panic!("Unsupported: Transfer fee");
           }
           if transaction.from_amount > transaction.to_amount {
             let fee_amount = transaction.from_amount - transaction.to_amount;
@@ -111,7 +110,7 @@ impl Tax {
       }
     }
   }
-  pub fn save(&self, file_path: &str) {
+  pub fn save<P: AsRef<Path>>(&self, file_path: P) {
     let now = Instant::now();
     let mut json = Vec::new();
     let formatter = serde_json::ser::PrettyFormatter::with_indent(b"	"); // tab
@@ -119,10 +118,10 @@ impl Tax {
     self.serialize(&mut ser).expect("Error saving content");
     println!("Stringify: {}ms", now.elapsed().as_millis());
 
-    let af = AtomicFile::new(file_path, AllowOverwrite);
+    let af = AtomicFile::new(&file_path, AllowOverwrite);
     af.write(|f| f.write_all(&json)).expect("Error saving");
   }
-  pub fn load(file_path: &str) -> Result<Self, String> {
+  pub fn load<P: AsRef<Path>>(file_path: P) -> Result<Self, String> {
     let now = Instant::now();
     match File::open(file_path) {
       Ok(mut file) => {
@@ -206,7 +205,7 @@ impl Transaction {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Balance {
   pub acquire_date: i64,
   pub amount: Decimal,
@@ -281,42 +280,9 @@ pub struct Realized {
   pub wallet: String,
 }
 
-// #[test]
-// fn trade() {
-//   let mut tax = Tax::load("./tests/taxes.krypj");
-//   tax.transactions = vec![
-//     Transaction {
-//       kind: TxType::Deposit,
-//       date: 1500000000000,
-//       note: "".to_string(),
-//       hash: "".to_string(),
-//       from_amount: dec!(0),
-//       from_asset: "".to_string(),
-//       from_wallet: "".to_string(),
-//       to_amount: dec!(1000),
-//       to_asset: "NOK".to_string(),
-//       to_wallet: "Binance".to_string(),
-//       fee_amount: dec!(0),
-//       fee_asset: "".to_string(),
-//       cost: dec!(0),
-//     },
-//   ]
-// }
-
 #[test]
-pub fn test() {
-  runtest();
-}
-
-// not marked as test to avoid unused warnings
-pub fn runtest() {
-  let mut tax = Tax {
-    transactions: Vec::new(),
-    base_currency: "NOK".to_string(),
-    price_data: PriceData::new(),
-    balances: Vec::new(),
-    reazlied_gains: Vec::new(),
-  };
+pub fn trade() {
+  let mut tax = Tax::load("./tests/taxes.krypj").unwrap();
   tax.transactions = vec![
     Transaction {
       kind: TxType::Deposit,
@@ -335,7 +301,7 @@ pub fn runtest() {
     },
     Transaction {
       kind: TxType::Trade,
-      date: 1510000000000,
+      date: 1500100000000,
       note: "".to_string(),
       hash: "".to_string(),
       from_amount: dec!(800),
@@ -348,58 +314,32 @@ pub fn runtest() {
       fee_asset: "".to_string(),
       cost: dec!(0),
     },
-    Transaction {
-      kind: TxType::Transfer,
-      date: 1520000000000,
-      note: "".to_string(),
-      hash: "".to_string(),
-      from_amount: dec!(0.1),
-      from_asset: "BTC".to_string(),
-      from_wallet: "Binance".to_string(),
-      to_amount: dec!(0.1),
-      to_asset: "BTC".to_string(),
-      to_wallet: "Coinbase".to_string(),
-      fee_amount: dec!(0),
-      fee_asset: "".to_string(),
-      cost: dec!(0),
-    },
-    Transaction {
-      kind: TxType::Trade,
-      date: 1530000000000,
-      note: "".to_string(),
-      hash: "".to_string(),
-      from_amount: dec!(0.4),
-      from_asset: "BTC".to_string(),
-      from_wallet: "Binance".to_string(),
-      to_amount: dec!(3),
-      to_asset: "ETH".to_string(),
-      to_wallet: "Binance".to_string(),
-      fee_amount: dec!(0),
-      fee_asset: "".to_string(),
-      cost: dec!(0),
-    },
-    Transaction {
-      kind: TxType::Withdrawal,
-      date: 1530000000000,
-      note: "".to_string(),
-      hash: "".to_string(),
-      from_amount: dec!(1.0),
-      from_asset: "ETH".to_string(),
-      from_wallet: "Binance".to_string(),
-      to_amount: dec!(0),
-      to_asset: "".to_string(),
-      to_wallet: "".to_string(),
-      fee_amount: dec!(0),
-      fee_asset: "".to_string(),
-      cost: dec!(0),
-    },
   ];
   for transaction in tax.transactions.iter_mut() {
     transaction.cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
   }
   tax.calculate();
+  assert_eq!(
+    tax.balances[0],
+    Balance {
+      acquire_date: 1500000000000,
+      amount: dec!(200),
+      currency: "NOK".to_string(),
+      wallet: "Binance".to_string(),
+      cost: dec!(200),
+    }
+  );
+  assert_eq!(
+    tax.balances[1],
+    Balance {
+      acquire_date: 1500100000000,
+      amount: dec!(0.5),
+      currency: "BTC".to_string(),
+      wallet: "Binance".to_string(),
+      cost: dec!(800),
+    }
+  );
   println!("tx: {:#?}", &tax.transactions);
   println!("balances: {:#?}", &tax.balances);
   println!("realized: {:#?}", &tax.reazlied_gains);
-  tax.save("./tests/taxes.krypj");
 }

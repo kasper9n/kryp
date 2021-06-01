@@ -3,22 +3,17 @@ import adapter from '@sveltejs/adapter-static'
 
 /** @type {import('@sveltejs/kit').Config} */
 export default {
-  // Consult https://github.com/sveltejs/svelte-preprocess
-  // for more information about preprocessors
   preprocess: preprocess(),
 
   kit: {
-    // hydrate the <div id="svelte"> element in src/app.html
     target: '#svelte',
     ssr: false,
     prerender: {
       enabled: false,
     },
     adapter: adapter({
-      // default options are shown
-      pages: 'build',
-      assets: 'build',
-      fallback: 'index.html',
+      pages: '.svelte-kit/build-output',
+      // fallback: 'app.html',
     }),
     vite: {
       clearScreen: false,

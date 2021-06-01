@@ -3,47 +3,16 @@
   windows_subsystem = "windows"
 )]
 
-use crate::tax::{runtest, Tax};
-use std::sync::{Arc, Mutex};
-use tauri::{api, command, CustomMenuItem, Menu, MenuItem, State, WindowBuilder, WindowUrl};
+use tauri::api::{dialog, shell};
+use tauri::{command, CustomMenuItem, Menu, MenuItem, WindowBuilder, WindowUrl};
 
+mod data;
 mod prices;
 mod tax;
 
-#[macro_export]
-macro_rules! throw {
-  ($($arg:tt)*) => {{
-    return Err(format!($($arg)*).to_owned())
-  }};
-}
-
-#[derive(Debug, Default)]
-struct Kryp {
-  current: Option<Tax>,
-}
-
-#[derive(Default)]
-struct Database(Arc<Mutex<Kryp>>);
-
-#[command]
-fn open(file_path: String, kryp: State<Database>) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
-  if let None = kryp.current {
-    kryp.current = Some(Tax::load(&file_path)?);
-  }
-  println!("fp {}", file_path);
-  println!("tax {:?}", kryp.current);
-  Ok(())
-}
-
 #[command]
 fn error_popup(msg: String) {
-  api::dialog::message("Error", msg);
-}
-
-#[command]
-fn calculate() {
-  runtest();
+  dialog::message("Error", msg);
 }
 
 fn main() {
@@ -99,12 +68,16 @@ fn main() {
         .fullscreen(false);
       return (win, webview);
     })
-    .manage(Database(Default::default()))
-    .invoke_handler(tauri::generate_handler![calculate, open, error_popup])
+    .manage(data::Data(Default::default()))
+    .invoke_handler(tauri::generate_handler![
+      data::open,
+      error_popup,
+      data::save
+    ])
     .menu(menu)
     .on_menu_event(|event| match event.menu_item_id().as_str() {
       "learn-more" => {
-        api::shell::open("https://github.com/probablykasper/kryp".to_string(), None).unwrap();
+        shell::open("https://github.com/probablykasper/kryp".to_string(), None).unwrap();
       }
       _ => {}
     })

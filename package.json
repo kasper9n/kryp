@@ -14,16 +14,16 @@
     "format": "prettier --write *.js *.json src"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^1.0.0-next.12",
-    "@sveltejs/kit": "^1.0.0-next.111",
-    "prettier": "~2.2.1",
+    "@sveltejs/adapter-static": "^1.0.0-next.13",
+    "@sveltejs/kit": "^1.0.0-next.112",
+    "prettier": "~2.3.0",
     "prettier-plugin-svelte": "^2.3.0",
-    "sass": "^1.32.13",
+    "sass": "^1.34.0",
     "svelte": "^3.38.2",
     "svelte-preprocess": "^4.7.3",
     "tslib": "^2.2.0",
-    "typescript": "^4.2.4",
-    "vite": "^2.3.2"
+    "typescript": "^4.3.2",
+    "vite": "^2.3.5"
   },
   "prettier": {
     "printWidth": 100,
