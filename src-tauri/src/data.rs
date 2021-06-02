@@ -4,13 +4,6 @@ use std::sync::{Arc, Mutex};
 use tauri::api::dialog;
 use tauri::{command, State};
 
-#[macro_export]
-macro_rules! throw {
-  ($($arg:tt)*) => {{
-    return Err(format!($($arg)*).to_owned())
-  }};
-}
-
 #[derive(Debug, Default)]
 pub struct Kryp {
   current: Option<Tax>,

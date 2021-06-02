@@ -1,5 +1,5 @@
 use crate::prices::{AssetKind, PriceData};
-use crate::throw;
+use crate::{round_8, throw};
 use atomicwrites::{AllowOverwrite, AtomicFile};
 use rust_decimal::{Decimal, RoundingStrategy};
 use rust_decimal_macros::dec;
@@ -9,109 +9,21 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Instant;
 
-fn round_8(num: Decimal) -> Decimal {
-  return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tax {
   transactions: Vec<Transaction>,
   base_currency: String,
   price_data: PriceData,
-  reazlied_gains: Vec<Realized>,
+  realized_gains: Vec<Realized>,
   balances: Vec<Balance>,
 }
 
 impl Tax {
-  pub fn calculate(&mut self) {
-    let transactions = &mut self.transactions;
-    transactions.sort_by(|a, b| a.date.cmp(&b.date));
-    for transaction in transactions.iter_mut() {
-      match transaction.kind {
-        TxType::Deposit => {
-          self.balances.push(Balance {
-            acquire_date: transaction.date,
-            amount: transaction.recv_amount,
-            currency: transaction.recv_asset.clone(),
-            wallet: transaction.recv_wallet.clone(),
-            cost: transaction.cost,
-          });
-        }
-        TxType::Trade => {
-          let mut cost = deduct(
-            &mut self.balances,
-            &transaction.sent_wallet,
-            &transaction.sent_asset,
-            transaction.sent_amount,
-          );
-          if transaction.fee_asset != "" {
-            cost += deduct(
-              &mut self.balances,
-              &transaction.sent_wallet,
-              &transaction.fee_asset,
-              transaction.fee_amount,
-            );
-          }
-          if cost != transaction.cost {
-            self.reazlied_gains.push(Realized {
-              date: transaction.date,
-              input: cost,
-              output: transaction.cost,
-              wallet: transaction.sent_wallet.clone(),
-            });
-          }
-          self.balances.push(Balance {
-            acquire_date: transaction.date,
-            amount: transaction.recv_amount,
-            currency: transaction.recv_asset.clone(),
-            wallet: transaction.sent_wallet.clone(),
-            cost: transaction.cost,
-          });
-        }
-        TxType::Transfer => {
-          if transaction.sent_amount > transaction.recv_amount {
-            let fee_amount = transaction.sent_amount - transaction.recv_amount;
-            let cost = deduct(
-              &mut self.balances,
-              &transaction.sent_wallet,
-              &transaction.sent_asset,
-              fee_amount,
-            );
-            if cost != fee_amount {
-              self.reazlied_gains.push(Realized {
-                date: transaction.date,
-                input: cost,
-                output: fee_amount,
-                wallet: transaction.sent_wallet.clone(),
-              });
-            }
-          }
-          transfer(
-            &mut self.balances,
-            transaction.recv_amount,
-            &transaction.sent_asset,
-            &transaction.sent_wallet,
-            &transaction.recv_wallet,
-          );
-        }
-        TxType::Withdrawal => {
-          let cost = deduct(
-            &mut self.balances,
-            &transaction.sent_wallet,
-            &transaction.sent_asset,
-            transaction.sent_amount,
-          );
-          if cost != transaction.cost {
-            self.reazlied_gains.push(Realized {
-              date: transaction.date,
-              input: cost,
-              output: transaction.cost,
-              wallet: transaction.sent_wallet.clone(),
-            });
-          }
-        }
-      }
-    }
+  pub fn calculate(&mut self) -> Result<(), String> {
+    let (balances, realized_gains) = calculate(&mut self.transactions)?;
+    self.balances = balances;
+    self.realized_gains = realized_gains;
+    Ok(())
   }
   pub fn save<P: AsRef<Path>>(&self, file_path: P) {
     let now = Instant::now();
@@ -143,6 +55,169 @@ impl Tax {
       Err(e) => throw!("Error opening file: {}", e),
     }
   }
+}
+
+fn calculate(transactions: &mut Vec<Transaction>) -> Result<(Vec<Balance>, Vec<Realized>), String> {
+  let mut balances = Vec::new();
+  let mut realized_gains = Vec::new();
+  for transaction in transactions {
+    match transaction.kind {
+      TxType::Deposit => {
+        balances.push(Balance {
+          acquire_date: transaction.date,
+          amount: transaction.recv_amount,
+          currency: transaction.recv_asset.clone(),
+          wallet: transaction.recv_wallet.clone(),
+          cost: transaction.cost,
+        });
+      }
+      TxType::Trade => {
+        let mut cost = deduct(
+          &mut balances,
+          &transaction.sent_wallet,
+          &transaction.sent_asset,
+          transaction.sent_amount,
+        )?;
+        if transaction.fee_asset != "" {
+          cost += deduct(
+            &mut balances,
+            &transaction.sent_wallet,
+            &transaction.fee_asset,
+            transaction.fee_amount,
+          )?;
+        }
+        if cost != transaction.cost {
+          realized_gains.push(Realized {
+            date: transaction.date,
+            input: cost,
+            output: transaction.cost,
+            wallet: transaction.sent_wallet.clone(),
+          });
+        }
+        balances.push(Balance {
+          acquire_date: transaction.date,
+          amount: transaction.recv_amount,
+          currency: transaction.recv_asset.clone(),
+          wallet: transaction.sent_wallet.clone(),
+          cost: transaction.cost,
+        });
+      }
+      TxType::Transfer => {
+        if transaction.sent_amount > transaction.recv_amount {
+          let fee_amount = transaction.sent_amount - transaction.recv_amount;
+          let cost = deduct(
+            &mut balances,
+            &transaction.sent_wallet,
+            &transaction.sent_asset,
+            fee_amount,
+          )?;
+          if cost != fee_amount {
+            realized_gains.push(Realized {
+              date: transaction.date,
+              input: cost,
+              output: fee_amount,
+              wallet: transaction.sent_wallet.clone(),
+            });
+          }
+        }
+        transfer(
+          &mut balances,
+          transaction.recv_amount,
+          &transaction.sent_asset,
+          &transaction.sent_wallet,
+          &transaction.recv_wallet,
+        )?;
+      }
+      TxType::Withdrawal => {
+        let cost = deduct(
+          &mut balances,
+          &transaction.sent_wallet,
+          &transaction.sent_asset,
+          transaction.sent_amount,
+        )?;
+        if cost != transaction.cost {
+          realized_gains.push(Realized {
+            date: transaction.date,
+            input: cost,
+            output: transaction.cost,
+            wallet: transaction.sent_wallet.clone(),
+          });
+        }
+      }
+    }
+  }
+  return Ok((balances, realized_gains));
+}
+
+/// Returns the NOK cost of the deducted amount
+fn deduct(
+  balances: &mut Vec<Balance>,
+  wallet: &str,
+  asset: &str,
+  amount: Decimal,
+) -> Result<Decimal, String> {
+  let mut cost = dec!(0);
+  let mut amount_left = amount;
+  for balance in balances {
+    if balance.wallet == wallet && balance.currency == asset {
+      if amount_left > balance.amount {
+        cost += balance.cost;
+        amount_left = amount_left - balance.amount;
+        balance.cost = dec!(0);
+        balance.amount = dec!(0);
+      } else {
+        let deduct_percent = amount_left / balance.amount;
+        let cost_to_deduct = round_8(balance.cost * deduct_percent);
+        cost += cost_to_deduct;
+        balance.amount = balance.amount - amount_left;
+        balance.cost = balance.cost - cost_to_deduct;
+        return Ok(cost);
+      }
+    }
+  }
+  throw!("Insufficient balance to deduct amount from");
+}
+
+fn transfer(
+  balances: &mut Vec<Balance>,
+  amount: Decimal,
+  asset: &str,
+  from: &str,
+  to: &str,
+) -> Result<(), String> {
+  let mut amount_left = amount;
+  let mut to_insert = None;
+  for (index, balance) in balances.iter_mut().enumerate() {
+    if balance.wallet == from && balance.currency == asset {
+      if amount_left > balance.amount {
+        balance.wallet = to.to_string();
+        amount_left = amount_left - balance.amount;
+      } else if amount_left == balance.amount {
+        balance.wallet = to.to_string();
+        return Ok(());
+      } else {
+        // split into two
+        let move_percent = amount_left / balance.amount;
+        let cost_to_move = round_8(balance.cost * move_percent);
+        let new_balance = Balance {
+          acquire_date: balance.acquire_date,
+          amount: amount_left,
+          currency: balance.currency.clone(),
+          wallet: to.to_string(),
+          cost: cost_to_move,
+        };
+        to_insert = Some((index, new_balance));
+        balance.amount = balance.amount - amount_left;
+        balance.cost = balance.cost - cost_to_move;
+      }
+    }
+  }
+  if let Some((index_to_insert_at, new_balance)) = to_insert {
+    balances.insert(index_to_insert_at, new_balance);
+  } else {
+    throw!("Insufficient balance to deduct amount from");
+  }
+  Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -267,65 +342,6 @@ pub struct Balance {
   pub cost: Decimal,
 }
 
-/// Returns the NOK cost of the deducted amount
-fn deduct(balances: &mut Vec<Balance>, wallet: &str, asset: &str, amount: Decimal) -> Decimal {
-  let mut cost = dec!(0);
-  let mut amount_left = amount;
-  for balance in balances {
-    if balance.wallet == wallet && balance.currency == asset {
-      if amount_left > balance.amount {
-        cost += balance.cost;
-        amount_left = amount_left - balance.amount;
-        balance.cost = dec!(0);
-        balance.amount = dec!(0);
-      } else {
-        let deduct_percent = amount_left / balance.amount;
-        let cost_to_deduct = round_8(balance.cost * deduct_percent);
-        cost += cost_to_deduct;
-        balance.amount = balance.amount - amount_left;
-        balance.cost = balance.cost - cost_to_deduct;
-        return cost;
-      }
-    }
-  }
-  panic!("Insufficient balance to deduct amount from");
-}
-
-fn transfer(balances: &mut Vec<Balance>, amount: Decimal, asset: &str, from: &str, to: &str) {
-  let mut amount_left = amount;
-  let mut to_insert = None;
-  for (index, balance) in balances.iter_mut().enumerate() {
-    if balance.wallet == from && balance.currency == asset {
-      if amount_left > balance.amount {
-        balance.wallet = to.to_string();
-        amount_left = amount_left - balance.amount;
-      } else if amount_left == balance.amount {
-        balance.wallet = to.to_string();
-        return;
-      } else {
-        // split into two
-        let move_percent = amount_left / balance.amount;
-        let cost_to_move = round_8(balance.cost * move_percent);
-        let new_balance = Balance {
-          acquire_date: balance.acquire_date,
-          amount: amount_left,
-          currency: balance.currency.clone(),
-          wallet: to.to_string(),
-          cost: cost_to_move,
-        };
-        to_insert = Some((index, new_balance));
-        balance.amount = balance.amount - amount_left;
-        balance.cost = balance.cost - cost_to_move;
-      }
-    }
-  }
-  if let Some((index_to_insert_at, new_balance)) = to_insert {
-    balances.insert(index_to_insert_at, new_balance);
-  } else {
-    panic!("Insufficient balance to deduct amount from");
-  }
-}
-
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Realized {
   pub date: i64,
@@ -357,7 +373,7 @@ pub fn trades() {
   for transaction in tax.transactions.iter_mut() {
     transaction.cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
   }
-  tax.calculate();
+  tax.calculate().unwrap();
   assert_eq!(
     tax.balances,
     [
@@ -385,7 +401,7 @@ pub fn trades() {
     ]
   );
   assert_eq!(
-    tax.reazlied_gains,
+    tax.realized_gains,
     [Realized {
       date: 1500300000000,
       input: dec!(800),
@@ -410,7 +426,7 @@ pub fn transfer_fee() {
   for transaction in tax.transactions.iter_mut() {
     transaction.cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
   }
-  tax.calculate();
+  tax.calculate().unwrap();
   assert_eq!(
     tax.balances,
     [Balance {
@@ -421,7 +437,7 @@ pub fn transfer_fee() {
       cost: dec!(750),
     }]
   );
-  assert_eq!(tax.reazlied_gains, []);
+  assert_eq!(tax.realized_gains, []);
 }
 
 #[test]
@@ -438,9 +454,9 @@ pub fn deposit_withdraw_crypto() {
   for transaction in tax.transactions.iter_mut() {
     transaction.cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
   }
-  tax.calculate();
+  tax.calculate().unwrap();
   println!("{:?}", tax.balances);
-  println!("{:?}", tax.reazlied_gains);
+  println!("{:?}", tax.realized_gains);
   assert_eq!(
     tax.balances,
     [Balance {
@@ -452,7 +468,7 @@ pub fn deposit_withdraw_crypto() {
     }]
   );
   assert_eq!(
-    tax.reazlied_gains,
+    tax.realized_gains,
     [Realized {
       date: 1500100000000,
       input: dec!(1633.83825099),

@@ -3,6 +3,7 @@
   windows_subsystem = "windows"
 )]
 
+use rust_decimal::{Decimal, RoundingStrategy};
 use tauri::api::{dialog, shell};
 use tauri::{command, CustomMenuItem, Menu, MenuItem, WindowBuilder, WindowUrl};
 
@@ -13,6 +14,17 @@ mod tax;
 #[command]
 fn error_popup(msg: String) {
   dialog::message("Error", msg);
+}
+
+#[macro_export]
+macro_rules! throw {
+  ($($arg:tt)*) => {{
+    return Err(format!($($arg)*).to_owned())
+  }};
+}
+
+pub fn round_8(num: Decimal) -> Decimal {
+  return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
 fn main() {
