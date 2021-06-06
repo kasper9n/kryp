@@ -48,7 +48,14 @@
       "active": false
     },
     "allowlist": {
-      "all": true
+      "shell": {
+        "execute": true,
+        "open": true
+      },
+      "dialog": {
+        "open": true,
+        "save": true
+      }
     },
     "security": {
       "csp": "default-src blob: data: filesystem: ws: http: https: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"

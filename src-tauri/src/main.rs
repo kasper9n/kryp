@@ -13,13 +13,14 @@ mod tax;
 
 #[command]
 fn error_popup(msg: String) {
+  println!("Error popup: {}", msg);
   dialog::message("Error", msg);
 }
 
 #[macro_export]
 macro_rules! throw {
   ($($arg:tt)*) => {{
-    return Err(format!($($arg)*).to_owned())
+    return Err(format!($($arg)*))
   }};
 }
 
@@ -83,8 +84,10 @@ fn main() {
     .manage(data::Data(Default::default()))
     .invoke_handler(tauri::generate_handler![
       data::open,
+      data::load_file,
       error_popup,
-      data::save
+      data::save,
+      data::get,
     ])
     .menu(menu)
     .on_menu_event(|event| match event.menu_item_id().as_str() {

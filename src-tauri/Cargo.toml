@@ -12,12 +12,13 @@ tauri-build = { version = "1.0.0-beta.0" }
 [dependencies]
 rust_decimal = "1.13.0"
 rust_decimal_macros = "1.13.0"
-reqwest = "0.11.3"
+reqwest = { version = "0.11.3", features = ["json"] }
 tokio = { version = "1.6.0", features = ["full"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.0"
-tauri = { version = "1.0.0-beta.1", features = ["api-all", "menu"] }
+# tauri = { version = "1.0.0-beta.1", features = ["api-all", "menu"] }
+tauri = { git = "https://github.com/tauri-apps/tauri", rev = "0642944", features = ["shell-execute", "shell-open", "dialog-open", "dialog-save", "menu"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 csv = "1.1.6"
 atomicwrites = "0.3.0"

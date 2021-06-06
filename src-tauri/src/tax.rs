@@ -1,7 +1,7 @@
 use crate::prices::{AssetKind, PriceData};
 use crate::{round_8, throw};
 use atomicwrites::{AllowOverwrite, AtomicFile};
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -11,11 +11,11 @@ use std::time::Instant;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tax {
-  transactions: Vec<Transaction>,
-  base_currency: String,
-  price_data: PriceData,
-  realized_gains: Vec<Realized>,
-  balances: Vec<Balance>,
+  pub transactions: Vec<Transaction>,
+  pub base_currency: String,
+  pub price_data: PriceData,
+  pub realized_gains: Vec<Realized>,
+  pub balances: Vec<Balance>,
 }
 
 impl Tax {
@@ -47,7 +47,9 @@ impl Tax {
         };
         let tax: Self = match serde_json::from_str(&mut json_str) {
           Ok(library) => library,
-          Err(err) => throw!("Error parsing file: {:?}", err),
+          Err(err) => {
+            throw!("Error parsing file: {:?}", err.to_string());
+          }
         };
         println!("Load library: {}ms", now.elapsed().as_millis());
         return Ok(tax);
@@ -352,7 +354,7 @@ pub struct Realized {
 
 #[test]
 pub fn trades() {
-  let mut tax = Tax::load("./tests/taxes.krypj").unwrap();
+  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
     Transaction::new(TxType::Deposit)
       .date(1500000000000)
@@ -413,7 +415,7 @@ pub fn trades() {
 
 #[test]
 pub fn transfer_fee() {
-  let mut tax = Tax::load("./tests/taxes.krypj").unwrap();
+  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
     Transaction::new(TxType::Deposit)
       .date(1500000000000)
@@ -442,7 +444,7 @@ pub fn transfer_fee() {
 
 #[test]
 pub fn deposit_withdraw_crypto() {
-  let mut tax = Tax::load("./tests/taxes.krypj").unwrap();
+  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
     Transaction::new(TxType::Deposit)
       .date(1500000000000)
