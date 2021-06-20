@@ -1,4 +1,4 @@
-use crate::tax::Tax;
+use crate::tax::{Tax, Transaction};
 use crate::throw;
 use serde_json::Value;
 use std::path::PathBuf;
@@ -15,6 +15,12 @@ pub struct Kryp {
 impl Kryp {
   pub fn get_tax(&self) -> Result<&Tax, String> {
     match &self.current {
+      None => throw!("No file is open"),
+      Some(tax) => return Ok(tax),
+    };
+  }
+  pub fn get_tax_mut(&mut self) -> Result<&mut Tax, String> {
+    match &mut self.current {
       None => throw!("No file is open"),
       Some(tax) => return Ok(tax),
     };
@@ -82,5 +88,18 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
     };
     tax.save(file_path);
   }
+  Ok(())
+}
+
+#[command]
+pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().unwrap();
+  let tax = kryp.get_tax_mut().unwrap();
+  let tx: Result<Transaction, _> = serde_json::from_str(&json);
+  let tx = match tx {
+    Err(e) => return Err(e.to_string()),
+    Ok(tx) => tx,
+  };
+  tax.add_transaction(tx)?;
   Ok(())
 }

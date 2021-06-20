@@ -19,6 +19,11 @@ pub struct Tax {
 }
 
 impl Tax {
+  pub fn add_transaction(&mut self, tx: Transaction) -> Result<(), String> {
+    tx.validate()?;
+    self.transactions.push(tx);
+    Ok(())
+  }
   pub fn calculate(&mut self) -> Result<(), String> {
     let (balances, realized_gains) = calculate(&mut self.transactions)?;
     self.balances = balances;
@@ -273,34 +278,86 @@ impl Transaction {
     self.date = date;
     self
   }
-  pub fn sent<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
+  pub fn requires_sent(&self) -> bool {
     match self.kind {
-      TxType::Trade | TxType::Transfer | TxType::Withdrawal => {}
-      TxType::Deposit => panic!(),
-    };
+      TxType::Trade | TxType::Transfer | TxType::Withdrawal => true,
+      TxType::Deposit => false,
+    }
+  }
+  pub fn sent<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
+    assert!(self.requires_sent());
     self.sent_amount = amount;
     self.sent_asset = asset.into();
     self.sent_wallet = wallet.into();
     self
   }
-  pub fn recv<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
+  pub fn requires_recv(&self) -> bool {
     match self.kind {
-      TxType::Trade | TxType::Transfer | TxType::Deposit => {}
-      TxType::Withdrawal => panic!(),
-    };
+      TxType::Trade | TxType::Transfer | TxType::Deposit => true,
+      TxType::Withdrawal => false,
+    }
+  }
+  pub fn recv<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
+    assert!(self.requires_recv());
     self.recv_amount = amount;
     self.recv_asset = asset.into();
     self.recv_wallet = wallet.into();
     self
   }
-  pub fn fee<S: Into<String>>(mut self, amount: Decimal, asset: S) -> Self {
+  pub fn allows_fee(&self) -> bool {
     match self.kind {
-      TxType::Trade => {}
-      TxType::Transfer | TxType::Deposit | TxType::Withdrawal => panic!(),
-    };
+      TxType::Trade => true,
+      TxType::Transfer | TxType::Deposit | TxType::Withdrawal => false,
+    }
+  }
+  pub fn fee<S: Into<String>>(mut self, amount: Decimal, asset: S) -> Self {
+    assert!(self.allows_fee());
     self.fee_amount = amount;
     self.fee_asset = asset.into();
     self
+  }
+  pub fn validate(&self) -> Result<(), String> {
+    fn ensure(condition: bool, failure_msg: &str) -> Result<(), String> {
+      match condition {
+        true => Ok(()),
+        false => Err(failure_msg.to_string()),
+      }
+    }
+    let zero = dec!(0);
+    match self.kind {
+      TxType::Trade => {
+        ensure(self.sent_asset != "", "Required: sent_asset")?;
+        ensure(self.sent_wallet != "", "Required: sent_wallet")?;
+        ensure(self.recv_asset != "", "Required: recv_asset")?;
+        ensure(self.recv_wallet != "", "Required: recv_wallet")?;
+      }
+      TxType::Transfer => {
+        ensure(self.sent_asset != "", "Required: sent_asset")?;
+        ensure(self.sent_wallet != "", "Required: sent_wallet")?;
+        ensure(self.recv_wallet != "", "Required: recv_wallet")?;
+        ensure(self.fee_amount == zero, "Must be empty: fee_amount")?;
+        ensure(self.fee_asset == "", "Must be empty: fee_asset")?;
+      }
+      TxType::Deposit => {
+        ensure(self.sent_amount == zero, "Must be empty: sent_amount")?;
+        ensure(self.sent_asset == "", "Must be empty: sent_asset")?;
+        ensure(self.sent_wallet == "", "Must be empty: sent_wallet")?;
+        ensure(self.recv_asset != "", "Required")?;
+        ensure(self.recv_wallet != "", "Required")?;
+        ensure(self.fee_amount == zero, "Must be empty: fee_amount")?;
+        ensure(self.fee_asset == "", "Must be empty: fee_asset")?;
+      }
+      TxType::Withdrawal => {
+        ensure(self.sent_asset != "", "Required")?;
+        ensure(self.sent_wallet != "", "Required")?;
+        ensure(self.recv_amount == zero, "Must be empty: recv_amount")?;
+        ensure(self.recv_asset == "", "Must be empty: recv_asset")?;
+        ensure(self.recv_wallet == "", "Must be empty: recv_wallet")?;
+        ensure(self.fee_amount == zero, "Must be empty: fee_amount")?;
+        ensure(self.fee_asset == "", "Must be empty: fee_asset")?;
+      }
+    }
+    Ok(())
   }
   pub fn calculate_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
     let mut cost;

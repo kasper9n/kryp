@@ -20,3 +20,6 @@
 - https://exchangerate.host/
 - https://openexchangerates.org/
 - https://www.amdoren.com/currency-api/
+
+### Attribution
+- Icons: Material & Iconmonstr

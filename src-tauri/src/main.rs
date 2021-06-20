@@ -77,7 +77,7 @@ fn main() {
         .decorations(true)
         .always_on_top(false)
         .inner_size(1000.0, 800.0)
-        .min_inner_size(300.0, 150.0)
+        .min_inner_size(300.0, 200.0)
         .fullscreen(false);
       return (win, webview);
     })
@@ -88,6 +88,7 @@ fn main() {
       error_popup,
       data::save,
       data::get,
+      data::add_transaction,
     ])
     .menu(menu)
     .on_menu_event(|event| match event.menu_item_id().as_str() {

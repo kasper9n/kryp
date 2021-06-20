@@ -1,7 +1,14 @@
 <script lang="ts">
-  import TxList from '../lib/TxList.svelte'
   import TxTable from '../lib/TxTable.svelte'
-  let view = 'list'
+  import TxList from '../lib/TxList.svelte'
+  import TxModal from '../lib/TxModal.svelte'
+  import Button from '../lib/Button.svelte'
+  let view = 0
+
+  let showAdd = false
+  function add() {
+    showAdd = true
+  }
 </script>
 
 <svelte:head>
@@ -10,39 +17,30 @@
 
 <div class="page">
   <div class="toolbar">
-    <div class="view">
-      <button class:enabled={view === 'list'} on:mousedown={() => (view = 'list')}>List</button>
-      <button class:enabled={view === 'table'} on:mousedown={() => (view = 'table')}>Table</button>
-    </div>
+    <Button group={['List', 'Table']} bind:selected={view} />
+    <div class="spacer" />
+    <Button on:click={add}>Add</Button>
   </div>
-  {#if view === 'list'}
+  {#if view === 0}
     <TxList />
-  {:else if view === 'table'}
+  {:else if view === 1}
     <TxTable />
   {/if}
 </div>
+<TxModal bind:visible={showAdd} />
 
 <style lang="sass">
+  $accent: #3061F6
+  $border: #c6cddd
   .page
-    margin: 20px
+    padding: 20px
+    max-width: 1000px
+    margin: auto
   .toolbar
     padding: 10px 0px
-  .view
-    display: inline-flex
-    background-color: #e6e6e6
-    border-radius: 5px
-    button
-      cursor: pointer
-      border: none
-      margin: 0px
-      height: 32px
-      padding: 0px 16px
-      font-size: 13px
-      color: #000000
-      background-color: transparent
-      outline: none
-      border-radius: 5px
-    .enabled
-      color: #ffffff
-      background-color: #EB5B77
+    display: flex
+    align-items: center
+  .spacer
+    width: 10px
+    height: 10px
 </style>

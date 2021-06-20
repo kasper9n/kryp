@@ -4,7 +4,7 @@ function popup(msg: string) {
   invoke('error_popup', { msg })
 }
 
-type Transaction = {
+export type Transaction = {
   kind: string
   date: number
   note: string

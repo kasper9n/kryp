@@ -90,8 +90,10 @@
     th
       text-align: center
       padding-bottom: 4px
-  .odd
+  tbody
     background-color: #f6f6f9
+  .odd
+    background-color: #ffffff
   .edit-cell
     font-size: 13px
     position: absolute
@@ -106,7 +108,7 @@
       opacity: 0
       pointer-events: none
   .red
-    color: #ff6176
+    color: #f92f72
   .green
-    color: #34ad84
+    color: #25b670
 </style>
