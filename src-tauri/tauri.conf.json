@@ -3,7 +3,7 @@
     "productName": "Kryp"
   },
   "build": {
-    "distDir": "../.svelte-kit/build",
+    "distDir": "../build",
     "devPath": "http://localhost:5000",
     "beforeDevCommand": "npm run dev:web",
     "beforeBuildCommand": "npm run build:web"

@@ -1,11 +1,23 @@
 <script lang="ts">
-  import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
-  import { page } from '$app/stores'
-  import { refresh, popup } from '../lib/general'
+  import { invoke } from '../node_modules/@tauri-apps/api/tauri'
+  import DashboardPage from './routes/index.svelte'
+  import TransactionsPage from './routes/transactions.svelte'
+  import { refresh, popup } from './lib/general'
+  const pages = [DashboardPage, TransactionsPage]
+  let page = 0
+  function link(node: HTMLElement, num: number) {
+    function handler() {
+      page = num
+    }
+    node.addEventListener('click', handler)
+    return {
+      destroy() {
+        node.removeEventListener('click', handler)
+      },
+    }
+  }
 
   let fileOpened = false
-
-  // open('/Users/kasper/Downloads/test.kryp')
 
   async function open(path?: string) {
     await invoke('open', { path })
@@ -28,14 +40,14 @@
 
 {#if fileOpened}
   <div class="nav">
-    <a href="/" class:current={$page.path === '/'}>Dashboard</a>
-    <a href="/transactions" class:current={$page.path === '/transactions'}>Transactions</a>
+    <div class="link" use:link={0} class:current={page === 0}>Dashboard</div>
+    <div class="link" use:link={1} class:current={page === 1}>Transactions</div>
     <button on:click={onOpenClick}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>
   </div>
 
-  <slot />
+  <svelte:component this={pages[page]} />
 {:else}
   This is where we create or open a file
   <button on:click={onOpenClick}>Open</button>
@@ -44,14 +56,17 @@
 <style lang="sass">
   :global(body)
     background-color: #f8f9fc
-  :global(h1, h2, h3)
+    margin: 0px
+  :global(h1), :global(h2), :global(h3)
     margin-top: 0px
     margin-bottom: 1em
     font-weight: 600
-  :global(h4, h5, h6)
+  :global(h4), :global(h5), :global(h6)
     margin-top: 0px
     margin-bottom: 1em
     font-weight: 600
+  :global(body), :global(input)
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
   .nav
     display: flex
     align-items: center
@@ -60,7 +75,8 @@
     background-color: #ffffff
     border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
-  a
+  .link
+    cursor: pointer
     color: #676d7e
     font-weight: 600
     text-decoration: none

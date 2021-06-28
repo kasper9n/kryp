@@ -1,28 +1,23 @@
 {
-  "name": "kryp",
-  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "tauri dev",
-    "dev:web": "svelte-kit dev --port 5000",
+    "dev:web": "vite --port 5000",
     "tauri": "tauri",
     "build": "tauri build",
-    "build:web": "svelte-kit build",
-    "preview": "svelte-kit preview",
+    "build:web": "vite build",
+    "preview": "vite preview",
     "lint": "prettier --check *.js *.json src",
     "format": "prettier --write *.js *.json src"
   },
   "devDependencies": {
-    "@sveltejs/adapter-static": "^1.0.0-next.13",
-    "@sveltejs/kit": "^1.0.0-next.118",
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.11",
     "moment": "^2.29.1",
     "prettier": "^2.3.2",
     "prettier-plugin-svelte": "^2.3.1",
     "sass": "^1.35.1",
     "svelte": "^3.38.3",
     "svelte-preprocess": "^4.7.3",
-    "tslib": "^2.3.0",
     "typescript": "^4.3.4",
     "vite": "^2.3.8"
   },
