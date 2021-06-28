@@ -19,6 +19,15 @@ pub struct Tax {
 }
 
 impl Tax {
+  pub fn new() -> Self {
+    Tax {
+      transactions: Vec::new(),
+      base_currency: "".to_string(),
+      price_data: PriceData::new(),
+      realized_gains: Vec::new(),
+      balances: Vec::new(),
+    }
+  }
   pub fn add_transaction(&mut self, tx: Transaction) -> Result<(), String> {
     tx.validate()?;
     self.transactions.push(tx);

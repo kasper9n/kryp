@@ -28,7 +28,7 @@
     box-sizing: border-box
     background-color: rgba(#000000, 0.5)
     .box
-      background-color: #F5F7FB
+      background-color: #f8f9fc
       max-width: 100%
       max-height: 100%
       padding: 20px 20px

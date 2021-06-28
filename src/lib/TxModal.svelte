@@ -4,14 +4,11 @@
   import DatePicker from '../lib/DatePicker.svelte'
   import { slide } from 'svelte/transition'
   import Modal from '../lib/Modal.svelte'
-  import { transactions } from './transactions'
   import type { Transaction } from './transactions'
+  import { refresh, popup } from '../lib/general'
   export let visible = false
   function cancel() {
     visible = false
-  }
-  function popup(msg: string) {
-    invoke('error_popup', { msg })
   }
 
   function save() {
@@ -36,7 +33,7 @@
       invoke('add_transaction', { json: JSON.stringify(fixedTx) })
         .then(() => {
           visible = false
-          transactions.refresh()
+          refresh()
         })
         .catch(popup)
     }
@@ -125,7 +122,7 @@
               bind:value={tx.sent_asset}
               placeholder="Asset" />
             <input
-              type="text"
+              type="number"
               class="amount"
               class:invalid={errors.has('sent_amount')}
               bind:value={tx.sent_amount}
@@ -162,7 +159,7 @@
                 placeholder="Asset" />
             {/if}
             <input
-              type="text"
+              type="number"
               class="amount"
               class:invalid={errors.has('recv_amount')}
               bind:value={tx.recv_amount}

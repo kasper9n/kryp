@@ -1,24 +1,22 @@
 <script lang="ts">
-  import * as dialog from '../../node_modules/@tauri-apps/api/dialog'
   import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
   import { page } from '$app/stores'
-  import Button from '../lib/Button.svelte'
-  import { transactions } from '../lib/transactions'
+  import { refresh, popup } from '../lib/general'
 
-  function popup(msg: string) {
-    invoke('error_popup', { msg })
+  let fileOpened = false
+
+  // open('/Users/kasper/Downloads/test.kryp')
+
+  async function open(path?: string) {
+    await invoke('open', { path })
+      .then(() => {
+        refresh()
+        fileOpened = true
+      })
+      .catch(popup)
   }
-
-  invoke('load_file', {
-    path: '/Users/kasper/Downloads/test.kryp',
-  })
-    .then(() => {
-      transactions.refresh()
-    })
-    .catch(popup)
-
-  async function load() {
-    await invoke('open').catch(popup)
+  function onOpenClick() {
+    open()
   }
   async function save() {
     await invoke('save', { saveAs: false }).catch(popup)
@@ -28,19 +26,24 @@
   }
 </script>
 
-<div class="nav">
-  <a href="/" class:current={$page.path === '/'}>Kryp</a>
-  <a href="/transactions" class:current={$page.path === '/transactions'}>Transactions</a>
-  <button on:click={load}>Load</button>
-  <button on:click={save}>Save</button>
-  <button on:click={saveAs}>Save As...</button>
-</div>
+{#if fileOpened}
+  <div class="nav">
+    <a href="/" class:current={$page.path === '/'}>Dashboard</a>
+    <a href="/transactions" class:current={$page.path === '/transactions'}>Transactions</a>
+    <button on:click={onOpenClick}>Load</button>
+    <button on:click={save}>Save</button>
+    <button on:click={saveAs}>Save As...</button>
+  </div>
 
-<slot />
+  <slot />
+{:else}
+  This is where we create or open a file
+  <button on:click={onOpenClick}>Open</button>
+{/if}
 
 <style lang="sass">
   :global(body)
-    background-color: #F5F7FB
+    background-color: #f8f9fc
   :global(h1, h2, h3)
     margin-top: 0px
     margin-bottom: 1em

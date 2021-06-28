@@ -1,29 +1,29 @@
 use crate::tax::{Tax, Transaction};
 use crate::throw;
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::api::dialog;
 use tauri::{command, State};
 
-#[derive(Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Kryp {
-  current: Option<Tax>,
+  tax: Tax,
+  opened: bool,
   file_path: Option<PathBuf>,
 }
 
-impl Kryp {
-  pub fn get_tax(&self) -> Result<&Tax, String> {
-    match &self.current {
-      None => throw!("No file is open"),
-      Some(tax) => return Ok(tax),
-    };
-  }
-  pub fn get_tax_mut(&mut self) -> Result<&mut Tax, String> {
-    match &mut self.current {
-      None => throw!("No file is open"),
-      Some(tax) => return Ok(tax),
-    };
+impl Default for Kryp {
+  fn default() -> Self {
+    Kryp {
+      tax: Tax::new(),
+      opened: false,
+      file_path: None,
+    }
   }
 }
 
@@ -31,41 +31,45 @@ impl Kryp {
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
 #[command]
-pub async fn get(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
-  let tax = kryp.get_tax()?;
-  let v = serde_json::to_value(&tax.transactions);
-  match v {
-    Ok(v) => return Ok(v),
-    Err(e) => throw!("Error serializing {}", e),
-  };
-}
-
-#[command]
 pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  if let None = kryp.current {
+  if kryp.opened == false {
     println!("open file {:?}", path);
-    kryp.current = Some(Tax::load(&path)?);
+    // tax.balances
+    kryp.tax = Tax::load(&path)?;
+    kryp.opened = true;
     kryp.file_path = Some(path);
   }
   Ok(())
 }
 
 #[command]
-pub async fn open(kryp: State<'_, Data>) -> Result<(), String> {
+pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  if let None = kryp.current {
-    let path = dialog::FileDialogBuilder::new()
-      .add_filter("Kryp", &["kryp"])
-      .pick_file();
-    let path = match path {
-      Some(file_path) => file_path,
-      None => return Ok(()),
+  if kryp.opened == false {
+    let file_path = match path {
+      Some(path) => path,
+      None => {
+        let path = dialog::FileDialogBuilder::new()
+          .add_filter("Kryp", &["kryp"])
+          .pick_file();
+        match path {
+          Some(file_path) => file_path,
+          None => return Ok(()),
+        }
+      }
     };
-    println!("open file {:?}", path);
-    kryp.current = Some(Tax::load(&path)?);
-    kryp.file_path = Some(path);
+    // let path = dialog::FileDialogBuilder::new()
+    //   .add_filter("Kryp", &["kryp"])
+    //   .pick_file();
+    // let path = match path {
+    //   Some(file_path) => file_path,
+    //   None => return Ok(()),
+    // };
+    println!("open file {:?}", file_path);
+    kryp.tax = Tax::load(&file_path)?;
+    kryp.opened = true;
+    kryp.file_path = Some(file_path);
   }
   Ok(())
 }
@@ -73,7 +77,6 @@ pub async fn open(kryp: State<'_, Data>) -> Result<(), String> {
 #[command]
 pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
   let kryp = kryp.0.lock().unwrap();
-  let tax = kryp.get_tax()?;
   if let None = kryp.file_path {
     save_as = true;
   }
@@ -81,25 +84,86 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
   if save_as {
     let file_path = dialog::FileDialogBuilder::new()
       .set_file_name("report.kryp")
+      .add_filter("Kryp", &["kryp"])
       .save_file();
     let file_path = match file_path {
       Some(file_path) => file_path,
       None => return Ok(()),
     };
-    tax.save(file_path);
+    kryp.tax.save(file_path);
   }
   Ok(())
 }
 
 #[command]
+pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().unwrap();
+  let v = serde_json::to_value(&*kryp);
+  match v {
+    Ok(v) => return Ok(v),
+    Err(e) => throw!("Error serializing {}", e),
+  };
+}
+
+#[command]
+pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().unwrap();
+  let v = serde_json::to_value(&kryp.tax);
+  match v {
+    Ok(v) => return Ok(v),
+    Err(e) => throw!("Error serializing {}", e),
+  };
+}
+
+#[command]
+pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().unwrap();
+  let v = serde_json::to_value(&kryp.tax.transactions);
+  match v {
+    Ok(v) => return Ok(v),
+    Err(e) => throw!("Error serializing {}", e),
+  };
+}
+
+#[command]
 pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  let tax = kryp.get_tax_mut().unwrap();
   let tx: Result<Transaction, _> = serde_json::from_str(&json);
   let tx = match tx {
     Err(e) => return Err(e.to_string()),
     Ok(tx) => tx,
   };
-  tax.add_transaction(tx)?;
+  kryp.tax.add_transaction(tx)?;
   Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Holding {
+  key: String,
+  amount: Decimal,
+  cost: Decimal,
+}
+
+#[command]
+pub async fn get_balances_by_asset(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().unwrap();
+  let mut holdings_map: HashMap<String, Holding> = HashMap::new();
+  for balance in &kryp.tax.balances {
+    let key = balance.currency.clone();
+    let holding = holdings_map.entry(key.clone()).or_insert(Holding {
+      key,
+      amount: dec!(0),
+      cost: dec!(0),
+    });
+    holding.amount += balance.amount;
+    holding.cost += balance.cost;
+  }
+  let mut holdings: Vec<Holding> = holdings_map.into_iter().map(|(_k, v)| v).collect();
+  holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
+
+  let v = serde_json::to_value(&holdings);
+  match v {
+    Ok(v) => return Ok(v),
+    Err(e) => throw!("Error serializing {}", e),
+  };
 }

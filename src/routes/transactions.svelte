@@ -1,10 +1,14 @@
+<script context="module">
+  // persist variable by defining in in module
+  import { writable } from 'svelte/store'
+  let view = writable(0)
+</script>
+
 <script lang="ts">
   import TxTable from '../lib/TxTable.svelte'
   import TxList from '../lib/TxList.svelte'
   import TxModal from '../lib/TxModal.svelte'
   import Button from '../lib/Button.svelte'
-  let view = 0
-
   let showAdd = false
   function add() {
     showAdd = true
@@ -17,13 +21,13 @@
 
 <div class="page">
   <div class="toolbar">
-    <Button group={['List', 'Table']} bind:selected={view} />
+    <Button group={['List', 'Table']} bind:selected={$view} />
     <div class="spacer" />
     <Button on:click={add}>Add</Button>
   </div>
-  {#if view === 0}
+  {#if $view === 0}
     <TxList />
-  {:else if view === 1}
+  {:else if $view === 1}
     <TxTable />
   {/if}
 </div>

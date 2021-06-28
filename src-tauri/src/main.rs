@@ -5,7 +5,7 @@
 
 use rust_decimal::{Decimal, RoundingStrategy};
 use tauri::api::{dialog, shell};
-use tauri::{command, CustomMenuItem, Menu, MenuItem, WindowBuilder, WindowUrl};
+use tauri::{command, CustomMenuItem, Menu, MenuItem, Submenu, WindowBuilder, WindowUrl};
 
 mod data;
 mod prices;
@@ -29,43 +29,38 @@ pub fn round_8(num: Decimal) -> Decimal {
 }
 
 fn main() {
-  let menu = vec![
-    // on macOS first menu is always app name
-    Menu::new(
+  let menu = Menu::new()
+    .add_submenu(Submenu::new(
+      // on macOS first menu is always app name
       "Kryp",
-      vec![
-        MenuItem::About("Kryp".to_string()),
-        MenuItem::Separator,
-        MenuItem::Services,
-        MenuItem::Separator,
-        MenuItem::Hide,
-        MenuItem::HideOthers,
-        MenuItem::ShowAll,
-        MenuItem::Separator,
-        MenuItem::Quit,
-      ],
-    ),
-    Menu::new(
+      Menu::new()
+        .add_native_item(MenuItem::About("Kryp".to_string()))
+        .add_native_item(MenuItem::Separator)
+        .add_native_item(MenuItem::Services)
+        .add_native_item(MenuItem::Separator)
+        .add_native_item(MenuItem::Hide)
+        .add_native_item(MenuItem::HideOthers)
+        .add_native_item(MenuItem::ShowAll)
+        .add_native_item(MenuItem::Separator)
+        .add_native_item(MenuItem::Quit),
+    ))
+    .add_submenu(Submenu::new(
       "Edit",
-      vec![
-        MenuItem::Undo,
-        MenuItem::Redo,
-        MenuItem::Separator,
-        MenuItem::Cut,
-        MenuItem::Copy,
-        MenuItem::Paste,
-        MenuItem::Separator,
-        MenuItem::SelectAll,
-      ],
-    ),
-    Menu::new(
+      Menu::new()
+        .add_native_item(MenuItem::Undo)
+        .add_native_item(MenuItem::Redo)
+        .add_native_item(MenuItem::Separator)
+        .add_native_item(MenuItem::Cut)
+        .add_native_item(MenuItem::Copy)
+        .add_native_item(MenuItem::Paste)
+        .add_native_item(MenuItem::Separator)
+        .add_native_item(MenuItem::SelectAll),
+    ))
+    .add_submenu(Submenu::new(
       "Help",
-      vec![MenuItem::Custom(CustomMenuItem::new(
-        "learn-more".into(),
-        "Learn More",
-      ))],
-    ),
-  ];
+      Menu::new().add_item(CustomMenuItem::new("learn-more".into(), "Learn More")),
+    ))
+    .add_native_item(MenuItem::Copy);
 
   let ctx = tauri::generate_context!();
   tauri::Builder::default()
@@ -87,8 +82,11 @@ fn main() {
       data::load_file,
       error_popup,
       data::save,
-      data::get,
+      data::get_data,
+      data::get_tax,
+      data::get_transactions,
       data::add_transaction,
+      data::get_balances_by_asset,
     ])
     .menu(menu)
     .on_menu_event(|event| match event.menu_item_id().as_str() {

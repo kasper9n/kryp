@@ -19,7 +19,7 @@
       '-' +
       twoDigit(date.getDate()) +
       ' ' +
-      date.getHours() +
+      twoDigit(date.getHours()) +
       ':' +
       twoDigit(date.getMinutes()) +
       ':' +

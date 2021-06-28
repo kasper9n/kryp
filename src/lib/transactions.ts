@@ -1,8 +1,6 @@
 import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
 import { writable } from 'svelte/store'
-function popup(msg: string) {
-  invoke('error_popup', { msg })
-}
+import { refresher, popup } from './general'
 
 export type Transaction = {
   kind: string
@@ -22,15 +20,15 @@ export type Transaction = {
 
 export const transactions = (() => {
   const store = writable([] as Transaction[])
+  refresher.subscribe(() => {
+    invoke('get_transactions')
+      .then((txs: Transaction[]) => {
+        store.set(txs)
+      })
+      .catch(popup)
+  })
   return {
     subscribe: store.subscribe,
-    refresh() {
-      invoke('get')
-        .then((txs: Transaction[]) => {
-          store.set(txs)
-        })
-        .catch(popup)
-    },
   }
 })()
 
