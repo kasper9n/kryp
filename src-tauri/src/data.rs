@@ -35,7 +35,6 @@ pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), Strin
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {
     println!("open file {:?}", path);
-    // tax.balances
     kryp.tax = Tax::load(&path)?;
     kryp.opened = true;
     kryp.file_path = Some(path);
@@ -59,13 +58,6 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>) -> Result<(), St
         }
       }
     };
-    // let path = dialog::FileDialogBuilder::new()
-    //   .add_filter("Kryp", &["kryp"])
-    //   .pick_file();
-    // let path = match path {
-    //   Some(file_path) => file_path,
-    //   None => return Ok(()),
-    // };
     println!("open file {:?}", file_path);
     kryp.tax = Tax::load(&file_path)?;
     kryp.opened = true;
@@ -98,11 +90,10 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
 #[command]
 pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
-  let v = serde_json::to_value(&*kryp);
-  match v {
-    Ok(v) => return Ok(v),
-    Err(e) => throw!("Error serializing {}", e),
-  };
+  let v = serde_json::json!({
+    "opened": kryp.opened,
+  });
+  return Ok(v);
 }
 
 #[command]

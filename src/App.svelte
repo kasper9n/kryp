@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { invoke } from '../node_modules/@tauri-apps/api/tauri'
+  import { invoke } from '@tauri-apps/api/tauri'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
   import { refresh, popup } from './lib/general'
+  import { opened } from './lib/data'
   const pages = [DashboardPage, TransactionsPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
@@ -17,13 +18,10 @@
     }
   }
 
-  let fileOpened = false
-
   async function open(path?: string) {
     await invoke('open', { path })
       .then(() => {
         refresh()
-        fileOpened = true
       })
       .catch(popup)
   }
@@ -38,7 +36,7 @@
   }
 </script>
 
-{#if fileOpened}
+{#if $opened}
   <div class="nav">
     <div class="link" use:link={0} class:current={page === 0}>Dashboard</div>
     <div class="link" use:link={1} class:current={page === 1}>Transactions</div>

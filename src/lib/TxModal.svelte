@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
+  import { invoke } from '@tauri-apps/api/tauri'
   import Button from '../lib/Button.svelte'
   import DatePicker from '../lib/DatePicker.svelte'
   import { slide } from 'svelte/transition'

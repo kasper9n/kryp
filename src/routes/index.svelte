@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
-  import { tax } from '../lib/tax'
+  import { invoke } from '@tauri-apps/api/tauri'
+  import { tax } from '../lib/data'
   import { popup, refresher } from '../lib/general'
   type Holding = {
     key: string

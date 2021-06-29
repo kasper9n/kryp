@@ -1,4 +1,4 @@
-import { invoke } from '../../node_modules/@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri'
 import { writable } from 'svelte/store'
 
 export const refresher = writable(1) // 1 so it's always truthy
