@@ -1,5 +1,7 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/tauri'
+  import { event } from '@tauri-apps/api'
+  import { onMount } from 'svelte'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
   import { refresh, popup } from './lib/general'
@@ -7,7 +9,8 @@
   const pages = [DashboardPage, TransactionsPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
-    function handler() {
+    function handler(e: MouseEvent) {
+      e.preventDefault()
       page = num
     }
     node.addEventListener('click', handler)
@@ -34,12 +37,22 @@
   async function saveAs() {
     await invoke('save', { saveAs: true }).catch(popup)
   }
+  onMount(() => {
+    const unlisten = event.listen('menu', ({ payload }) => {
+      if (payload === 'Dashboard') {
+        page = 0
+      } else if (payload === 'Transactions') {
+        page = 1
+      }
+    })
+    return unlisten
+  })
 </script>
 
 {#if $opened}
   <div class="nav">
-    <div class="link" use:link={0} class:current={page === 0}>Dashboard</div>
-    <div class="link" use:link={1} class:current={page === 1}>Transactions</div>
+    <button class="link" use:link={0} class:current={page === 0}>Dashboard</button>
+    <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
     <button on:click={onOpenClick}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>
@@ -74,7 +87,10 @@
     border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
   .link
-    cursor: pointer
+    background-color: transparent
+    border: none
+    font: inherit
+    margin: 0px
     color: #676d7e
     font-weight: 600
     text-decoration: none

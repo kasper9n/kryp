@@ -57,8 +57,18 @@ fn main() {
         .add_native_item(MenuItem::SelectAll),
     ))
     .add_submenu(Submenu::new(
+      "View",
+      Menu::new()
+        .add_item(
+          CustomMenuItem::new("Dashboard".into(), "Dashboard").accelerator("cmdOrControl+1"),
+        )
+        .add_item(
+          CustomMenuItem::new("Transactions".into(), "Transactions").accelerator("cmdOrControl+2"),
+        ),
+    ))
+    .add_submenu(Submenu::new(
       "Help",
-      Menu::new().add_item(CustomMenuItem::new("learn-more".into(), "Learn More")),
+      Menu::new().add_item(CustomMenuItem::new("Learn More".into(), "Learn More")),
     ))
     .add_native_item(MenuItem::Copy);
 
@@ -89,11 +99,15 @@ fn main() {
       data::get_balances_by_asset,
     ])
     .menu(menu)
-    .on_menu_event(|event| match event.menu_item_id().as_str() {
-      "learn-more" => {
-        shell::open("https://github.com/probablykasper/kryp".to_string(), None).unwrap();
+    .on_menu_event(|event| {
+      let event_name = event.menu_item_id().as_str();
+      let _ = event.window().emit("menu", event_name);
+      match event_name {
+        "Learn More" => {
+          shell::open("https://github.com/probablykasper/kryp".to_string(), None).unwrap();
+        }
+        _ => {}
       }
-      _ => {}
     })
     .run(ctx)
     .expect("error running application");
