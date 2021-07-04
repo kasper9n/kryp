@@ -60,7 +60,8 @@ fn main() {
           custom_menu("Save As...")
             .disabled()
             .accelerator("shift+cmdOrControl+S"),
-        ),
+        )
+        .add_item(custom_menu("Close").accelerator("cmdOrControl+W")),
     ))
     .add_submenu(Submenu::new("Edit", {
       let mut menu = Menu::new();
@@ -116,6 +117,7 @@ fn main() {
       data::load_file,
       data::open,
       data::save,
+      data::close,
       data::get_data,
       data::get_tax,
       data::get_transactions,

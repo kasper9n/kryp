@@ -128,6 +128,30 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
 }
 
 #[command]
+/// Returns a hideApp bool
+pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
+  let mut kryp = kryp.0.lock().unwrap();
+  if kryp.opened && kryp.tax.dirty {
+    match dialog::ask("You have unsaved changes. Close without saving?", "") {
+      dialog::AskResponse::No => return Ok(false),
+      _ => {}
+    }
+  }
+  if !kryp.opened {
+    // disabled due to bug: https://github.com/tauri-apps/tauri/issues/2149
+    // #[cfg(target_os = "macos")]
+    // win.hide().unwrap();
+    *kryp = Kryp::default();
+    refresh_menu_bar!(kryp, win);
+    return Ok(true);
+  } else {
+    *kryp = Kryp::default();
+    refresh_menu_bar!(kryp, win);
+    return Ok(false);
+  }
+}
+
+#[command]
 pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
   let v = serde_json::json!({

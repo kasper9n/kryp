@@ -42,6 +42,10 @@
   async function saveAs() {
     await invoke('save', { saveAs: true }).catch(popup)
   }
+  async function close() {
+    await invoke('close').catch(popup)
+    refresh()
+  }
   onMount(() => {
     const unlisten = event.listen('menu', ({ payload }) => {
       if (payload === 'Dashboard') {
@@ -56,6 +60,8 @@
         save()
       } else if (payload === 'Save As...') {
         saveAs()
+      } else if (payload === 'Close') {
+        close()
       }
       console.log('menu event: ' + payload)
     })
