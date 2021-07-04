@@ -1,4 +1,5 @@
 {
+	"version": "0.1",
 	"transactions": [],
 	"base_currency": "NOK",
 	"price_data": {

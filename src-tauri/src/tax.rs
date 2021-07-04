@@ -11,6 +11,7 @@ use std::time::Instant;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tax {
+  pub version: String,
   pub transactions: Vec<Transaction>,
   pub base_currency: String,
   pub price_data: PriceData,
@@ -21,6 +22,7 @@ pub struct Tax {
 impl Tax {
   pub fn new() -> Self {
     Tax {
+      version: "0.1".to_string(),
       transactions: Vec::new(),
       base_currency: "".to_string(),
       price_data: PriceData::new(),
