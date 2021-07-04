@@ -28,6 +28,11 @@ pub fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
+fn custom_menu(name: &str) -> CustomMenuItem<String> {
+  let c = CustomMenuItem::new(name.to_string(), name);
+  return c;
+}
+
 fn main() {
   let menu = Menu::new()
     .add_submenu(Submenu::new(
@@ -45,30 +50,48 @@ fn main() {
         .add_native_item(MenuItem::Quit),
     ))
     .add_submenu(Submenu::new(
-      "Edit",
+      "File",
       Menu::new()
-        .add_native_item(MenuItem::Undo)
-        .add_native_item(MenuItem::Redo)
+        .add_item(custom_menu("New").accelerator("cmdOrControl+N"))
+        .add_item(custom_menu("Open...").accelerator("cmdOrControl+O"))
         .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Cut)
-        .add_native_item(MenuItem::Copy)
-        .add_native_item(MenuItem::Paste)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::SelectAll),
+        .add_item(custom_menu("Save").disabled().accelerator("cmdOrControl+S"))
+        .add_item(
+          custom_menu("Save As...")
+            .disabled()
+            .accelerator("shift+cmdOrControl+S"),
+        ),
     ))
+    .add_submenu(Submenu::new("Edit", {
+      let mut menu = Menu::new();
+      menu = menu.add_native_item(MenuItem::Undo);
+      menu = menu.add_native_item(MenuItem::Redo);
+      menu = menu.add_native_item(MenuItem::Separator);
+      menu = menu.add_native_item(MenuItem::Cut);
+      menu = menu.add_native_item(MenuItem::Copy);
+      menu = menu.add_native_item(MenuItem::Paste);
+      #[cfg(not(target_os = "macos"))]
+      {
+        menu = menu.add_native_item(MenuItem::Separator);
+      }
+      menu = menu.add_native_item(MenuItem::SelectAll);
+      menu
+    }))
     .add_submenu(Submenu::new(
       "View",
       Menu::new()
-        .add_item(
-          CustomMenuItem::new("Dashboard".into(), "Dashboard").accelerator("cmdOrControl+1"),
-        )
-        .add_item(
-          CustomMenuItem::new("Transactions".into(), "Transactions").accelerator("cmdOrControl+2"),
-        ),
+        .add_item(custom_menu("Dashboard").accelerator("cmdOrControl+1"))
+        .add_item(custom_menu("Transactions").accelerator("cmdOrControl+2")),
+    ))
+    .add_submenu(Submenu::new(
+      "Window",
+      Menu::new()
+        .add_native_item(MenuItem::Minimize)
+        .add_native_item(MenuItem::Zoom),
     ))
     .add_submenu(Submenu::new(
       "Help",
-      Menu::new().add_item(CustomMenuItem::new("Learn More".into(), "Learn More")),
+      Menu::new().add_item(custom_menu("Learn More")),
     ))
     .add_native_item(MenuItem::Copy);
 
@@ -88,9 +111,10 @@ fn main() {
     })
     .manage(data::Data(Default::default()))
     .invoke_handler(tauri::generate_handler![
-      data::open,
-      data::load_file,
       error_popup,
+      data::new_file,
+      data::load_file,
+      data::open,
       data::save,
       data::get_data,
       data::get_tax,

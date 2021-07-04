@@ -17,6 +17,8 @@ pub struct Tax {
   pub price_data: PriceData,
   pub realized_gains: Vec<Realized>,
   pub balances: Vec<Balance>,
+  #[serde(skip)]
+  pub dirty: bool,
 }
 
 impl Tax {
@@ -28,6 +30,7 @@ impl Tax {
       price_data: PriceData::new(),
       realized_gains: Vec::new(),
       balances: Vec::new(),
+      dirty: true,
     }
   }
   pub fn add_transaction(&mut self, tx: Transaction) -> Result<(), String> {

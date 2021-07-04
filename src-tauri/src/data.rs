@@ -8,13 +8,24 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::api::dialog;
-use tauri::{command, State};
+use tauri::{command, State, Window};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Kryp {
   tax: Tax,
   opened: bool,
   file_path: Option<PathBuf>,
+}
+
+impl Kryp {
+  // pub fn set_opened<P: Params>(mut self, window: Window<P>, value: bool) {
+  //   self.opened = value;
+  //   let menu_handle = window.menu_handle();
+  //   // std::thread::spawn(move || {
+  //     let id: P::MenuId = "Save".into();
+  //     menu_handle.get_item("Save").set_enabled(value);
+  //   // });
+  // }
 }
 
 impl Default for Kryp {
@@ -27,34 +38,51 @@ impl Default for Kryp {
   }
 }
 
+// Call whenever opened is updated
+macro_rules! refresh_menu_bar {
+  ($kryp:ident, $win:ident) => {{
+    let menu_handle = $win.menu_handle();
+    menu_handle
+      .get_item(&"Save".to_string())
+      .set_enabled($kryp.opened)
+      .unwrap();
+    menu_handle
+      .get_item(&"Save As...".to_string())
+      .set_enabled($kryp.opened)
+      .unwrap();
+  }};
+}
+
 #[derive(Default)]
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
 #[command]
-pub async fn new_file(kryp: State<'_, Data>) -> Result<(), String> {
+pub async fn new_file(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {
     kryp.tax = Tax::new();
     kryp.opened = true;
     kryp.file_path = None;
+    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }
 
 #[command]
-pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), String> {
+pub async fn load_file(path: PathBuf, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {
     println!("open file {:?}", path);
     kryp.tax = Tax::load(&path)?;
     kryp.opened = true;
     kryp.file_path = Some(path);
+    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }
 
 #[command]
-pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>) -> Result<(), String> {
+pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {
     let file_path = match path {
@@ -73,6 +101,7 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>) -> Result<(), St
     kryp.tax = Tax::load(&file_path)?;
     kryp.opened = true;
     kryp.file_path = Some(file_path);
+    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/tauri'
-  import { event } from '@tauri-apps/api'
+  import { event, dialog } from '@tauri-apps/api'
+  import { appWindow } from '@tauri-apps/api/window'
   import { onMount } from 'svelte'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
@@ -47,7 +48,16 @@
         page = 0
       } else if (payload === 'Transactions') {
         page = 1
+      } else if (payload === 'New') {
+        new_file()
+      } else if (payload === 'Open...') {
+        open()
+      } else if (payload === 'Save') {
+        save()
+      } else if (payload === 'Save As...') {
+        saveAs()
       }
+      console.log('menu event: ' + payload)
     })
     return unlisten
   })
