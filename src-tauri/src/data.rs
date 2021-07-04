@@ -31,6 +31,17 @@ impl Default for Kryp {
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
 #[command]
+pub async fn new_file(kryp: State<'_, Data>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().unwrap();
+  if kryp.opened == false {
+    kryp.tax = Tax::new();
+    kryp.opened = true;
+    kryp.file_path = None;
+  }
+  Ok(())
+}
+
+#[command]
 pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {

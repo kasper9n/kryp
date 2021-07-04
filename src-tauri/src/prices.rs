@@ -162,7 +162,8 @@ impl PriceDataAsset {
       symbol: String,
       name: String,
     }
-    thread::sleep(time::Duration::from_millis(600));
+    let coingecko_duration = time::Duration::from_millis(600);
+    thread::sleep(coingecko_duration);
     let request_url = "https://api.coingecko.com/api/v3/coins/list";
     let coins_res = reqwest::get(request_url).await?;
     if !coins_res.status().is_success() {
@@ -194,7 +195,7 @@ impl PriceDataAsset {
     struct MarketChart {
       prices: Vec<(i64, f64)>,
     }
-    thread::sleep(time::Duration::from_millis(600));
+    thread::sleep(coingecko_duration);
     let request_url = format!(
       "https://api.coingecko.com/api/v3/coins/{id}/market_chart/range?vs_currency={base}&from={from}&to={to}",
       id = id,
@@ -250,7 +251,6 @@ fn crypto() {
   assert_eq!(eth_pda.local_price(1600000000000, false).unwrap().1, 5.2);
   assert_eq!(eth_pda.local_price(1600008000000, false).unwrap().1, 6.1);
   assert_eq!(eth_pda.local_price(1610000000000, false), None);
-  eth_pda.fetch(1620009000000);
 }
 
 /// Get a range from -x% to +x% of value. For example, a 50% tolerance
@@ -263,7 +263,7 @@ fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
 }
 
 #[test]
-fn fetch() {
+fn api_fetch() {
   let mut pd = PriceData::new();
   let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
   let nok_price = pd.get_price("NOK", date.timestamp_millis());

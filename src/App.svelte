@@ -21,15 +21,19 @@
     }
   }
 
+  async function new_file() {
+    await invoke('new_file')
+      .then(() => {
+        refresh()
+      })
+      .catch(popup)
+  }
   async function open(path?: string) {
     await invoke('open', { path })
       .then(() => {
         refresh()
       })
       .catch(popup)
-  }
-  function onOpenClick() {
-    open()
   }
   async function save() {
     await invoke('save', { saveAs: false }).catch(popup)
@@ -53,7 +57,7 @@
   <div class="nav">
     <button class="link" use:link={0} class:current={page === 0}>Dashboard</button>
     <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
-    <button on:click={onOpenClick}>Load</button>
+    <button on:click={() => open()}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>
   </div>
@@ -61,7 +65,8 @@
   <svelte:component this={pages[page]} />
 {:else}
   This is where we create or open a file
-  <button on:click={onOpenClick}>Open</button>
+  <button on:click={() => open()}>Open</button>
+  <button on:click={new_file}>New</button>
 {/if}
 
 <style lang="sass">
