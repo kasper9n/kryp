@@ -138,9 +138,7 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
     }
   }
   if !kryp.opened {
-    // disabled due to bug: https://github.com/tauri-apps/tauri/issues/2149
-    // #[cfg(target_os = "macos")]
-    // win.hide().unwrap();
+    win.close().unwrap();
     *kryp = Kryp::default();
     refresh_menu_bar!(kryp, win);
     return Ok(true);

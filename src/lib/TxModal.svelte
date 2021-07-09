@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { writable } from 'svelte/store'
+  import type { Writable } from 'svelte/store'
   import { invoke } from '@tauri-apps/api/tauri'
   import Button from '../lib/Button.svelte'
   import DatePicker from '../lib/DatePicker.svelte'
@@ -6,39 +8,66 @@
   import Modal from '../lib/Modal.svelte'
   import type { Transaction } from './transactions'
   import { refresh, popup } from '../lib/general'
+  import NumericInput from './NumericInput.svelte'
   export let visible = false
   function cancel() {
     visible = false
+  }
+  function numStr(str) {
+    if (str === '') return ''
+    else return str
   }
 
   function save() {
     validate(tx, false)
     if (hasErrors) return
+    let fixedTx: Transaction
     if (kind === 'Trade') {
-      let fixedTx: Transaction = {
+      fixedTx = {
         kind,
         date: tx.date.getTime(),
         note: tx.note,
         hash: tx.hash,
-        sent_amount: tx.sent_amount === '' ? '0' : tx.sent_amount,
+        sent_amount: numStr(tx.sent_amount),
         sent_asset: tx.sent_asset,
         sent_wallet: tx.sent_wallet,
-        recv_amount: tx.recv_amount === '' ? '0' : tx.recv_amount,
+        recv_amount: numStr(tx.recv_amount),
         recv_asset: tx.recv_asset,
         recv_wallet: tx.recv_wallet,
-        fee_amount: tx.fee_amount === '' ? '0' : tx.fee_amount,
+        fee_amount: numStr(tx.fee_amount),
         fee_asset: tx.fee_asset,
         cost: tx.cost === '' ? '0' : tx.cost,
       }
-      invoke('add_transaction', { json: JSON.stringify(fixedTx) })
-        .then(() => {
-          visible = false
-          refresh()
-        })
-        .catch(popup)
+    } else {
+      popup('Unsupported tx type: ' + kind)
+      return
     }
+    invoke('add_transaction', { json: JSON.stringify(fixedTx) })
+      .then(() => {
+        visible = false
+        refresh()
+      })
+      .catch(popup)
   }
   let kind = 'Trade'
+  $: enabledFields = getEnabledFields(kind)
+  function getEnabledFields(kind: string) {
+    let fields = {
+      sent: true,
+      recv: true,
+      fee: false,
+    }
+    if (kind === 'Trade') {
+      fields.fee = true
+    }
+    if (kind === 'Deposit') {
+      fields.sent = false
+    }
+    if (kind === 'Withdrawal') {
+      fields.recv = false
+    }
+    return fields
+  }
   function getDefault() {
     return {
       date: new Date(),
@@ -73,12 +102,13 @@
       errors.add('recv_asset')
       errors.add('recv_wallet')
     }
-    if (tx.sent_amount !== '') errors.delete('sent_amount')
-    if (tx.sent_asset !== '') errors.delete('sent_asset')
-    if (tx.sent_wallet !== '') errors.delete('sent_wallet')
-    if (tx.recv_amount !== '') errors.delete('recv_amount')
-    if (tx.recv_asset !== '') errors.delete('recv_asset')
-    if (tx.recv_wallet !== '') errors.delete('recv_wallet')
+    console.log('tx.sent_amount', tx.sent_amount)
+    if (!enabledFields.sent || tx.sent_amount) errors.delete('sent_amount')
+    if (!enabledFields.sent || tx.sent_asset) errors.delete('sent_asset')
+    if (!enabledFields.sent || tx.sent_wallet) errors.delete('sent_wallet')
+    if (!enabledFields.recv || tx.recv_amount) errors.delete('recv_amount')
+    if (!enabledFields.recv || tx.recv_asset) errors.delete('recv_asset')
+    if (!enabledFields.recv || tx.recv_wallet) errors.delete('recv_wallet')
     errors = errors
     hasErrors = !!errors.size || invalidDate
   }
@@ -104,7 +134,7 @@
     </div>
     <div class="row">
       <div class="sent">
-        {#if kind !== 'Deposit'}
+        {#if enabledFields.sent}
           <h4>Sent</h4>
           <div class="row">
             <input
@@ -121,17 +151,16 @@
               class:invalid={errors.has('sent_asset')}
               bind:value={tx.sent_asset}
               placeholder="Asset" />
-            <input
-              type="number"
-              class="amount"
-              class:invalid={errors.has('sent_amount')}
+            <NumericInput
               bind:value={tx.sent_amount}
+              invalid={errors.has('sent_amount')}
+              noLeftBorder
               placeholder="Amount" />
           </div>
         {/if}
       </div>
       <div class="received">
-        {#if kind !== 'Withdrawal'}
+        {#if enabledFields.recv}
           <h4>Received</h4>
           <div class="row">
             <input
@@ -142,38 +171,27 @@
               placeholder="Wallet" />
           </div>
           <div class="row">
-            {#if kind === 'Transfer'}
-              <input
-                type="text"
-                class="asset"
-                bind:value={tx.sent_asset}
-                disabled={kind === 'Transfer'}
-                placeholder="Asset" />
-            {:else}
-              <input
-                type="text"
-                class="asset"
-                class:invalid={errors.has('recv_asset')}
-                bind:value={tx.recv_asset}
-                disabled={kind === 'Transfer'}
-                placeholder="Asset" />
-            {/if}
             <input
-              type="number"
-              class="amount"
-              class:invalid={errors.has('recv_amount')}
+              type="text"
+              class="asset"
+              class:invalid={errors.has('recv_asset')}
+              bind:value={tx.recv_asset}
+              placeholder="Asset" />
+            <NumericInput
               bind:value={tx.recv_amount}
+              invalid={errors.has('recv_amount')}
+              noLeftBorder
               placeholder="Amount" />
           </div>
         {/if}
       </div>
     </div>
     <h4>Optional Details</h4>
-    {#if kind === 'Trade'}
+    {#if enabledFields.fee}
       <div class="row fee" transition:slide|local>
         <p>Fee</p>
         <input type="text" class="asset" bind:value={tx.fee_asset} placeholder="Asset" />
-        <input type="text" class="amount" bind:value={tx.fee_amount} placeholder="Amount" />
+        <NumericInput bind:value={tx.fee_amount} noLeftBorder placeholder="Amount" />
       </div>
     {/if}
     <div class="row">
@@ -240,17 +258,13 @@
   .wallet
     display: block
     width: 100%
-  .asset:focus, .amount:focus
+  .asset:focus
     z-index: 1 // outline fix
   .asset
     width: 30%
     border-right: none
     border-top-right-radius: 0px
     border-bottom-right-radius: 0px
-  .amount
-    width: 70%
-    border-top-left-radius: 0px
-    border-bottom-left-radius: 0px
   .bottom
     display: flex
     justify-content: flex-end
