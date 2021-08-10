@@ -22,7 +22,7 @@
       ],
       "resources": [],
       "externalBin": [],
-      "copyright": "",
+      "copyright": "© 2021 kasper.space",
       "category": "DeveloperTool",
       "shortDescription": "",
       "longDescription": "",
@@ -58,7 +58,7 @@
       }
     },
     "security": {
-      "csp": "default-src blob: data: filesystem: ws: http: https: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
+      "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
     }
   }
 }

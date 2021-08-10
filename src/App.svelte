@@ -2,12 +2,13 @@
   import { invoke } from '@tauri-apps/api/tauri'
   import { event, dialog } from '@tauri-apps/api'
   import { appWindow } from '@tauri-apps/api/window'
-  import { onMount } from 'svelte'
+  import { onDestroy } from 'svelte'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
+  import PricesPage from './routes/prices.svelte'
   import { refresh, popup } from './lib/general'
   import { opened } from './lib/data'
-  const pages = [DashboardPage, TransactionsPage]
+  const pages = [DashboardPage, TransactionsPage, PricesPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
     function handler(e: MouseEvent) {
@@ -46,26 +47,26 @@
     await invoke('close').catch(popup)
     refresh()
   }
-  onMount(() => {
-    const unlisten = event.listen('menu', ({ payload }) => {
-      if (payload === 'Dashboard') {
-        page = 0
-      } else if (payload === 'Transactions') {
-        page = 1
-      } else if (payload === 'New') {
-        new_file()
-      } else if (payload === 'Open...') {
-        open()
-      } else if (payload === 'Save') {
-        save()
-      } else if (payload === 'Save As...') {
-        saveAs()
-      } else if (payload === 'Close') {
-        close()
-      }
-      console.log('menu event: ' + payload)
-    })
-    return unlisten
+  const unlistenFuture = event.listen('menu', ({ payload }) => {
+    if (payload === 'Dashboard') {
+      page = 0
+    } else if (payload === 'Transactions') {
+      page = 1
+    } else if (payload === 'New') {
+      new_file()
+    } else if (payload === 'Open...') {
+      open()
+    } else if (payload === 'Save') {
+      save()
+    } else if (payload === 'Save As...') {
+      saveAs()
+    } else if (payload === 'Close') {
+      close()
+    }
+  })
+  onDestroy(async () => {
+    const unlisten = await unlistenFuture
+    unlisten()
   })
 </script>
 
@@ -73,6 +74,7 @@
   <div class="nav">
     <button class="link" use:link={0} class:current={page === 0}>Dashboard</button>
     <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
+    <button class="link" use:link={2} class:current={page === 2}>Prices</button>
     <button on:click={() => open()}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>

@@ -38,6 +38,13 @@ impl Default for Kryp {
   }
 }
 
+pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
+  match serde_json::to_value(data) {
+    Ok(v) => Ok(v),
+    Err(e) => throw!("Error serializing {}", e),
+  }
+}
+
 // Call whenever opened is updated
 macro_rules! refresh_menu_bar {
   ($kryp:ident, $win:ident) => {{
@@ -161,31 +168,29 @@ pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
 #[command]
 pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
-  let v = serde_json::to_value(&kryp.tax);
-  match v {
-    Ok(v) => return Ok(v),
-    Err(e) => throw!("Error serializing {}", e),
-  };
+  to_json(&kryp.tax)
+}
+
+#[command]
+pub async fn calculate(kryp: State<'_, Data>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().unwrap();
+  kryp.tax.calculate()?;
+  Ok(())
 }
 
 #[command]
 pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
-  let v = serde_json::to_value(&kryp.tax.transactions);
-  match v {
-    Ok(v) => return Ok(v),
-    Err(e) => throw!("Error serializing {}", e),
-  };
+  to_json(&kryp.tax.transactions)
 }
 
 #[command]
 pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  let tx: Result<Transaction, _> = serde_json::from_str(&json);
-  let tx = match tx {
-    Err(e) => return Err(e.to_string()),
-    Ok(tx) => tx,
-  };
+  let mut tx = Transaction::from_json(&json)?;
+  let tax = &mut kryp.tax;
+  let cost = tx.calculate_cost(&mut tax.price_data, &tax.base_currency);
+  let tx = tx.cost(cost);
   kryp.tax.add_transaction(tx)?;
   Ok(())
 }
@@ -214,9 +219,11 @@ pub async fn get_balances_by_asset(kryp: State<'_, Data>) -> Result<Value, Strin
   let mut holdings: Vec<Holding> = holdings_map.into_iter().map(|(_k, v)| v).collect();
   holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
 
-  let v = serde_json::to_value(&holdings);
-  match v {
-    Ok(v) => return Ok(v),
-    Err(e) => throw!("Error serializing {}", e),
-  };
+  to_json(&holdings)
+}
+
+#[command]
+pub async fn get_prices(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().unwrap();
+  to_json(&kryp.tax.price_data)
 }

@@ -3,6 +3,16 @@ import { writable } from 'svelte/store'
 import { refresher, popup } from './general'
 import type { Transaction } from './transactions'
 
+export type PriceDataAsset = {
+  symbol: string
+  kind: string
+  interval: string
+  prices: Map<number, number>
+}
+export type PriceData = {
+  assets: Map<string, PriceDataAsset>
+}
+
 type Tax = {
   balances: any[]
   base_currency: string

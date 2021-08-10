@@ -271,6 +271,14 @@ pub struct Transaction {
 }
 
 impl Transaction {
+  pub fn from_json(json: &str) -> Result<Self, String> {
+    let tx: Result<Transaction, _> = serde_json::from_str(&json);
+    match tx {
+      Err(e) => Err(e.to_string()),
+      Ok(tx) => Ok(tx),
+    }
+  }
+  #[allow(dead_code)]
   pub fn new(kind: TxType) -> Self {
     Transaction {
       kind,
@@ -288,16 +296,19 @@ impl Transaction {
       cost: dec!(0),
     }
   }
+  #[allow(dead_code)]
   pub fn date(mut self, date: i64) -> Self {
     self.date = date;
     self
   }
+  #[allow(dead_code)]
   pub fn requires_sent(&self) -> bool {
     match self.kind {
       TxType::Trade | TxType::Transfer | TxType::Withdrawal => true,
       TxType::Deposit => false,
     }
   }
+  #[allow(dead_code)]
   pub fn sent<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
     assert!(self.requires_sent());
     self.sent_amount = amount;
@@ -305,12 +316,14 @@ impl Transaction {
     self.sent_wallet = wallet.into();
     self
   }
+  #[allow(dead_code)]
   pub fn requires_recv(&self) -> bool {
     match self.kind {
       TxType::Trade | TxType::Transfer | TxType::Deposit => true,
       TxType::Withdrawal => false,
     }
   }
+  #[allow(dead_code)]
   pub fn recv<S: Into<String>>(mut self, amount: Decimal, asset: S, wallet: S) -> Self {
     assert!(self.requires_recv());
     self.recv_amount = amount;
@@ -318,16 +331,22 @@ impl Transaction {
     self.recv_wallet = wallet.into();
     self
   }
+  #[allow(dead_code)]
   pub fn allows_fee(&self) -> bool {
     match self.kind {
       TxType::Trade => true,
       TxType::Transfer | TxType::Deposit | TxType::Withdrawal => false,
     }
   }
+  #[allow(dead_code)]
   pub fn fee<S: Into<String>>(mut self, amount: Decimal, asset: S) -> Self {
     assert!(self.allows_fee());
     self.fee_amount = amount;
     self.fee_asset = asset.into();
+    self
+  }
+  pub fn cost(mut self, cost: Decimal) -> Self {
+    self.cost = cost;
     self
   }
   pub fn validate(&self) -> Result<(), String> {
@@ -373,6 +392,7 @@ impl Transaction {
     }
     Ok(())
   }
+  /// Calculates and returns the cost of the transaction
   pub fn calculate_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
     let mut cost;
     match self.kind {

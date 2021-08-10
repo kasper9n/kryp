@@ -2777,7 +2777,7 @@ dependencies = [
 [[package]]
 name = "tauri"
 version = "1.0.0-beta.4"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "attohttpc",
  "bincode",
@@ -2829,7 +2829,7 @@ dependencies = [
 [[package]]
 name = "tauri-codegen"
 version = "1.0.0-beta.2"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "blake3",
  "kuchiki",
@@ -2847,7 +2847,7 @@ dependencies = [
 [[package]]
 name = "tauri-macros"
 version = "1.0.0-beta.3"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2858,7 +2858,7 @@ dependencies = [
 [[package]]
 name = "tauri-runtime"
 version = "0.1.3"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "gtk",
  "serde",
@@ -2872,7 +2872,7 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "0.1.3"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "gtk",
  "ico",
@@ -2888,7 +2888,7 @@ dependencies = [
 [[package]]
 name = "tauri-utils"
 version = "1.0.0-beta.1"
-source = "git+https://github.com/tauri-apps/tauri?rev=e0a8e09#e0a8e09cab6799eeb9ec524b5f7780d1e5a84299"
+source = "git+https://github.com/tauri-apps/tauri?rev=7eaf437#7eaf437b7f5894e2c8269abfa4f99376f26607ad"
 dependencies = [
  "heck",
  "html5ever",
