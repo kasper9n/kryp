@@ -86,8 +86,8 @@ pub struct PriceDataAsset {
 impl PriceDataAsset {
   pub fn local_price(&self, target_date: i64, extra_tolerance: bool) -> Option<(i64, f64)> {
     let max_offset = match self.interval {
-      Interval::Daily => 1000 * 60 * 60 * if extra_tolerance { 13 } else { 12 },
-      Interval::HourlyOrDaily => 1000 * 60 * if extra_tolerance { 60 * 13 } else { 50 },
+      Interval::Daily => 1000 * 60 * 60 * if extra_tolerance { 25 } else { 12 },
+      Interval::HourlyOrDaily => 1000 * 60 * if extra_tolerance { 60 * 25 } else { 50 },
     };
     let number_range = target_date - max_offset..=target_date + max_offset;
     let range = self.prices.range(number_range);
@@ -128,7 +128,6 @@ impl PriceDataAsset {
       from = start_dt_str,
       to = end_dt.format("%Y-%m-%d").to_string(),
     );
-    // println!("{}", request_url);
     let timeseries_res = reqwest::get(request_url).await?;
     if !timeseries_res.status().is_success() {
       panic!("Error fetching coins {}", self.symbol);
@@ -203,7 +202,6 @@ impl PriceDataAsset {
       from = start_dt.timestamp(),
       to = end_dt.timestamp(),
     );
-    // println!("{}", request_url);
     let market_chart_res = reqwest::get(request_url).await?;
     if !market_chart_res.status().is_success() {
       if market_chart_res.status() == 429 {
