@@ -31,7 +31,7 @@ impl Kryp {
 impl Default for Kryp {
   fn default() -> Self {
     Kryp {
-      tax: Tax::new(),
+      tax: Tax::new("USD"),
       opened: false,
       file_path: None,
     }
@@ -64,10 +64,14 @@ macro_rules! refresh_menu_bar {
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
 #[command]
-pub async fn new_file(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
+pub async fn new_file(
+  base_currency: String,
+  kryp: State<'_, Data>,
+  win: Window,
+) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened == false {
-    kryp.tax = Tax::new();
+    kryp.tax = Tax::new(&base_currency);
     kryp.opened = true;
     kryp.file_path = None;
     refresh_menu_bar!(kryp, win);

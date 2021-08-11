@@ -1,13 +1,13 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/tauri'
-  import { event, dialog } from '@tauri-apps/api'
-  import { appWindow } from '@tauri-apps/api/window'
+  import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
   import PricesPage from './routes/prices.svelte'
   import { refresh, popup } from './lib/general'
   import { opened } from './lib/data'
+  import NewFileModal from './modals/NewFile.svelte'
   const pages = [DashboardPage, TransactionsPage, PricesPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
@@ -23,13 +23,8 @@
     }
   }
 
-  async function new_file() {
-    await invoke('new_file')
-      .then(() => {
-        refresh()
-      })
-      .catch(popup)
-  }
+  let newFileModalVisible = false
+
   async function open(path?: string) {
     await invoke('open', { path })
       .then(() => {
@@ -53,7 +48,7 @@
     } else if (payload === 'Transactions') {
       page = 1
     } else if (payload === 'New') {
-      new_file()
+      newFileModalVisible = true
     } else if (payload === 'Open...') {
       open()
     } else if (payload === 'Save') {
@@ -84,8 +79,10 @@
 {:else}
   This is where we create or open a file
   <button on:click={() => open()}>Open</button>
-  <button on:click={new_file}>New</button>
+  <button on:click={() => (newFileModalVisible = true)}>New</button>
 {/if}
+
+<NewFileModal bind:visible={newFileModalVisible} />
 
 <style lang="sass">
   :global(body)

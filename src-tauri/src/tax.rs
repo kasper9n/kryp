@@ -22,11 +22,11 @@ pub struct Tax {
 }
 
 impl Tax {
-  pub fn new() -> Self {
+  pub fn new(base_currency: &str) -> Self {
     Tax {
       version: "0.1".to_string(),
       transactions: Vec::new(),
-      base_currency: "".to_string(),
+      base_currency: base_currency.to_string(),
       price_data: PriceData::new(),
       realized_gains: Vec::new(),
       balances: Vec::new(),

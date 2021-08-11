@@ -29,6 +29,7 @@
     background-color: rgba(#000000, 0.5)
     .box
       background-color: #f8f9fc
+      min-width: 300px
       max-width: 100%
       max-height: 100%
       padding: 20px 20px

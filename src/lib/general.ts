@@ -9,3 +9,14 @@ export function refresh() {
 export function popup(msg: string) {
   invoke('error_popup', { msg })
 }
+
+let lastActiveElement = document.body
+export function focus(el: HTMLElement) {
+  if (document.activeElement instanceof HTMLElement) {
+    lastActiveElement = document.activeElement
+    el.focus()
+  }
+}
+export function focusLast() {
+  if (lastActiveElement) lastActiveElement.focus()
+}
