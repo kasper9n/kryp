@@ -6,7 +6,7 @@
   export let value = new Date()
   let textHist = ['', '']
   let text = ''
-  function externalUpdate(x) {
+  function externalUpdate(x: Date) {
     text = getText(x)
   }
   $: externalUpdate(value)
@@ -15,7 +15,7 @@
     return (
       date.getFullYear() +
       '-' +
-      twoDigit(date.getMonth()) +
+      twoDigit(date.getMonth() + 1) +
       '-' +
       twoDigit(date.getDate()) +
       ' ' +
@@ -32,6 +32,7 @@
     let mom = moment(text, 'YYYY-MM-DD H:mm:ss', true)
     invalid = !mom.isValid()
     textHist = [textHist[1], text]
+    if (!invalid) value = mom.toDate()
   }
   $: textUpdate(text)
   function input(e: any) {
