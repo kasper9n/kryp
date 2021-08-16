@@ -5,10 +5,11 @@
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
   import PricesPage from './routes/prices.svelte'
+  import HelpPage from './routes/help.svelte'
   import { refresh, popup } from './lib/general'
   import { opened } from './lib/data'
   import NewFileModal from './modals/NewFile.svelte'
-  const pages = [DashboardPage, TransactionsPage, PricesPage]
+  const pages = [DashboardPage, TransactionsPage, PricesPage, HelpPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
     function handler(e: MouseEvent) {
@@ -71,6 +72,7 @@
     <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
     <div class="nav-mid" />
     <button class="link" use:link={2} class:current={page === 2}>Prices</button>
+    <button class="link" use:link={3} class:current={page === 3}>Help</button>
     <button on:click={() => open()}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>
