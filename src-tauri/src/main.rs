@@ -82,7 +82,8 @@ fn main() {
       "View",
       Menu::new()
         .add_item(custom_menu("Dashboard").accelerator("cmdOrControl+1"))
-        .add_item(custom_menu("Transactions").accelerator("cmdOrControl+2")),
+        .add_item(custom_menu("Transactions").accelerator("cmdOrControl+2"))
+        .add_native_item(MenuItem::EnterFullScreen),
     ))
     .add_submenu(Submenu::new(
       "Window",

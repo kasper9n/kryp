@@ -69,6 +69,7 @@
   <div class="nav">
     <button class="link" use:link={0} class:current={page === 0}>Dashboard</button>
     <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
+    <div class="nav-mid" />
     <button class="link" use:link={2} class:current={page === 2}>Prices</button>
     <button on:click={() => open()}>Load</button>
     <button on:click={save}>Save</button>
@@ -106,6 +107,9 @@
     background-color: #ffffff
     border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
+  .nav-mid
+    width: 50px
+    flex-grow: 1
   .link
     background-color: transparent
     border: none

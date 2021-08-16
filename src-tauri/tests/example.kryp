@@ -537,6 +537,7 @@
 			"wallet": "Coinbase"
 		}
 	],
+	"incomes": [],
 	"balances": [
 		{
 			"acquire_date": 1500000000000,

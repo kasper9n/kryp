@@ -3,30 +3,59 @@ import { writable } from 'svelte/store'
 import { refresher, popup } from './general'
 import type { Transaction } from './transactions'
 
+type Tax = {
+  transactions: Transaction[]
+  base_currency: string
+  price_data: PriceData
+  realized_gains: Realized[]
+  incomes: Income[]
+  balances: Balance[]
+}
+
+const defaultTax = {
+  transactions: [],
+  base_currency: 'USD',
+  price_data: {
+    assets: {},
+  },
+  realized_gains: [],
+  incomes: [],
+  balances: [],
+}
+export const tax = writable(defaultTax as Tax)
+
+export type PriceData = {
+  assets: Map<string, PriceDataAsset>
+}
 export type PriceDataAsset = {
   symbol: string
   kind: string
   interval: string
   prices: Map<number, number>
 }
-export type PriceData = {
-  assets: Map<string, PriceDataAsset>
+
+export type Balance = {
+  acquire_date: number
+  amount: string
+  currency: string
+  wallet: string
+  cost: string
 }
 
-type Tax = {
-  balances: any[]
-  base_currency: string
-  price_data: any
-  realized_gains: any
-  transactions: Transaction[]
+export type Realized = {
+  date: number
+  input: string
+  output: string
+  wallet: string
 }
 
-const defaultTax = {
-  balances: [],
-  base_currency: 'USD',
-  transactions: [],
+export type Income = {
+  date: number
+  amount: string
+  currency: string
+  value: string
+  wallet: string
 }
-export const tax = writable(defaultTax as Tax)
 
 type Data = {
   opened: boolean

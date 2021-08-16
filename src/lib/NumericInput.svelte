@@ -56,10 +56,11 @@
 <style lang="sass">
   input
     min-width: 0px
-    padding: 4px 8px
+    width: 100%
+    padding: 4px 6px
     margin: 0px
     font-family: inherit
-    font-size: 13px
+    font-size: 12px
     border: 1px solid #c6cddd
     border-radius: 3px
   .noLeftBorder

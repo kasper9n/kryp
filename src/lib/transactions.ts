@@ -3,7 +3,7 @@ import { writable } from 'svelte/store'
 import { refresher, popup } from './general'
 
 export type Transaction = {
-  kind: string
+  kind: 'Trade' | 'Transfer' | 'Deposit' | 'Income' | 'Withdrawal'
   date: number
   note: string
   hash: string

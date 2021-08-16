@@ -16,6 +16,7 @@ pub struct Tax {
   pub base_currency: String,
   pub price_data: PriceData,
   pub realized_gains: Vec<Realized>,
+  pub incomes: Vec<Income>,
   pub balances: Vec<Balance>,
   #[serde(skip)]
   pub dirty: bool,
@@ -30,6 +31,7 @@ impl Tax {
       price_data: PriceData::new(),
       realized_gains: Vec::new(),
       balances: Vec::new(),
+      incomes: Vec::new(),
       dirty: true,
     }
   }
@@ -39,9 +41,10 @@ impl Tax {
     Ok(())
   }
   pub fn calculate(&mut self) -> Result<(), String> {
-    let (balances, realized_gains) = calculate(&mut self.transactions)?;
-    self.balances = balances;
-    self.realized_gains = realized_gains;
+    let output = calculate(&mut self.transactions)?;
+    self.balances = output.balances;
+    self.realized_gains = output.realized_gains;
+    self.incomes = output.incomes;
     Ok(())
   }
   pub fn save<P: AsRef<Path>>(&self, file_path: P) {
@@ -78,9 +81,16 @@ impl Tax {
   }
 }
 
-fn calculate(transactions: &mut Vec<Transaction>) -> Result<(Vec<Balance>, Vec<Realized>), String> {
+struct CalculationOutput {
+  pub balances: Vec<Balance>,
+  pub realized_gains: Vec<Realized>,
+  pub incomes: Vec<Income>,
+}
+
+fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, String> {
   let mut balances = Vec::new();
   let mut realized_gains = Vec::new();
+  let mut incomes = Vec::new();
   for transaction in transactions {
     match transaction.kind {
       TxType::Deposit => {
@@ -91,6 +101,22 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<(Vec<Balance>, Vec<R
           wallet: transaction.recv_wallet.clone(),
           cost: transaction.cost,
         });
+      }
+      TxType::Income => {
+        balances.push(Balance {
+          acquire_date: transaction.date,
+          amount: transaction.recv_amount,
+          currency: transaction.recv_asset.clone(),
+          wallet: transaction.recv_wallet.clone(),
+          cost: transaction.cost,
+        });
+        incomes.push(Income {
+          date: transaction.date,
+          amount: transaction.recv_amount,
+          currency: transaction.recv_asset.clone(),
+          wallet: transaction.recv_wallet.clone(),
+          value: transaction.cost,
+        })
       }
       TxType::Trade => {
         let mut cost = deduct(
@@ -167,7 +193,11 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<(Vec<Balance>, Vec<R
       }
     }
   }
-  return Ok((balances, realized_gains));
+  return Ok(CalculationOutput {
+    balances,
+    realized_gains,
+    incomes,
+  });
 }
 
 /// Returns the NOK cost of the deducted amount
@@ -245,11 +275,13 @@ fn transfer(
 pub enum TxType {
   Trade = 0,
   Transfer = 1,
+
   Deposit = 2,
-  Withdrawal = 3,
-  // ExternalBuy = 4,
-  // ExternalSell = 5,
-  // Gift = 6,
+  Income = 3,
+
+  Withdrawal = 4,
+  // Gift = 5,
+  // Lost = 6,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -305,7 +337,7 @@ impl Transaction {
   pub fn requires_sent(&self) -> bool {
     match self.kind {
       TxType::Trade | TxType::Transfer | TxType::Withdrawal => true,
-      TxType::Deposit => false,
+      TxType::Deposit | TxType::Income => false,
     }
   }
   #[allow(dead_code)]
@@ -319,7 +351,7 @@ impl Transaction {
   #[allow(dead_code)]
   pub fn requires_recv(&self) -> bool {
     match self.kind {
-      TxType::Trade | TxType::Transfer | TxType::Deposit => true,
+      TxType::Trade | TxType::Transfer | TxType::Deposit | TxType::Income => true,
       TxType::Withdrawal => false,
     }
   }
@@ -335,7 +367,7 @@ impl Transaction {
   pub fn allows_fee(&self) -> bool {
     match self.kind {
       TxType::Trade => true,
-      TxType::Transfer | TxType::Deposit | TxType::Withdrawal => false,
+      TxType::Transfer | TxType::Deposit | TxType::Income | TxType::Withdrawal => false,
     }
   }
   #[allow(dead_code)]
@@ -371,7 +403,7 @@ impl Transaction {
         ensure(self.fee_amount == zero, "Must be empty: fee_amount")?;
         ensure(self.fee_asset == "", "Must be empty: fee_asset")?;
       }
-      TxType::Deposit => {
+      TxType::Deposit | TxType::Income => {
         ensure(self.sent_amount == zero, "Must be empty: sent_amount")?;
         ensure(self.sent_asset == "", "Must be empty: sent_asset")?;
         ensure(self.sent_wallet == "", "Must be empty: sent_wallet")?;
@@ -415,7 +447,7 @@ impl Transaction {
       TxType::Transfer => {
         cost = price_data.get_value(self.sent_amount, &self.sent_asset, self.date, base);
       }
-      TxType::Deposit => {
+      TxType::Deposit | TxType::Income => {
         cost = price_data.get_value(self.recv_amount, &self.recv_asset, self.date, base);
       }
       TxType::Withdrawal => {
@@ -440,6 +472,15 @@ pub struct Realized {
   pub date: i64,
   pub input: Decimal,
   pub output: Decimal,
+  pub wallet: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Income {
+  pub date: i64,
+  pub amount: Decimal,
+  pub currency: String,
+  pub value: Decimal,
   pub wallet: String,
 }
 

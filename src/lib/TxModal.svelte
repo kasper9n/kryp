@@ -13,8 +13,8 @@
   function cancel() {
     visible = false
   }
-  function numStr(str) {
-    if (str === '') return ''
+  function numStr(str: string) {
+    if (str === '') return '0'
     else return str
   }
 
@@ -36,12 +36,29 @@
         recv_wallet: tx.recv_wallet,
         fee_amount: numStr(tx.fee_amount),
         fee_asset: tx.fee_asset,
-        cost: tx.cost === '' ? '0' : tx.cost,
+        cost: numStr(tx.cost),
+      }
+    } else if (kind === 'Deposit' || kind === 'Income') {
+      fixedTx = {
+        kind,
+        date: tx.date.getTime(),
+        note: tx.note,
+        hash: tx.hash,
+        sent_amount: numStr(''),
+        sent_asset: '',
+        sent_wallet: '',
+        recv_amount: numStr(tx.recv_amount),
+        recv_asset: tx.recv_asset,
+        recv_wallet: tx.recv_wallet,
+        fee_amount: numStr(''),
+        fee_asset: '',
+        cost: numStr(tx.cost),
       }
     } else {
       popup('Unsupported tx type: ' + kind)
       return
     }
+    console.log('fixedTx', fixedTx)
     invoke('add_transaction', { json: JSON.stringify(fixedTx) })
       .then(() => {
         visible = false
@@ -60,7 +77,7 @@
     if (kind === 'Trade') {
       fields.fee = true
     }
-    if (kind === 'Deposit') {
+    if (kind === 'Deposit' || kind === 'Income') {
       fields.sent = false
     }
     if (kind === 'Withdrawal') {
@@ -102,7 +119,6 @@
       errors.add('recv_asset')
       errors.add('recv_wallet')
     }
-    console.log('tx.sent_amount', tx.sent_amount)
     if (!enabledFields.sent || tx.sent_amount) errors.delete('sent_amount')
     if (!enabledFields.sent || tx.sent_asset) errors.delete('sent_asset')
     if (!enabledFields.sent || tx.sent_wallet) errors.delete('sent_wallet')
@@ -118,13 +134,14 @@
 
 <Modal bind:visible>
   <h2>Add transaction</h2>
-  <form on:submit|preventDefault={save}>
+  <form on:submit|preventDefault={save} class="googoogaga">
     <div class="row">
       <p>Type</p>
       <select bind:value={kind}>
         <option value="Trade">Trade</option>
         <option value="Transfer">Transfer</option>
         <option value="Deposit">Deposit</option>
+        <option value="Income">Income</option>
         <option value="Withdrawal">Withdrawal</option>
       </select>
     </div>
@@ -204,18 +221,23 @@
     </div>
     <div class="bottom">
       <Button secondary on:click={cancel}>Cancel</Button>
-      <div class="spacer" />
       <Button type="submit">Add</Button>
     </div>
   </form>
 </Modal>
 
 <style lang="sass">
+  .googoogaga
+    width: 550px
+    max-width: 100%
   .sent, .received
     background-color: #eff2f5
     border: 1px solid #c6cddd
     padding: 10px
-    width: 260px
+    width: 0px
+    flex-grow: 1
+    // :last-child
+    //   margin-bottom: 0px
   .sent
     border-radius: 7px 0px 0px 7px
   .received
@@ -223,9 +245,9 @@
     border-left: none
   .row
     display: flex
-    padding-bottom: 10px
+    margin-bottom: 10px
   .fee
-    width: 270px
+    width: 320px
     max-width: 100%
   h4
     margin-bottom: 10px
@@ -240,11 +262,11 @@
     cursor: default
   input, textarea
     min-width: 0px
-    padding: 4px 8px
+    padding: 4px 6px
     width: 100%
     margin: 0px
     font-family: inherit
-    font-size: 13px
+    font-size: 12px
     border: 1px solid #c6cddd
     border-radius: 3px
   .invalid
@@ -261,14 +283,16 @@
   .asset:focus
     z-index: 1 // outline fix
   .asset
-    width: 30%
+    min-width: 60px
+    width: 0px
     border-right: none
     border-top-right-radius: 0px
     border-bottom-right-radius: 0px
   .bottom
-    display: flex
-    justify-content: flex-end
-  .spacer
-    width: 10px
-    height: 10px
+    display: grid
+    grid-auto-flow: column
+    grid-gap: 10px
+    margin-top: 18px
+    width: min-content
+    margin-left: auto
 </style>

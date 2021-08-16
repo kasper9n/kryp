@@ -34,10 +34,10 @@
             viewBox="0 0 24 24"
             ><path
               d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z" /></svg>
-        {:else if tx.kind === 'Deposit'}
+        {:else if tx.kind === 'Deposit' || tx.kind === 'Income'}
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="deposit"
+            class="deposit-income"
             width="24"
             height="24"
             viewBox="0 0 24 24"
@@ -46,7 +46,7 @@
         {/if}
       </div>
       <div class="kind">{tx.kind}</div>
-      {#if tx.kind === 'Deposit'}
+      {#if tx.kind === 'Deposit' || tx.kind === 'Income'}
         <div class="sent" />
       {:else}
         <div class="sent">{tx.sent_amount} {tx.sent_asset} {tx.sent_wallet}</div>
@@ -89,7 +89,7 @@
     text-align: center
   .arrow, .icon
     font-size: 0px // fix bottom 4px
-  svg.deposit
+  svg.deposit-income
     width: 18px
     height: 18px
     transform: rotate(45deg)

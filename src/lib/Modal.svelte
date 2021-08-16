@@ -32,7 +32,7 @@
       min-width: 300px
       max-width: 100%
       max-height: 100%
-      padding: 20px 20px
+      padding: 18px
       box-sizing: border-box
       border-radius: 7px
       box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
