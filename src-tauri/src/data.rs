@@ -99,10 +99,16 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
     let file_path = match path {
       Some(path) => path,
       None => {
-        let path = dialog::FileDialogBuilder::new()
-          .add_filter("Kryp", &["kryp"])
-          .pick_file();
-        match path {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["kryp"]);
+        if cfg!(any(target_os = "macos", target_os = "windows")) {
+          println!("set_parent");
+          d = d.set_parent(&dialog::window_parent(&win).unwrap());
+        }
+        d.pick_file(move |p| {
+          sender.send(p).unwrap();
+        });
+        match receiver.recv().unwrap_or_default() {
           Some(file_path) => file_path,
           None => return Ok(()),
         }
@@ -125,15 +131,17 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
   }
   println!("save as {}", save_as);
   if save_as {
-    let file_path = dialog::FileDialogBuilder::new()
+    let (sender, receiver) = std::sync::mpsc::channel();
+    dialog::FileDialogBuilder::new()
       .set_file_name("report.kryp")
       .add_filter("Kryp", &["kryp"])
-      .save_file();
-    let file_path = match file_path {
-      Some(file_path) => file_path,
+      .save_file(move |p| {
+        sender.send(p).unwrap();
+      });
+    match receiver.recv().unwrap_or_default() {
+      Some(file_path) => kryp.tax.save(file_path),
       None => return Ok(()),
     };
-    kryp.tax.save(file_path);
   }
   Ok(())
 }
@@ -143,9 +151,18 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
 pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
   let mut kryp = kryp.0.lock().unwrap();
   if kryp.opened && kryp.tax.dirty {
-    match dialog::ask("You have unsaved changes. Close without saving?", "") {
-      dialog::AskResponse::No => return Ok(false),
-      _ => {}
+    let (sender, receiver) = std::sync::mpsc::channel();
+    dialog::ask(
+      Some(&win),
+      "You have unsaved changes. Close without saving?",
+      "",
+      move |res| {
+        sender.send(res).unwrap();
+      },
+    );
+    match receiver.recv().unwrap_or(false) {
+      false => return Ok(false),
+      true => {}
     }
   }
   if !kryp.opened {

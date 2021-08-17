@@ -4,17 +4,20 @@
 )]
 
 use rust_decimal::{Decimal, RoundingStrategy};
+use std::thread;
 use tauri::api::{dialog, shell};
-use tauri::{command, CustomMenuItem, Menu, MenuItem, Submenu, WindowBuilder, WindowUrl};
+use tauri::{command, CustomMenuItem, Menu, MenuItem, Submenu, Window, WindowBuilder, WindowUrl};
 
 mod data;
 mod prices;
 mod tax;
 
 #[command]
-fn error_popup(msg: String) {
+fn error_popup(msg: String, win: Window) {
   println!("Error popup: {}", msg);
-  dialog::message("Error", msg);
+  thread::spawn(move || {
+    dialog::message(Some(&win), "Error", msg);
+  });
 }
 
 #[macro_export]
@@ -28,7 +31,7 @@ pub fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
-fn custom_menu(name: &str) -> CustomMenuItem<String> {
+fn custom_menu(name: &str) -> CustomMenuItem {
   let c = CustomMenuItem::new(name.to_string(), name);
   return c;
 }
@@ -99,14 +102,14 @@ fn main() {
 
   let ctx = tauri::generate_context!();
   tauri::Builder::default()
-    .create_window("main".into(), WindowUrl::default(), |win, webview| {
+    .create_window("main", WindowUrl::default(), |win, webview| {
       let win = win
         .title("Kryp")
         .resizable(true)
         .transparent(false)
         .decorations(true)
         .always_on_top(false)
-        .inner_size(1000.0, 800.0)
+        .inner_size(1050.0, 800.0)
         .min_inner_size(300.0, 200.0)
         .fullscreen(false);
       return (win, webview);
@@ -129,7 +132,7 @@ fn main() {
     ])
     .menu(menu)
     .on_menu_event(|event| {
-      let event_name = event.menu_item_id().as_str();
+      let event_name = event.menu_item_id();
       let _ = event.window().emit("menu", event_name);
       match event_name {
         "Learn More" => {

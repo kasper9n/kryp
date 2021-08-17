@@ -2,6 +2,7 @@
   export let group: any[] | null = null
   export let selected = 0
   export let secondary = false
+  export let neutral = false
   export let disabled = false
   export let type = 'button'
 </script>
@@ -9,17 +10,24 @@
 {#if group}
   <div class="view">
     {#each group as value, i}
-      <button class:secondary class:selected={selected === i} on:click={() => (selected = i)}
-        >{value}</button>
+      <div class="wrapper" class:secondary on:click={() => (selected = i)}>
+        <button class:selected={selected === i}>{value}</button>
+      </div>
     {/each}
   </div>
 {:else}
-  <button class:secondary class:disabled on:click {type} {...$$restProps}><slot /></button>
+  <div class="wrapper" class:neutral class:secondary class:disabled on:click>
+    <button {type} {...$$restProps}><slot /></button>
+  </div>
 {/if}
 
 <style lang="sass">
   $accent: #3061F6
+  $neutral: #242429
   $border: #c6cddd
+  .wrapper
+    display: inline-block
+    vertical-align: middle
   button
     cursor: pointer
     user-select: none
@@ -35,17 +43,24 @@
     color: #ffffff
     border-radius: 7px
     transition: 0.1s ease-in-out
-    transition-property: transform, opacity
-    &.secondary
-      background-color: #ffffff
-      color: #191B20
-      border: 1px solid $border
-      box-shadow: 0px 0px 2px 0px $border
-    &.disabled
-      background-color: #191B20
+    transition-property: transform, opacity, box-shadow
     &:active
       opacity: 0.95
       transform: scale(0.95)
+  .neutral
+    margin: 0px 5px
+    button
+      background-color: $neutral
+      height: 30px
+      padding: 0px 22px
+      box-shadow: 0px 0px 2px 0px $neutral
+  .secondary button
+    background-color: #ffffff
+    color: #191B20
+    border: 1px solid $border
+    box-shadow: 0px 0px 2px 0px $border
+  .disabled button
+    background-color: #191B20
   .view
     display: flex
     background-color: #ffffff
@@ -61,8 +76,6 @@
       color: #252935
       height: 100%
       padding: 0px 16px
-      // padding: 0px 0px
-      // width: 60px
     .selected
       color: #ffffff
       background-color: #191B20

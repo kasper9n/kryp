@@ -9,6 +9,7 @@
   import { refresh, popup } from './lib/general'
   import { opened } from './lib/data'
   import NewFileModal from './modals/NewFile.svelte'
+  import Button from './lib/Button.svelte'
   const pages = [DashboardPage, TransactionsPage, PricesPage, HelpPage]
   let page = 0
   function link(node: HTMLElement, num: number) {
@@ -80,9 +81,13 @@
 
   <svelte:component this={pages[page]} />
 {:else}
-  This is where we create or open a file
-  <button on:click={() => open()}>Open</button>
-  <button on:click={() => (newFileModalVisible = true)}>New</button>
+  <div class="start-page">
+    <h1>Kryp</h1>
+    <div class="buttons">
+      <Button neutral on:click={() => open()}>Open</Button>
+      <Button neutral on:click={() => (newFileModalVisible = true)}>New</Button>
+    </div>
+  </div>
 {/if}
 
 <NewFileModal bind:visible={newFileModalVisible} />
@@ -93,11 +98,11 @@
     margin: 0px
   :global(h1), :global(h2), :global(h3)
     margin-top: 0px
-    margin-bottom: 1em
+    margin-bottom: 0.5em
     font-weight: 600
   :global(h4), :global(h5), :global(h6)
     margin-top: 0px
-    margin-bottom: 1em
+    margin-bottom: 0.5em
     font-weight: 600
   :global(body), :global(input)
     font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
@@ -123,4 +128,12 @@
     padding: 15px
     &.current
       color: #000000
+  .start-page
+    position: absolute
+    width: 100%
+    height: 100%
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
 </style>

@@ -38,9 +38,11 @@
   <p>
     This page contains the prices that have been fetched and saved.
     <br />
-    Crypto prices are fetched from <a href="https://www.coingecko.com/en">CoinGecko</a>
+    Crypto prices are fetched from
+    <a target="_blank" href="https://www.coingecko.com/en">CoinGecko</a>
     <br />
-    Fiat prices are fetched from <a href="https://exchangerate.host">exchangerate.host</a>
+    Fiat prices are fetched from
+    <a target="_blank" href="https://exchangerate.host">exchangerate.host</a>
   </p>
   <div class="card flex">
     {#if assets}
