@@ -3,10 +3,13 @@
   windows_subsystem = "windows"
 )]
 
+use crate::data::St;
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
-use tauri::{command, CustomMenuItem, Menu, MenuItem, Submenu, Window, WindowBuilder, WindowUrl};
+use tauri::{
+  command, CustomMenuItem, Manager, Menu, MenuItem, Submenu, Window, WindowBuilder, WindowUrl,
+};
 
 mod data;
 mod prices;
@@ -101,7 +104,7 @@ fn main() {
     .add_native_item(MenuItem::Copy);
 
   let ctx = tauri::generate_context!();
-  tauri::Builder::default()
+  let tauri_app = tauri::Builder::default()
     .create_window("main", WindowUrl::default(), |win, webview| {
       let win = win
         .title("Kryp")
@@ -141,6 +144,40 @@ fn main() {
         _ => {}
       }
     })
-    .run(ctx)
-    .expect("error running application");
+    .build(ctx)
+    .expect("error while running tauri app");
+  tauri_app.run(|app_handle, e| match e {
+    tauri::Event::CloseRequested { label, api, .. } => {
+      if label == "main" {
+        let st: St<'_> = app_handle.state();
+        let kryp = st.0.lock().unwrap();
+        if kryp.has_unsaved_changes() {
+          api.prevent_close();
+          let app_handle = app_handle.clone();
+          let w = app_handle.get_window(&label).unwrap();
+          let res = dialog_sync(
+            w.clone(),
+            "You have unsaved changes. Close without saving?",
+            "",
+          );
+          if res == true {
+            w.close().unwrap();
+          }
+        }
+      }
+    }
+    _ => {}
+  })
+}
+
+pub fn dialog_sync<S: AsRef<str>>(w: Window, title: S, msg: S) -> bool {
+  let (sender, receiver) = std::sync::mpsc::channel();
+  let title = title.as_ref().to_string();
+  let msg = msg.as_ref().to_string();
+  thread::spawn(move || {
+    dialog::ask(Some(&w), title, msg, move |res| {
+      sender.send(res).unwrap();
+    })
+  });
+  receiver.recv().unwrap_or(false)
 }

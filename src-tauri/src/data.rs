@@ -18,6 +18,9 @@ pub struct Kryp {
 }
 
 impl Kryp {
+  pub fn has_unsaved_changes(&self) -> bool {
+    self.opened && self.tax.dirty
+  }
   // pub fn set_opened<P: Params>(mut self, window: Window<P>, value: bool) {
   //   self.opened = value;
   //   let menu_handle = window.menu_handle();
@@ -63,6 +66,8 @@ macro_rules! refresh_menu_bar {
 #[derive(Default)]
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
+pub type St<'a> = State<'a, Data>;
+
 #[command]
 pub async fn new_file(
   base_currency: String,
@@ -102,7 +107,6 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
         let (sender, receiver) = std::sync::mpsc::channel();
         let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["kryp"]);
         if cfg!(any(target_os = "macos", target_os = "windows")) {
-          println!("set_parent");
           d = d.set_parent(&dialog::window_parent(&win).unwrap());
         }
         d.pick_file(move |p| {
@@ -150,19 +154,14 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
 /// Returns a hideApp bool
 pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
   let mut kryp = kryp.0.lock().unwrap();
-  if kryp.opened && kryp.tax.dirty {
-    let (sender, receiver) = std::sync::mpsc::channel();
-    dialog::ask(
-      Some(&win),
+  if kryp.has_unsaved_changes() {
+    let res = crate::dialog_sync(
+      win.clone(),
       "You have unsaved changes. Close without saving?",
       "",
-      move |res| {
-        sender.send(res).unwrap();
-      },
     );
-    match receiver.recv().unwrap_or(false) {
-      false => return Ok(false),
-      true => {}
+    if res == false {
+      return Ok(false);
     }
   }
   if !kryp.opened {

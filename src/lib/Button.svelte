@@ -33,7 +33,7 @@
     user-select: none
     -webkit-user-select: none
     margin: 0px
-    height: 36px
+    height: 34px
     padding: 0px 18px
     border: none
     font-size: 13px
