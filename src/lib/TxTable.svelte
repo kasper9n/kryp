@@ -54,10 +54,8 @@
   <tbody on:click={tbodyClick}>
     {#each $transactions as tx, i}
       <tr class:odd={i % 2 === 0}>
-        <td
-          class="type"
-          class:green={tx.kind === 'Deposit' || tx.kind === 'Income'}
-          class:red={tx.kind === 'Withdrawal'}>{tx.kind}</td>
+        <td class="type" class:green={tx.kind === 'Deposit'} class:red={tx.kind === 'Withdrawal'}
+          >{tx.kind}</td>
         <td class="sent amount">{tx.sent_amount}</td>
         <td class="sent asset">{tx.sent_asset}</td>
         <td class="sent wallet">{tx.sent_wallet}</td>

@@ -454,6 +454,7 @@
 		}
 	},
 	"realized_gains": [],
-	"incomes": [],
-	"balances": []
+	"deposits": [],
+	"balances": [],
+	"tags": []
 }

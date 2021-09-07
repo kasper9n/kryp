@@ -8,8 +8,9 @@ type Tax = {
   base_currency: string
   price_data: PriceData
   realized_gains: Realized[]
-  incomes: Income[]
+  deposits: Deposit[]
   balances: Balance[]
+  tags: string[]
 }
 
 const defaultTax = {
@@ -19,8 +20,9 @@ const defaultTax = {
     assets: {},
   },
   realized_gains: [],
-  incomes: [],
+  deposits: [],
   balances: [],
+  tags: [],
 }
 export const tax = writable(defaultTax as Tax)
 
@@ -49,7 +51,7 @@ export type Realized = {
   wallet: string
 }
 
-export type Income = {
+export type Deposit = {
   date: number
   amount: string
   currency: string

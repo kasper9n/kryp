@@ -3,6 +3,7 @@
 	"transactions": [
 		{
 			"kind": "Deposit",
+			"tags": [],
 			"date": 1500000000000,
 			"note": "",
 			"hash": "",
@@ -18,6 +19,7 @@
 		},
 		{
 			"kind": "Trade",
+			"tags": [],
 			"date": 1500100000000,
 			"note": "",
 			"hash": "",
@@ -33,6 +35,7 @@
 		},
 		{
 			"kind": "Transfer",
+			"tags": [],
 			"date": 1500200000000,
 			"note": "",
 			"hash": "",
@@ -48,6 +51,7 @@
 		},
 		{
 			"kind": "Trade",
+			"tags": [],
 			"date": 1500300000000,
 			"note": "",
 			"hash": "",
@@ -63,6 +67,7 @@
 		},
 		{
 			"kind": "Withdrawal",
+			"tags": [],
 			"date": 1500400000000,
 			"note": "",
 			"hash": "",
@@ -534,10 +539,11 @@
 			"date": 1500300000000,
 			"input": "800",
 			"output": "9398.57934082",
-			"wallet": "Coinbase"
+			"wallet": "Coinbase",
+			"tags": []
 		}
 	],
-	"incomes": [],
+	"deposits": [],
 	"balances": [
 		{
 			"acquire_date": 1500000000000,
@@ -560,5 +566,6 @@
 			"wallet": "Coinbase",
 			"cost": "9398.57934082"
 		}
-	]
+	],
+	"tags": []
 }

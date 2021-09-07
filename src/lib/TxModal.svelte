@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { writable } from 'svelte/store'
-  import type { Writable } from 'svelte/store'
   import { invoke } from '@tauri-apps/api/tauri'
   import Button from '../lib/Button.svelte'
   import DatePicker from '../lib/DatePicker.svelte'
-  import { slide } from 'svelte/transition'
   import Modal from '../lib/Modal.svelte'
   import type { Transaction } from './transactions'
   import { refresh, popup } from '../lib/general'
   import NumericInput from './NumericInput.svelte'
+  import SuggestInput from './SuggestInput.svelte'
+
   export let visible = false
   function cancel() {
     visible = false
@@ -38,7 +37,7 @@
         fee_asset: tx.fee_asset,
         cost: numStr(tx.cost),
       }
-    } else if (kind === 'Deposit' || kind === 'Income') {
+    } else if (kind === 'Deposit') {
       fixedTx = {
         kind,
         date: tx.date.getTime(),
@@ -77,7 +76,7 @@
     if (kind === 'Trade') {
       fields.fee = true
     }
-    if (kind === 'Deposit' || kind === 'Income') {
+    if (kind === 'Deposit') {
       fields.sent = false
     }
     if (kind === 'Withdrawal') {
@@ -133,15 +132,14 @@
 </script>
 
 <Modal bind:visible>
-  <h2>Add transaction</h2>
   <form on:submit|preventDefault={save} class="googoogaga">
+    <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
       <select bind:value={kind}>
         <option value="Trade">Trade</option>
         <option value="Transfer">Transfer</option>
         <option value="Deposit">Deposit</option>
-        <option value="Income">Income</option>
         <option value="Withdrawal">Withdrawal</option>
       </select>
     </div>
@@ -149,7 +147,7 @@
       <p>Date</p>
       <DatePicker bind:value={tx.date} bind:invalid={invalidDate} />
     </div>
-    <div class="row">
+    <div class="row main-info">
       <div class="sent">
         {#if enabledFields.sent}
           <h4>Sent</h4>
@@ -202,15 +200,25 @@
           </div>
         {/if}
       </div>
+      {#if enabledFields.fee}
+        <div class="fee">
+          <h4>Fee</h4>
+          <div class="row">
+            <input type="text" bind:value={tx.fee_asset} placeholder="Asset" />
+          </div>
+          <div class="row">
+            <NumericInput bind:value={tx.fee_amount} placeholder="Amount" />
+          </div>
+        </div>
+      {/if}
     </div>
     <h4>Optional Details</h4>
-    {#if enabledFields.fee}
-      <div class="row fee" transition:slide|local>
-        <p>Fee</p>
-        <input type="text" class="asset" bind:value={tx.fee_asset} placeholder="Asset" />
-        <NumericInput bind:value={tx.fee_amount} noLeftBorder placeholder="Amount" />
-      </div>
-    {/if}
+    <div class="row">
+      <p>Tag</p>
+      <SuggestInput
+        options={['Income', 'Airdrop', 'Fork', 'Spend', 'Lost', 'Gift', 'Donation']}
+        value="" />
+    </div>
     <div class="row">
       <p>Tx Hash</p>
       <input type="text" class="note" bind:value={tx.hash} />
@@ -228,36 +236,47 @@
 
 <style lang="sass">
   .googoogaga
-    width: 550px
+    width: 560px
     max-width: 100%
-  .sent, .received
+    user-select: none
+    -webkit-user-select: none
+    cursor: default
+    font-size: 12px
+  .sent, .received, .fee
     background-color: #eff2f5
     border: 1px solid #c6cddd
-    padding: 10px
     width: 0px
     flex-grow: 1
-    // :last-child
-    //   margin-bottom: 0px
+    padding-bottom: 2px
+    .row, h4
+      margin: 10px
   .sent
     border-radius: 7px 0px 0px 7px
+    width: 40%
   .received
-    border-radius: 0px 7px 7px 0px
     border-left: none
+    width: 40%
   .row
     display: flex
-    margin-bottom: 10px
+    margin: 10px 0px
+  .main-info
+    position: relative
+    > :last-child
+      border-radius: 0px 7px 7px 0px
+      border-left: none
+    .row
+      margin: 9px
   .fee
-    width: 320px
-    max-width: 100%
+    width: 25%
   h4
-    margin-bottom: 10px
+    margin: 10px 0px
   select
     margin: 4px 0px
   p
     display: inline-block
     min-width: 65px
     margin: 0px
-    margin-top: 4px
+    margin: 4px 0px
     font-size: 14px
     cursor: default
   input, textarea
@@ -266,7 +285,7 @@
     width: 100%
     margin: 0px
     font-family: inherit
-    font-size: 12px
+    font-size: inherit
     border: 1px solid #c6cddd
     border-radius: 3px
   .invalid

@@ -60,7 +60,7 @@
     padding: 4px 6px
     margin: 0px
     font-family: inherit
-    font-size: 12px
+    font-size: inherit
     border: 1px solid #c6cddd
     border-radius: 3px
   .noLeftBorder

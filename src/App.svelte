@@ -96,6 +96,10 @@
   :global(body)
     background-color: #f8f9fc
     margin: 0px
+  :global(h2)
+    font-size: 24px
+  :global(h4)
+    font-size: 16px
   :global(h1), :global(h2), :global(h3)
     margin-top: 0px
     margin-bottom: 0.5em

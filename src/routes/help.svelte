@@ -31,16 +31,15 @@
 
   <h3>Deposit</h3>
   <p>
-    Add an asset to a wallet, without resulting in taxes. If the deposit is not in your base
-    currency, it will be treated as a purchase, using the price at the time of the deposit.</p>
-
-  <h3>Income</h3>
-  <p>
-    Receive an asset. This transaction type will result in income taxes. Income could be from
-    airdrops, forks, mining, staking, referrals, loan interest, etc.</p>
+    Add an asset to a wallet. By default this transaction does not result in any taxes. If certain
+    tags are added, it will generate income tax (like Airdrop, Fork, Mining, Staking, Referrals,
+    Loan interest, etc). If the deposit is not in your base currency, it will be treated as a
+    purchase, using the price at the time of the deposit.</p>
 
   <h3>Withdrawal</h3>
-  <p>Send an asset out of your wallet. This transaction will realize capital gains.</p>
+  <p>
+    Remove an asset from your wallet. By default this transaction will realize capital gains, unless
+    the transaction has a tag that disables capital gains (like Lost, Gift, Donation).</p>
 </div>
 
 <style lang="sass">
