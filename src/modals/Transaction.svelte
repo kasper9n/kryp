@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/tauri'
   import Button from '../lib/Button.svelte'
   import DatePicker from '../lib/DatePicker.svelte'
   import Modal from '../lib/Modal.svelte'
-  import type { Transaction } from './transactions'
-  import { refresh, popup } from '../lib/general'
-  import NumericInput from './NumericInput.svelte'
-  import SuggestInput from './SuggestInput.svelte'
+  import type { Transaction } from '../lib/transactions'
+  import { refresh, popup, runCmd } from '../lib/general'
+  import NumericInput from '../lib/NumericInput.svelte'
+  import Dropdown from '../lib/Dropdown.svelte'
 
   export let visible = false
   function cancel() {
@@ -17,7 +16,7 @@
     else return str
   }
 
-  function save() {
+  async function save() {
     validate(tx, false)
     if (hasErrors) return
     let fixedTx: Transaction
@@ -58,12 +57,9 @@
       return
     }
     console.log('fixedTx', fixedTx)
-    invoke('add_transaction', { json: JSON.stringify(fixedTx) })
-      .then(() => {
-        visible = false
-        refresh()
-      })
-      .catch(popup)
+    await runCmd('add_transaction', { json: JSON.stringify(fixedTx) })
+    visible = false
+    refresh()
   }
   let kind = 'Trade'
   $: enabledFields = getEnabledFields(kind)
@@ -136,16 +132,14 @@
     <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
-      <select bind:value={kind}>
-        <option value="Trade">Trade</option>
-        <option value="Transfer">Transfer</option>
-        <option value="Deposit">Deposit</option>
-        <option value="Withdrawal">Withdrawal</option>
-      </select>
+      <Dropdown
+        options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']}
+        bind:value={kind}
+        width="128px" />
     </div>
     <div class="row">
       <p>Date</p>
-      <DatePicker bind:value={tx.date} bind:invalid={invalidDate} />
+      <DatePicker bind:value={tx.date} bind:invalid={invalidDate} width="128px" />
     </div>
     <div class="row main-info">
       <div class="sent">
@@ -214,12 +208,6 @@
     </div>
     <h4>Optional Details</h4>
     <div class="row">
-      <p>Tag</p>
-      <SuggestInput
-        options={['Income', 'Airdrop', 'Fork', 'Spend', 'Lost', 'Gift', 'Donation']}
-        value="" />
-    </div>
-    <div class="row">
       <p>Tx Hash</p>
       <input type="text" class="note" bind:value={tx.hash} />
     </div>
@@ -270,13 +258,10 @@
     width: 25%
   h4
     margin: 10px 0px
-  select
-    margin: 4px 0px
   p
     display: inline-block
     min-width: 65px
-    margin: 0px
-    margin: 4px 0px
+    margin: 3px 0px
     font-size: 14px
     cursor: default
   input, textarea

@@ -7,7 +7,7 @@
 <script lang="ts">
   import TxTable from '../lib/TxTable.svelte'
   import TxList from '../lib/TxList.svelte'
-  import TxModal from '../lib/TxModal.svelte'
+  import TransactionModal from '../modals/Transaction.svelte'
   import Button from '../lib/Button.svelte'
   let showAdd = false
   function add() {
@@ -31,7 +31,7 @@
     <TxTable />
   {/if}
 </div>
-<TxModal bind:visible={showAdd} />
+<TransactionModal bind:visible={showAdd} />
 
 <style lang="sass">
   $accent: #3061F6

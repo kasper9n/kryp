@@ -1,18 +1,14 @@
 <script lang="ts">
-  import { refresh, popup, focus } from '../lib/general'
-  import { invoke } from '@tauri-apps/api/tauri'
+  import { refresh, focus, runCmd } from '../lib/general'
   import Modal from '../lib/Modal.svelte'
   import Button from '../lib/Button.svelte'
   export let visible = false
   let baseCurrency = 'USD'
   async function create() {
-    await invoke('new_file', {
+    await runCmd('new_file', {
       baseCurrency: baseCurrency,
     })
-      .then(() => {
-        refresh()
-      })
-      .catch(popup)
+    refresh()
     visible = false
   }
 </script>

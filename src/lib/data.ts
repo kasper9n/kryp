@@ -1,6 +1,5 @@
-import { invoke } from '@tauri-apps/api/tauri'
 import { writable } from 'svelte/store'
-import { refresher, popup } from './general'
+import { refresher, runCmd } from './general'
 import type { Transaction } from './transactions'
 
 type Tax = {
@@ -65,16 +64,11 @@ type Data = {
 
 export const opened = writable(false)
 
-refresher.subscribe(() => {
-  invoke('get_tax')
-    .then((v: Tax) => {
-      console.log(v)
-      tax.set(v)
-    })
-    .catch(popup)
-  invoke('get_data')
-    .then((data: Data) => {
-      opened.set(data.opened)
-    })
-    .catch(popup)
+refresher.subscribe(async () => {
+  const newTax: Tax = await runCmd('get_tax')
+  console.log(newTax)
+  tax.set(newTax)
+
+  const data: Data = await runCmd('get_data')
+  opened.set(data.opened)
 })

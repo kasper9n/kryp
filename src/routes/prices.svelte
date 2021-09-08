@@ -1,14 +1,11 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/tauri'
-  import { popup } from '../lib/general'
+  import { runCmd } from '../lib/general'
   import type { PriceData, PriceDataAsset } from '../lib/data'
   let assets: PriceDataAsset[] | null = null
-  invoke('get_prices')
-    .then((v: PriceData) => {
-      assets = Object.values(v.assets)
-      if (assets[0]) currentI = 0
-    })
-    .catch(popup)
+  runCmd('get_prices').then((price_data: PriceData) => {
+    assets = Object.values(price_data.assets)
+    if (assets[0]) currentI = 0
+  })
   function twoDigit(value: number) {
     return ('0' + value.toString()).slice(-2)
   }

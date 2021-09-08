@@ -1,6 +1,5 @@
-import { invoke } from '@tauri-apps/api/tauri'
 import { writable } from 'svelte/store'
-import { refresher, popup } from './general'
+import { refresher, runCmd } from './general'
 
 export type Transaction = {
   kind: 'Trade' | 'Transfer' | 'Deposit' | 'Withdrawal'
@@ -20,12 +19,9 @@ export type Transaction = {
 
 export const transactions = (() => {
   const store = writable([] as Transaction[])
-  refresher.subscribe(() => {
-    invoke('get_transactions')
-      .then((txs: Transaction[]) => {
-        store.set(txs)
-      })
-      .catch(popup)
+  refresher.subscribe(async () => {
+    const txs: Transaction[] = await runCmd('get_transactions')
+    store.set(txs)
   })
   return {
     subscribe: store.subscribe,

@@ -1,20 +1,17 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/tauri'
   import { tax } from '../lib/data'
-  import { popup, refresher } from '../lib/general'
+  import { refresher, runCmd } from '../lib/general'
   type Holding = {
     key: string
     amount: string
     cost: string
   }
   let holdings = []
-  refresher.subscribe(() => {
-    invoke('get_balances_by_asset')
-      .then((v: Holding[]) => {
-        console.log(v)
-        holdings = v
-      })
-      .catch(popup)
+  refresher.subscribe(async () => {
+    const v: Holding[] = await runCmd('get_balances_by_asset')
+    console.log(v)
+    holdings = v
   })
 </script>
 

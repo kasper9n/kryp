@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/tauri'
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
   import DashboardPage from './routes/index.svelte'
   import TransactionsPage from './routes/transactions.svelte'
   import PricesPage from './routes/prices.svelte'
   import HelpPage from './routes/help.svelte'
-  import { refresh, popup } from './lib/general'
+  import { refresh, runCmd } from './lib/general'
   import { opened } from './lib/data'
   import NewFileModal from './modals/NewFile.svelte'
   import Button from './lib/Button.svelte'
@@ -28,20 +27,17 @@
   let newFileModalVisible = false
 
   async function open(path?: string) {
-    await invoke('open', { path })
-      .then(() => {
-        refresh()
-      })
-      .catch(popup)
+    await runCmd('open', { path })
+    refresh()
   }
   async function save() {
-    await invoke('save', { saveAs: false }).catch(popup)
+    await runCmd('save', { saveAs: false })
   }
   async function saveAs() {
-    await invoke('save', { saveAs: true }).catch(popup)
+    await runCmd('save', { saveAs: true })
   }
   async function close() {
-    await invoke('close').catch(popup)
+    await runCmd('close')
     refresh()
   }
   const unlistenFuture = event.listen('menu', ({ payload }) => {

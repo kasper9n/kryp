@@ -3,6 +3,7 @@
   function twoDigit(value: number) {
     return ('0' + value.toString()).slice(-2)
   }
+  export let width = '114px'
   export let value = new Date()
   let textHist = ['', '']
   let text = ''
@@ -52,11 +53,13 @@
   type="text"
   bind:value={text}
   on:input={input}
-  placeholder="2020-12-31 23:00:00" />
+  placeholder="2020-12-31 23:00:00"
+  style={`width: ${width}`} />
 
 <style lang="sass">
   input
     min-width: 0px
+    box-sizing: border-box
     padding: 4px 6px
     margin: 0px
     font-family: inherit
