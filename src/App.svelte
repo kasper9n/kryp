@@ -109,8 +109,8 @@
   .nav
     display: flex
     align-items: center
-    user-select: none
-    -webkit-user-select: none
+    // user-select: none
+    // -webkit-user-select: none
     background-color: #ffffff
     border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
@@ -129,9 +129,8 @@
     &.current
       color: #000000
   .start-page
-    position: absolute
-    width: 100%
-    height: 100%
+    width: 100vw
+    height: 100vh
     display: flex
     flex-direction: column
     align-items: center

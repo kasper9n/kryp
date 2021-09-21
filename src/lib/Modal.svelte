@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from '../lib/Button.svelte'
   export let visible = false
   function close() {
     visible = false

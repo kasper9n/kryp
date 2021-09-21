@@ -19,7 +19,6 @@ pub struct Tax {
   pub realized_gains: Vec<Realized>,
   pub deposits: Vec<Deposit>,
   pub balances: Vec<Balance>,
-  pub tags: HashSet<String>,
   #[serde(skip)]
   pub dirty: bool,
 }
@@ -34,7 +33,6 @@ impl Tax {
       realized_gains: Vec::new(),
       balances: Vec::new(),
       deposits: Vec::new(),
-      tags: HashSet::new(),
       dirty: true,
     }
   }
@@ -121,7 +119,6 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
             input: cost,
             output: transaction.cost,
             wallet: transaction.sent_wallet.clone(),
-            tags: transaction.tags.clone(),
           });
         }
         balances.push(Balance {
@@ -147,7 +144,6 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
               input: cost,
               output: fee_amount,
               wallet: transaction.sent_wallet.clone(),
-              tags: transaction.tags.clone(),
             });
           }
         }
@@ -173,7 +169,6 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
           currency: transaction.recv_asset.clone(),
           wallet: transaction.recv_wallet.clone(),
           value: transaction.cost,
-          tags: transaction.tags.clone(),
         })
       }
       TxType::Withdrawal => {
@@ -189,7 +184,6 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
             input: cost,
             output: transaction.cost,
             wallet: transaction.sent_wallet.clone(),
-            tags: transaction.tags.clone(),
           });
         }
       }
@@ -284,7 +278,6 @@ pub enum TxType {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
   kind: TxType,
-  tags: Vec<String>,
   date: i64,
   note: String,
   hash: String,
@@ -312,7 +305,6 @@ impl Transaction {
   pub fn new(kind: TxType) -> Self {
     Transaction {
       kind,
-      tags: vec![],
       date: 1500000000000,
       note: "".to_string(),
       hash: "".to_string(),
@@ -472,7 +464,6 @@ pub struct Realized {
   pub input: Decimal,
   pub output: Decimal,
   pub wallet: String,
-  pub tags: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -482,7 +473,6 @@ pub struct Deposit {
   pub currency: String,
   pub value: Decimal,
   pub wallet: String,
-  pub tags: Vec<String>,
 }
 
 #[test]
@@ -542,7 +532,6 @@ pub fn trades() {
       input: dec!(800),
       output: dec!(9398.57934082),
       wallet: "Coinbase".to_string(),
-      tags: vec![],
     }]
   );
 }
@@ -610,7 +599,6 @@ pub fn deposit_withdraw_crypto() {
       input: dec!(1633.83825099),
       output: dec!(1417.67606226),
       wallet: "Coinbase".to_string(),
-      tags: vec![],
     }]
   );
 }

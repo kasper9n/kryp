@@ -1,11 +1,11 @@
 <script lang="ts">
   import Button from '../lib/Button.svelte'
-  import DatePicker from '../lib/DatePicker.svelte'
   import Modal from '../lib/Modal.svelte'
   import type { Transaction } from '../lib/transactions'
   import { refresh, popup, runCmd } from '../lib/general'
   import NumericInput from '../lib/NumericInput.svelte'
   import Dropdown from '../lib/Dropdown.svelte'
+  import { DateInput } from '../lib/date-picker'
 
   export let visible = false
   function cancel() {
@@ -17,7 +17,9 @@
   }
 
   async function save() {
+    console.log('VALIDATE:')
     validate(tx, false)
+    console.log('hasE', hasErrors, errors)
     if (hasErrors) return
     let fixedTx: Transaction
     if (kind === 'Trade') {
@@ -121,10 +123,10 @@
     if (!enabledFields.recv || tx.recv_asset) errors.delete('recv_asset')
     if (!enabledFields.recv || tx.recv_wallet) errors.delete('recv_wallet')
     errors = errors
-    hasErrors = !!errors.size || invalidDate
+    hasErrors = !!errors.size || !validDate
   }
   $: validate(tx, true)
-  let invalidDate: boolean
+  let validDate: boolean
 </script>
 
 <Modal bind:visible>
@@ -139,7 +141,7 @@
     </div>
     <div class="row">
       <p>Date</p>
-      <DatePicker bind:value={tx.date} bind:invalid={invalidDate} width="128px" />
+      <DateInput bind:value={tx.date} bind:valid={validDate} width="128px" />
     </div>
     <div class="row main-info">
       <div class="sent">

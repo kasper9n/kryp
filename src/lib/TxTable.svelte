@@ -2,7 +2,7 @@
   import { transactions, formatDateTime } from '../lib/transactions'
   let hideEditBox = true
   let editText = ''
-  let editCell
+  let editCell: HTMLInputElement
   function tbodyClick(e: MouseEvent) {
     const tbody = e.target as HTMLTableSectionElement
     if (tbody.nodeName === 'TD') {
@@ -18,7 +18,7 @@
       editCell.focus()
     }
   }
-  function keydown(e) {
+  function keydown(e: KeyboardEvent) {
     if (e.key === 'Escape') editBoxBlur()
   }
   function editBoxBlur() {

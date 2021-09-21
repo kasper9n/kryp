@@ -10,7 +10,7 @@ export function popup(msg: string) {
   invoke('error_popup', { msg })
 }
 
-export async function runCmd<T = unknown>(cmd: string, options: { [key: string]: unknown } = {}) {
+export async function runCmd<T = any>(cmd: string, options: { [key: string]: T } = {}) {
   return (await invoke(cmd, options).catch(popup)) as T
 }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { runCmd } from '../lib/general'
   import type { PriceData, PriceDataAsset } from '../lib/data'
-  let assets: PriceDataAsset[] | null = null
+  let assets: PriceDataAsset[] = []
   runCmd('get_prices').then((price_data: PriceData) => {
     assets = Object.values(price_data.assets)
     if (assets[0]) currentI = 0

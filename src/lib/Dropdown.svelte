@@ -25,9 +25,9 @@
   let visible = false
   let focused = false
   let selected = ''
-  function onInput(e) {
+  function onInput(e: any) {
     if (focused && !visible) {
-      if (e.inputType === 'insertText') {
+      if (e.inputType === 'insertText' && e?.data) {
         open()
         text = e.data
       } else {
@@ -74,12 +74,14 @@
   let menuEl: HTMLDivElement
   function scrollTo(index: number) {
     let itemEl = menuEl.querySelector(`div:nth-child(${index + 1})`)
-    let menuRect = menuEl.getBoundingClientRect()
-    let itemRect = itemEl.getBoundingClientRect()
-    if (menuRect.bottom < itemRect.bottom) {
-      menuEl.scrollTop += itemRect.bottom - menuRect.bottom
-    } else if (menuRect.top > itemRect.top) {
-      menuEl.scrollTop -= menuRect.top - itemRect.top
+    if (itemEl) {
+      let menuRect = menuEl.getBoundingClientRect()
+      let itemRect = itemEl.getBoundingClientRect()
+      if (menuRect.bottom < itemRect.bottom) {
+        menuEl.scrollTop += itemRect.bottom - menuRect.bottom
+      } else if (menuRect.top > itemRect.top) {
+        menuEl.scrollTop -= menuRect.top - itemRect.top
+      }
     }
   }
   function keydown(e: KeyboardEvent) {
@@ -113,7 +115,9 @@
     e.preventDefault()
     let el = e.target as HTMLElement
     let menu = el.parentElement
-    menu.scrollTo({ left: 0, top: el.clientTop + el.clientHeight })
+    if (menu) {
+      menu.scrollTo({ left: 0, top: el.clientTop + el.clientHeight })
+    }
   }
 </script>
 
@@ -138,7 +142,7 @@
     class:visible
     bind:this={menuEl}
     on:mouseout={() => (selected = '')}
-    on:blur={null}
+    on:blur={() => {}}
     style="max-height: {menuMaxHeight}px">
     {#each filteredOptions as option}
       <div
@@ -147,7 +151,7 @@
         on:mouseup={() => itemMouseUp(option)}
         on:click={() => pick(option)}
         on:mouseover={() => (selected = option)}
-        on:focus={null}
+        on:focus={() => {}}
         class:selected={option === selected}
         class:current={option === value}>{option}</div>
     {/each}

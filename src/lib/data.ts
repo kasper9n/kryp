@@ -9,10 +9,9 @@ type Tax = {
   realized_gains: Realized[]
   deposits: Deposit[]
   balances: Balance[]
-  tags: string[]
 }
 
-const defaultTax = {
+const defaultTax: Tax = {
   transactions: [],
   base_currency: 'USD',
   price_data: {
@@ -21,12 +20,11 @@ const defaultTax = {
   realized_gains: [],
   deposits: [],
   balances: [],
-  tags: [],
 }
-export const tax = writable(defaultTax as Tax)
+export const tax = writable(defaultTax)
 
 export type PriceData = {
-  assets: Map<string, PriceDataAsset>
+  assets: { [key: string]: PriceDataAsset }
 }
 export type PriceDataAsset = {
   symbol: string
