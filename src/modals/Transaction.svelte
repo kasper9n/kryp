@@ -139,7 +139,7 @@
         bind:value={kind}
         width="128px" />
     </div>
-    <div class="row">
+    <div class="row date-row">
       <p>Date</p>
       <DateInput bind:value={tx.date} bind:valid={validDate} width="128px" />
     </div>
@@ -266,7 +266,7 @@
     margin: 3px 0px
     font-size: 14px
     cursor: default
-  input, textarea
+  input, textarea, .date-row :global(input)
     min-width: 0px
     padding: 4px 6px
     width: 100%
