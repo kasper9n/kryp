@@ -106,6 +106,7 @@
     font-weight: 600
   :global(body), :global(input)
     font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
+    --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
   .nav
     display: flex
     align-items: center

@@ -2,7 +2,6 @@
   import { checkShortcut } from './general'
 
   export let value: string
-  export let width = '100%'
   let text = value
   export let options: string[]
   let dragSwitching = false
@@ -122,7 +121,7 @@
 </script>
 
 <svelte:window on:mouseup={() => (dragSwitching = false)} />
-<div class="dropdown" class:focused on:keydown={keydown} style={`width: ${width}`}>
+<div class="dropdown" class:focused on:keydown={keydown}>
   <div class="field" on:mousedown|preventDefault={fieldMouseDown}>
     <input
       bind:this={inputEl}
@@ -164,6 +163,7 @@
 <style lang="sass">
   .dropdown
     position: relative
+    width: var(--dropdown-width, 100%)
   input, .item
     font-size: 12px
     padding: 4px 8px
@@ -174,7 +174,7 @@
     background-color: #ffffff
     border: 1px solid #c6cddd
     border-radius: 3px
-    transition: all 80ms ease-in-out
+    transition: all 80ms var(--ease)
     &:active .icon
       transform: translateY(1px)
     :active .icon
@@ -183,7 +183,7 @@
       // will stop working. This line fixes that (don't ask me why)
       transform: translateY(1px)
     .icon
-      transition: transform 120ms ease-in-out
+      transition: transform 120ms var(--ease)
       display: flex
       padding: 4px
       padding-right: 6px
@@ -196,8 +196,8 @@
         border-radius: 4px
         transform: rotate(90deg)
   .focused .field
-    border-color: #3061F6
-    box-shadow: 0px 0px 0px 1px #3061F6
+    border-color: #0269f7
+    box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
   input
     min-width: 10px
     width: 100%

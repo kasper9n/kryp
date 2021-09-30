@@ -97,7 +97,7 @@
     border-radius: 3px
     margin-right: 20px
     cursor: pointer
-    transition: 0.1s ease-in-out
+    transition: 0.1s var(--ease)
     transition-property: transform, opacity
     &:active
       opacity: 0.95

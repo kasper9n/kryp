@@ -5,6 +5,7 @@
   export let invalid = false
   export let noLeftBorder = false
   export let placeholder = ''
+  export let style = ''
   let node: HTMLInputElement
   function beforeinput(e: any) {
     e = e as InputEvent
@@ -32,14 +33,16 @@
         hasPeriod = true
       } else if (/[0-9]/.test(char)) {
         newValue += char
-      } else {
+      } else if (start !== null && end !== null) {
         start -= 1
         end -= 1
       }
     }
     node.value = newValue
     value = newValue
-    node.setSelectionRange(start, end)
+    if (start !== null && end !== null) {
+      node.setSelectionRange(start, end)
+    }
   }
 </script>
 
@@ -51,7 +54,8 @@
   class:invalid
   class:noLeftBorder
   bind:value
-  {placeholder} />
+  {placeholder}
+  {style} />
 
 <style lang="sass">
   input
@@ -63,6 +67,11 @@
     font-size: inherit
     border: 1px solid #c6cddd
     border-radius: 3px
+    outline: none
+    transition: all 80ms var(--ease)
+    &:focus
+      border-color: #0269f7
+      box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
   .noLeftBorder
     border-top-left-radius: 0px
     border-bottom-left-radius: 0px

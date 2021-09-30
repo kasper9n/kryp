@@ -5,7 +5,7 @@
   import { refresh, popup, runCmd } from '../lib/general'
   import NumericInput from '../lib/NumericInput.svelte'
   import Dropdown from '../lib/Dropdown.svelte'
-  import { DateInput } from '../lib/date-picker'
+  import { DateInput } from '../../../date-picker-svelte/package/index'
 
   export let visible = false
   function cancel() {
@@ -134,14 +134,11 @@
     <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
-      <Dropdown
-        options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']}
-        bind:value={kind}
-        width="128px" />
+      <Dropdown options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']} bind:value={kind} />
     </div>
     <div class="row date-row">
       <p>Date</p>
-      <DateInput bind:value={tx.date} bind:valid={validDate} width="128px" />
+      <DateInput bind:value={tx.date} bind:valid={validDate} />
     </div>
     <div class="row main-info">
       <div class="sent">
@@ -165,7 +162,7 @@
             <NumericInput
               bind:value={tx.sent_amount}
               invalid={errors.has('sent_amount')}
-              noLeftBorder
+              style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
               placeholder="Amount" />
           </div>
         {/if}
@@ -191,7 +188,7 @@
             <NumericInput
               bind:value={tx.recv_amount}
               invalid={errors.has('recv_amount')}
-              noLeftBorder
+              style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
               placeholder="Amount" />
           </div>
         {/if}
@@ -232,6 +229,8 @@
     -webkit-user-select: none
     cursor: default
     font-size: 12px
+    --date-input-width: 128px
+    --dropdown-width: 128px
   .sent, .received, .fee
     background-color: #eff2f5
     border: 1px solid #c6cddd
@@ -266,15 +265,20 @@
     margin: 3px 0px
     font-size: 14px
     cursor: default
-  input, textarea, .date-row :global(input)
+  input, textarea
+    width: 100%
     min-width: 0px
     padding: 4px 6px
-    width: 100%
     margin: 0px
-    font-family: inherit
-    font-size: inherit
     border: 1px solid #c6cddd
     border-radius: 3px
+    outline: none
+    transition: all 80ms var(--ease)
+    &:focus
+      border-color: #0269f7
+      box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
+  input, textarea, .date-row :global(input)
+    font-size: inherit
   .invalid
     border: 1px solid rgba(#f92f72, 0.5)
     background-color: #fff0f5
@@ -291,7 +295,7 @@
   .asset
     min-width: 60px
     width: 0px
-    border-right: none
+    margin-right: -1px
     border-top-right-radius: 0px
     border-bottom-right-radius: 0px
   .bottom

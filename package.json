@@ -11,17 +11,17 @@
     "lint": "prettier --write *.js *.json src"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "1.0.0-next.22",
+    "@sveltejs/vite-plugin-svelte": "1.0.0-next.24",
+    "date-picker-svelte": "^0.1.0",
     "moment": "^2.29.1",
-    "prettier": "^2.4.0",
+    "prettier": "^2.4.1",
     "prettier-plugin-svelte": "^2.4.0",
-    "sass": "^1.39.2",
-    "svelte": "^3.42.4",
+    "sass": "^1.42.1",
+    "svelte": "^3.43.0",
     "svelte-check": "^2.2.6",
-    "svelte-date-picker": "file:../svelte-date-picker/package",
-    "svelte-preprocess": "^4.9.4",
-    "typescript": "^4.4.2",
-    "vite": "^2.5.6"
+    "svelte-preprocess": "^4.9.5",
+    "typescript": "^4.4.3",
+    "vite": "^2.5.10"
   },
   "dependencies": {
     "@tauri-apps/api": "1.0.0-beta.8",

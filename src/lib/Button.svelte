@@ -42,7 +42,7 @@
     box-shadow: 0px 0px 2px 0px $accent
     color: #ffffff
     border-radius: 7px
-    transition: 0.1s ease-in-out
+    transition: 0.1s var(--ease)
     transition-property: transform, opacity, box-shadow
     &:active
       opacity: 0.95
