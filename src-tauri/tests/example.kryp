@@ -2,22 +2,19 @@
 	"version": "0.1",
 	"transactions": [
 		{
-			"kind": "Deposit",
+			"base": "Deposit",
+			"cat": "Deposit",
 			"date": 1500000000000,
 			"note": "",
 			"hash": "",
-			"sent_amount": "0",
-			"sent_asset": "",
-			"sent_wallet": "",
-			"recv_amount": "1000",
-			"recv_asset": "NOK",
-			"recv_wallet": "Binance",
-			"fee_amount": "0",
-			"fee_asset": "",
+			"amount": "1000",
+			"asset": "NOK",
+			"wallet": "Binance",
 			"cost": "1000"
 		},
 		{
-			"kind": "Trade",
+			"base": "Trade",
+			"cat": "Trade",
 			"date": 1500100000000,
 			"note": "",
 			"hash": "",
@@ -32,7 +29,8 @@
 			"cost": "800"
 		},
 		{
-			"kind": "Transfer",
+			"base": "Transfer",
+			"cat": "Transfer",
 			"date": 1500200000000,
 			"note": "",
 			"hash": "",
@@ -42,12 +40,11 @@
 			"recv_amount": "0.5",
 			"recv_asset": "BTC",
 			"recv_wallet": "Coinbase",
-			"fee_amount": "0",
-			"fee_asset": "",
 			"cost": "7952.15658094"
 		},
 		{
-			"kind": "Trade",
+			"base": "Trade",
+			"cat": "Trade",
 			"date": 1500300000000,
 			"note": "",
 			"hash": "",
@@ -62,18 +59,14 @@
 			"cost": "9398.57934082"
 		},
 		{
-			"kind": "Withdrawal",
+			"base": "Withdrawal",
+			"cat": "Withdrawal",
 			"date": 1500400000000,
 			"note": "",
 			"hash": "",
-			"sent_amount": "50",
-			"sent_asset": "NOK",
-			"sent_wallet": "Binance",
-			"recv_amount": "0",
-			"recv_asset": "",
-			"recv_wallet": "",
-			"fee_amount": "0",
-			"fee_asset": "",
+			"amount": "50",
+			"asset": "NOK",
+			"wallet": "Binance",
 			"cost": "9398.57934082"
 		}
 	],
@@ -537,7 +530,6 @@
 			"wallet": "Coinbase"
 		}
 	],
-	"deposits": [],
 	"balances": [
 		{
 			"acquire_date": 1500000000000,

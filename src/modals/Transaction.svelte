@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '../lib/Button.svelte'
   import Modal from '../lib/Modal.svelte'
-  import type { Transaction } from '../lib/transactions'
+  import type { Transaction, Trade, Transfer, Deposit, Withdrawal } from '../lib/transactions'
   import { refresh, popup, runCmd } from '../lib/general'
   import NumericInput from '../lib/NumericInput.svelte'
   import Dropdown from '../lib/Dropdown.svelte'
@@ -17,54 +17,72 @@
   }
 
   async function save() {
-    console.log('VALIDATE:')
-    validate(tx, false)
-    console.log('hasE', hasErrors, errors)
+    validate(info, false)
     if (hasErrors) return
-    let fixedTx: Transaction
-    if (kind === 'Trade') {
-      fixedTx = {
-        kind,
-        date: tx.date.getTime(),
-        note: tx.note,
-        hash: tx.hash,
-        sent_amount: numStr(tx.sent_amount),
-        sent_asset: tx.sent_asset,
-        sent_wallet: tx.sent_wallet,
-        recv_amount: numStr(tx.recv_amount),
-        recv_asset: tx.recv_asset,
-        recv_wallet: tx.recv_wallet,
-        fee_amount: numStr(tx.fee_amount),
-        fee_asset: tx.fee_asset,
-        cost: numStr(tx.cost),
-      }
-    } else if (kind === 'Deposit') {
-      fixedTx = {
-        kind,
-        date: tx.date.getTime(),
-        note: tx.note,
-        hash: tx.hash,
-        sent_amount: numStr(''),
-        sent_asset: '',
-        sent_wallet: '',
-        recv_amount: numStr(tx.recv_amount),
-        recv_asset: tx.recv_asset,
-        recv_wallet: tx.recv_wallet,
-        fee_amount: numStr(''),
-        fee_asset: '',
-        cost: numStr(tx.cost),
-      }
+    let json: Transaction
+    const base = cat
+    if (base === 'Trade') {
+      json = {
+        cat,
+        date: info.date.getTime(),
+        note: info.note,
+        hash: info.hash,
+        sent_amount: numStr(info.sent_amount),
+        sent_asset: info.sent_asset,
+        sent_wallet: info.sent_wallet,
+        recv_amount: numStr(info.recv_amount),
+        recv_asset: info.recv_asset,
+        recv_wallet: info.recv_wallet,
+        fee_amount: numStr(info.fee_amount),
+        fee_asset: info.fee_asset,
+        cost: numStr(info.cost),
+      } as Trade
+    } else if (base === 'Transfer') {
+      json = {
+        cat,
+        date: info.date.getTime(),
+        note: info.note,
+        hash: info.hash,
+        sent_amount: numStr(info.sent_amount),
+        sent_asset: info.sent_asset,
+        sent_wallet: info.sent_wallet,
+        recv_amount: numStr(info.recv_amount),
+        recv_asset: info.recv_asset,
+        recv_wallet: info.recv_wallet,
+        cost: numStr(info.cost),
+      } as Transfer
+    } else if (base === 'Deposit') {
+      json = {
+        cat,
+        date: info.date.getTime(),
+        note: info.note,
+        hash: info.hash,
+        amount: numStr(info.recv_amount),
+        asset: info.recv_asset,
+        wallet: info.recv_wallet,
+        cost: numStr(info.cost),
+      } as Deposit
+    } else if (base === 'Withdrawal') {
+      json = {
+        cat,
+        date: info.date.getTime(),
+        note: info.note,
+        hash: info.hash,
+        amount: numStr(info.recv_amount),
+        asset: info.recv_asset,
+        wallet: info.recv_wallet,
+        cost: numStr(info.cost),
+      } as Withdrawal
     } else {
-      popup('Unsupported tx type: ' + kind)
+      popup('Unsupported tx type: ' + cat)
       return
     }
-    console.log('fixedTx', fixedTx)
-    await runCmd('add_transaction', { json: JSON.stringify(fixedTx) })
+    await runCmd('add_transaction', { base, json: JSON.stringify(json) })
     visible = false
     refresh()
   }
-  let kind = 'Trade'
-  $: enabledFields = getEnabledFields(kind)
+  let cat = 'Trade'
+  $: enabledFields = getEnabledFields(cat)
   function getEnabledFields(kind: string) {
     let fields = {
       sent: true,
@@ -98,16 +116,16 @@
       cost: '',
     }
   }
-  let tx = getDefault()
+  let info = getDefault()
   function open() {
-    tx = getDefault()
+    info = getDefault()
     errors.clear()
   }
   $: if (visible) open()
 
   let errors: Set<string> = new Set()
   let hasErrors: boolean
-  function validate(tx: any, onlyRemove = false) {
+  function validate(info: any, onlyRemove = false) {
     if (!onlyRemove) {
       errors.add('sent_amount')
       errors.add('sent_asset')
@@ -116,16 +134,16 @@
       errors.add('recv_asset')
       errors.add('recv_wallet')
     }
-    if (!enabledFields.sent || tx.sent_amount) errors.delete('sent_amount')
-    if (!enabledFields.sent || tx.sent_asset) errors.delete('sent_asset')
-    if (!enabledFields.sent || tx.sent_wallet) errors.delete('sent_wallet')
-    if (!enabledFields.recv || tx.recv_amount) errors.delete('recv_amount')
-    if (!enabledFields.recv || tx.recv_asset) errors.delete('recv_asset')
-    if (!enabledFields.recv || tx.recv_wallet) errors.delete('recv_wallet')
+    if (!enabledFields.sent || info.sent_amount) errors.delete('sent_amount')
+    if (!enabledFields.sent || info.sent_asset) errors.delete('sent_asset')
+    if (!enabledFields.sent || info.sent_wallet) errors.delete('sent_wallet')
+    if (!enabledFields.recv || info.recv_amount) errors.delete('recv_amount')
+    if (!enabledFields.recv || info.recv_asset) errors.delete('recv_asset')
+    if (!enabledFields.recv || info.recv_wallet) errors.delete('recv_wallet')
     errors = errors
     hasErrors = !!errors.size || !validDate
   }
-  $: validate(tx, true)
+  $: validate(info, true)
   let validDate: boolean
 </script>
 
@@ -134,11 +152,11 @@
     <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
-      <Dropdown options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']} bind:value={kind} />
+      <Dropdown options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']} bind:value={cat} />
     </div>
     <div class="row date-row">
       <p>Date</p>
-      <DateInput bind:value={tx.date} bind:valid={validDate} />
+      <DateInput bind:value={info.date} bind:valid={validDate} />
     </div>
     <div class="row main-info">
       <div class="sent">
@@ -149,7 +167,7 @@
               type="text"
               class="wallet"
               class:invalid={errors.has('sent_wallet')}
-              bind:value={tx.sent_wallet}
+              bind:value={info.sent_wallet}
               placeholder="Wallet" />
           </div>
           <div class="row">
@@ -157,10 +175,10 @@
               type="text"
               class="asset"
               class:invalid={errors.has('sent_asset')}
-              bind:value={tx.sent_asset}
+              bind:value={info.sent_asset}
               placeholder="Asset" />
             <NumericInput
-              bind:value={tx.sent_amount}
+              bind:value={info.sent_amount}
               invalid={errors.has('sent_amount')}
               style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
               placeholder="Amount" />
@@ -175,7 +193,7 @@
               type="text"
               class="wallet"
               class:invalid={errors.has('recv_wallet')}
-              bind:value={tx.recv_wallet}
+              bind:value={info.recv_wallet}
               placeholder="Wallet" />
           </div>
           <div class="row">
@@ -183,10 +201,10 @@
               type="text"
               class="asset"
               class:invalid={errors.has('recv_asset')}
-              bind:value={tx.recv_asset}
+              bind:value={info.recv_asset}
               placeholder="Asset" />
             <NumericInput
-              bind:value={tx.recv_amount}
+              bind:value={info.recv_amount}
               invalid={errors.has('recv_amount')}
               style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
               placeholder="Amount" />
@@ -197,10 +215,10 @@
         <div class="fee">
           <h4>Fee</h4>
           <div class="row">
-            <input type="text" bind:value={tx.fee_asset} placeholder="Asset" />
+            <input type="text" bind:value={info.fee_asset} placeholder="Asset" />
           </div>
           <div class="row">
-            <NumericInput bind:value={tx.fee_amount} placeholder="Amount" />
+            <NumericInput bind:value={info.fee_amount} placeholder="Amount" />
           </div>
         </div>
       {/if}
@@ -208,11 +226,11 @@
     <h4>Optional Details</h4>
     <div class="row">
       <p>Tx Hash</p>
-      <input type="text" class="note" bind:value={tx.hash} />
+      <input type="text" class="note" bind:value={info.hash} />
     </div>
     <div class="row">
       <p>Note</p>
-      <textarea class="note" bind:value={tx.note} />
+      <textarea class="note" bind:value={info.note} />
     </div>
     <div class="bottom">
       <Button secondary on:click={cancel}>Cancel</Button>

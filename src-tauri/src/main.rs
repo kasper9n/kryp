@@ -14,10 +14,11 @@ use tauri::{
 mod data;
 mod prices;
 mod tax;
+mod transaction;
 
 #[command]
 fn error_popup(msg: String, win: Window) {
-  println!("Error popup: {}", msg);
+  println!("Error: {}", msg);
   thread::spawn(move || {
     dialog::message(Some(&win), "Error", msg);
   });

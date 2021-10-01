@@ -1,5 +1,6 @@
-use crate::tax::{Tax, Transaction};
+use crate::tax::Tax;
 use crate::throw;
+use crate::transaction::{Transaction, TxType};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -205,12 +206,12 @@ pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
+pub fn add_transaction(base: TxType, json: String, kryp: State<Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  let mut tx = Transaction::from_json(&json)?;
+  let mut tx = Transaction::from_json(base, &json)?;
   let tax = &mut kryp.tax;
   let cost = tx.calculate_cost(&mut tax.price_data, &tax.base_currency);
-  let tx = tx.cost(cost);
+  tx.set_cost(cost);
   kryp.tax.add_transaction(tx)?;
   Ok(())
 }

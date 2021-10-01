@@ -54,16 +54,45 @@
   <tbody on:click={tbodyClick}>
     {#each $transactions as tx, i}
       <tr class:odd={i % 2 === 0}>
-        <td class="type" class:green={tx.kind === 'Deposit'} class:red={tx.kind === 'Withdrawal'}
-          >{tx.kind}</td>
-        <td class="sent amount">{tx.sent_amount}</td>
-        <td class="sent asset">{tx.sent_asset}</td>
-        <td class="sent wallet">{tx.sent_wallet}</td>
-        <td class="recv amount">{tx.recv_amount}</td>
-        <td class="recv asset">{tx.recv_asset}</td>
-        <td class="recv wallet">{tx.recv_wallet}</td>
-        <td class="fee amount">{tx.fee_amount}</td>
-        <td class="fee asset">{tx.fee_asset}</td>
+        <td class="type" class:green={tx.base === 'Deposit'} class:red={tx.base === 'Withdrawal'}
+          >{tx.cat}</td>
+        {#if tx.base === 'Trade'}
+          <td class="sent amount">{tx.sent_amount}</td>
+          <td class="sent asset">{tx.sent_asset}</td>
+          <td class="sent wallet">{tx.sent_wallet}</td>
+          <td class="recv amount">{tx.recv_amount}</td>
+          <td class="recv asset">{tx.recv_asset}</td>
+          <td class="recv wallet">{tx.recv_wallet}</td>
+          <td class="fee amount">{tx.fee_amount}</td>
+          <td class="fee asset">{tx.fee_asset}</td>
+        {:else if tx.base === 'Transfer'}
+          <td class="sent amount">{tx.sent_amount}</td>
+          <td class="sent asset">{tx.sent_asset}</td>
+          <td class="sent wallet">{tx.sent_wallet}</td>
+          <td class="recv amount">{tx.recv_amount}</td>
+          <td class="recv asset">{tx.recv_asset}</td>
+          <td class="recv wallet">{tx.recv_wallet}</td>
+          <td class="fee amount" />
+          <td class="fee asset" />
+        {:else if tx.base === 'Deposit'}
+          <td class="sent amount" />
+          <td class="sent asset" />
+          <td class="sent wallet" />
+          <td class="recv amount">{tx.amount}</td>
+          <td class="recv asset">{tx.asset}</td>
+          <td class="recv wallet">{tx.wallet}</td>
+          <td class="fee amount" />
+          <td class="fee asset" />
+        {:else if tx.base === 'Withdrawal'}
+          <td class="sent amount">{tx.amount}</td>
+          <td class="sent asset">{tx.asset}</td>
+          <td class="sent wallet">{tx.wallet}</td>
+          <td class="recv amount" />
+          <td class="recv asset" />
+          <td class="recv wallet" />
+          <td class="fee amount" />
+          <td class="fee asset" />
+        {/if}
         <td class="note">{tx.note}</td>
         <td class="hash">{tx.hash}</td>
         <td class="date">{formatDateTime(new Date(tx.date))}</td>
