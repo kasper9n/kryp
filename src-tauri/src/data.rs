@@ -206,9 +206,9 @@ pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub fn add_transaction(base: TxType, json: String, kryp: State<Data>) -> Result<(), String> {
+pub fn add_transaction(ttype: TxType, json: String, kryp: State<Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  let mut tx = Transaction::from_json(base, &json)?;
+  let mut tx = Transaction::from_json(ttype, &json)?;
   let tax = &mut kryp.tax;
   let cost = tx.calculate_cost(&mut tax.price_data, &tax.base_currency);
   tx.set_cost(cost);

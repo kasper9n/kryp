@@ -6,7 +6,7 @@
   {#each $transactions as tx}
     <div class="item">
       <div class="icon">
-        {#if tx.base === 'Trade'}
+        {#if tx.type === 'Trade'}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="trade"
@@ -16,7 +16,7 @@
             fill="#000000"
             ><path d="M0 0h24v24H0z" fill="none" /><path
               d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z" /></svg>
-        {:else if tx.base === 'Transfer'}
+        {:else if tx.type === 'Transfer'}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="transfer"
@@ -25,7 +25,7 @@
             viewBox="0 0 24 24"
             ><path
               d="M10.024 4h6.015l7.961 8-7.961 8h-6.015l7.961-8-7.961-8zm-10.024 16h6.015l7.961-8-7.961-8h-6.015l7.961 8-7.961 8z" /></svg>
-        {:else if tx.base === 'Withdrawal'}
+        {:else if tx.type === 'Withdrawal'}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="withdraw"
@@ -34,7 +34,7 @@
             viewBox="0 0 24 24"
             ><path
               d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z" /></svg>
-        {:else if tx.base === 'Deposit'}
+        {:else if tx.type === 'Deposit'}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="deposit"
@@ -45,10 +45,10 @@
               d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z" /></svg>
         {/if}
       </div>
-      <div class="kind">{tx.base}</div>
-      {#if tx.base === 'Deposit'}
+      <div class="kind">{tx.tag}</div>
+      {#if tx.type === 'Deposit'}
         <div class="sent" />
-      {:else if tx.base === 'Withdrawal'}
+      {:else if tx.type === 'Withdrawal'}
         <div class="sent">{tx.amount} {tx.asset} {tx.wallet}</div>
       {:else}
         <div class="sent">{tx.sent_amount} {tx.sent_asset} {tx.sent_wallet}</div>
@@ -59,9 +59,9 @@
           ><path
             d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z" /></svg>
       </div>
-      {#if tx.base === 'Withdrawal'}
+      {#if tx.type === 'Withdrawal'}
         <div class="recv" />
-      {:else if tx.base === 'Deposit'}
+      {:else if tx.type === 'Deposit'}
         <div class="recv">{tx.amount} {tx.asset} {tx.wallet}</div>
       {:else}
         <div class="recv">{tx.recv_amount} {tx.recv_asset} {tx.recv_wallet}</div>

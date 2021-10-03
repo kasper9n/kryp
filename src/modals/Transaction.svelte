@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '../lib/Button.svelte'
   import Modal from '../lib/Modal.svelte'
-  import type { Transaction, Trade, Transfer, Deposit, Withdrawal } from '../lib/transactions'
+  import type { Transaction } from '../lib/transactions'
   import { refresh, popup, runCmd } from '../lib/general'
   import NumericInput from '../lib/NumericInput.svelte'
   import Dropdown from '../lib/Dropdown.svelte'
@@ -20,10 +20,10 @@
     validate(info, false)
     if (hasErrors) return
     let json: Transaction
-    const base = cat
-    if (base === 'Trade') {
+    if (tag.type === 'Trade') {
       json = {
-        cat,
+        type: tag.type,
+        tag: tag.value,
         date: info.date.getTime(),
         note: info.note,
         hash: info.hash,
@@ -36,10 +36,11 @@
         fee_amount: numStr(info.fee_amount),
         fee_asset: info.fee_asset,
         cost: numStr(info.cost),
-      } as Trade
-    } else if (base === 'Transfer') {
+      }
+    } else if (tag.type === 'Transfer') {
       json = {
-        cat,
+        type: tag.type,
+        tag: tag.value,
         date: info.date.getTime(),
         note: info.note,
         hash: info.hash,
@@ -50,10 +51,11 @@
         recv_asset: info.recv_asset,
         recv_wallet: info.recv_wallet,
         cost: numStr(info.cost),
-      } as Transfer
-    } else if (base === 'Deposit') {
+      }
+    } else if (tag.type === 'Deposit') {
       json = {
-        cat,
+        type: tag.type,
+        tag: tag.value,
         date: info.date.getTime(),
         note: info.note,
         hash: info.hash,
@@ -61,10 +63,11 @@
         asset: info.recv_asset,
         wallet: info.recv_wallet,
         cost: numStr(info.cost),
-      } as Deposit
-    } else if (base === 'Withdrawal') {
+      }
+    } else if (tag.type === 'Withdrawal') {
       json = {
-        cat,
+        type: tag.type,
+        tag: tag.value,
         date: info.date.getTime(),
         note: info.note,
         hash: info.hash,
@@ -72,17 +75,26 @@
         asset: info.recv_asset,
         wallet: info.recv_wallet,
         cost: numStr(info.cost),
-      } as Withdrawal
+      }
     } else {
-      popup('Unsupported tx type: ' + cat)
+      popup('Unsupported tx type: ' + tag)
       return
     }
-    await runCmd('add_transaction', { base, json: JSON.stringify(json) })
+    await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
     visible = false
     refresh()
   }
-  let cat = 'Trade'
-  $: enabledFields = getEnabledFields(cat)
+  const tags = [
+    { type: 'Trade', value: 'Trade', name: 'Trade' },
+    { type: 'Transfer', value: 'Transfer', name: 'Transfer' },
+    { type: 'Deposit', value: 'Deposit', name: 'Deposit' },
+    { type: 'Deposit', value: 'Gift', name: 'Gift' },
+    { type: 'Withdrawal', value: 'Withdrawal', name: 'Withdrawal' },
+    { type: 'Withdrawal', value: 'Spend', name: 'Spend' },
+    { type: 'Withdrawal', value: 'Lost', name: 'Lost' },
+  ]
+  let tag = tags[0]
+  $: enabledFields = getEnabledFields(tag.type)
   function getEnabledFields(kind: string) {
     let fields = {
       sent: true,
@@ -152,7 +164,13 @@
     <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
-      <Dropdown options={['Trade', 'Transfer', 'Deposit', 'Withdrawal']} bind:value={cat} />
+      <Dropdown options={tags} bind:value={tag} let:option let:selected>
+        <div class="tag-option" class:selected data-type={option.type}
+          ><svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24"
+            ><circle cx="12" cy="12" r="12" /></svg
+          >{option.name}
+        </div>
+      </Dropdown>
     </div>
     <div class="row date-row">
       <p>Date</p>
@@ -249,6 +267,24 @@
     font-size: 12px
     --date-input-width: 128px
     --dropdown-width: 128px
+  .tag-option
+    padding: 4px 8px
+    display: flex
+    align-items: center
+    border: 1px solid transparent
+    &.selected
+      background-color: #4d73ff
+      color: #ffffff
+    svg
+      margin-right: 5px
+    &[data-type='Deposit'] svg
+      fill: #35d085
+    &[data-type='Trade'] svg
+      fill: #2ea8fa
+    &[data-type='Withdrawal'] svg
+      fill: #f92f72
+    &[data-type='Transfer'] svg
+      fill: #b853ee
   .sent, .received, .fee
     background-color: #eff2f5
     border: 1px solid #c6cddd

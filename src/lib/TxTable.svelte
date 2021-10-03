@@ -54,9 +54,9 @@
   <tbody on:click={tbodyClick}>
     {#each $transactions as tx, i}
       <tr class:odd={i % 2 === 0}>
-        <td class="type" class:green={tx.base === 'Deposit'} class:red={tx.base === 'Withdrawal'}
-          >{tx.cat}</td>
-        {#if tx.base === 'Trade'}
+        <td class="type" class:green={tx.type === 'Deposit'} class:red={tx.type === 'Withdrawal'}
+          >{tx.tag}</td>
+        {#if tx.type === 'Trade'}
           <td class="sent amount">{tx.sent_amount}</td>
           <td class="sent asset">{tx.sent_asset}</td>
           <td class="sent wallet">{tx.sent_wallet}</td>
@@ -65,7 +65,7 @@
           <td class="recv wallet">{tx.recv_wallet}</td>
           <td class="fee amount">{tx.fee_amount}</td>
           <td class="fee asset">{tx.fee_asset}</td>
-        {:else if tx.base === 'Transfer'}
+        {:else if tx.type === 'Transfer'}
           <td class="sent amount">{tx.sent_amount}</td>
           <td class="sent asset">{tx.sent_asset}</td>
           <td class="sent wallet">{tx.sent_wallet}</td>
@@ -74,7 +74,7 @@
           <td class="recv wallet">{tx.recv_wallet}</td>
           <td class="fee amount" />
           <td class="fee asset" />
-        {:else if tx.base === 'Deposit'}
+        {:else if tx.type === 'Deposit'}
           <td class="sent amount" />
           <td class="sent asset" />
           <td class="sent wallet" />
@@ -83,7 +83,7 @@
           <td class="recv wallet">{tx.wallet}</td>
           <td class="fee amount" />
           <td class="fee asset" />
-        {:else if tx.base === 'Withdrawal'}
+        {:else if tx.type === 'Withdrawal'}
           <td class="sent amount">{tx.amount}</td>
           <td class="sent asset">{tx.asset}</td>
           <td class="sent wallet">{tx.wallet}</td>

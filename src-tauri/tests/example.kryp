@@ -2,8 +2,8 @@
 	"version": "0.1",
 	"transactions": [
 		{
-			"base": "Deposit",
-			"cat": "Deposit",
+			"type": "Deposit",
+			"tag": "Deposit",
 			"date": 1500000000000,
 			"note": "",
 			"hash": "",
@@ -13,8 +13,8 @@
 			"cost": "1000"
 		},
 		{
-			"base": "Trade",
-			"cat": "Trade",
+			"type": "Trade",
+			"tag": "Trade",
 			"date": 1500100000000,
 			"note": "",
 			"hash": "",
@@ -29,8 +29,8 @@
 			"cost": "800"
 		},
 		{
-			"base": "Transfer",
-			"cat": "Transfer",
+			"type": "Transfer",
+			"tag": "Transfer",
 			"date": 1500200000000,
 			"note": "",
 			"hash": "",
@@ -43,8 +43,8 @@
 			"cost": "7952.15658094"
 		},
 		{
-			"base": "Trade",
-			"cat": "Trade",
+			"type": "Trade",
+			"tag": "Trade",
 			"date": 1500300000000,
 			"note": "",
 			"hash": "",
@@ -59,8 +59,8 @@
 			"cost": "9398.57934082"
 		},
 		{
-			"base": "Withdrawal",
-			"cat": "Withdrawal",
+			"type": "Withdrawal",
+			"tag": "Withdrawal",
 			"date": 1500400000000,
 			"note": "",
 			"hash": "",

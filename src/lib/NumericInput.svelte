@@ -40,7 +40,7 @@
     }
     node.value = newValue
     value = newValue
-    if (start !== null && end !== null) {
+    if (start !== null && end !== null && node === document.activeElement) {
       node.setSelectionRange(start, end)
     }
   }

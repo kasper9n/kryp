@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Trade {
-  cat: String,
+  tag: String,
   pub date: i64,
   note: String,
   hash: String,
@@ -26,7 +26,7 @@ impl Trade {
   #[cfg(test)]
   pub fn new(date: i64, sent: (Decimal, &str, &str), recv: (Decimal, &str, &str)) -> Self {
     Trade {
-      cat: "Transfer".to_string(),
+      tag: "Transfer".to_string(),
       date,
       note: "".to_string(),
       hash: "".to_string(),
@@ -45,7 +45,7 @@ impl Trade {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transfer {
-  cat: String,
+  tag: String,
   pub date: i64,
   note: String,
   hash: String,
@@ -62,7 +62,7 @@ impl Transfer {
   #[cfg(test)]
   pub fn new(date: i64, sent: (Decimal, &str, &str), recv: (Decimal, &str, &str)) -> Self {
     Transfer {
-      cat: "Transfer".to_string(),
+      tag: "Transfer".to_string(),
       date,
       note: "".to_string(),
       hash: "".to_string(),
@@ -79,7 +79,7 @@ impl Transfer {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Deposit {
-  cat: String,
+  tag: String,
   pub date: i64,
   note: String,
   hash: String,
@@ -93,7 +93,7 @@ impl Deposit {
   #[cfg(test)]
   pub fn new(date: i64, recv: (Decimal, &str, &str)) -> Self {
     Deposit {
-      cat: "Deposit".to_string(),
+      tag: "Deposit".to_string(),
       date,
       note: "".to_string(),
       hash: "".to_string(),
@@ -107,7 +107,7 @@ impl Deposit {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Withdrawal {
-  cat: String,
+  tag: String,
   pub date: i64,
   note: String,
   hash: String,
@@ -121,7 +121,7 @@ impl Withdrawal {
   #[cfg(test)]
   pub fn new(date: i64, sent: (Decimal, &str, &str)) -> Self {
     Withdrawal {
-      cat: "Withdrawal".to_string(),
+      tag: "Withdrawal".to_string(),
       date,
       note: "".to_string(),
       hash: "".to_string(),
@@ -142,7 +142,7 @@ pub enum TxType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "base")]
+#[serde(tag = "type")]
 pub enum Transaction {
   Trade(Trade),
   Transfer(Transfer),

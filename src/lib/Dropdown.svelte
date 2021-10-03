@@ -1,16 +1,17 @@
 <script lang="ts">
   import { checkShortcut } from './general'
 
-  export let value: string
-  let text = value
-  export let options: string[]
+  export let value: Option
+  let text = value.name
+  type Option = { name: string; [key: string]: any }
+  export let options: Option[]
   let dragSwitching = false
-  export let menuMaxHeight = 140
-  function filterOptions(options: string[], text: string) {
+  export let menuMaxHeight = 300
+  function filterOptions(options: Option[], text: string) {
     let filtered = []
     const lcText = text.toLowerCase()
     for (const option of options) {
-      let lcOption = option.toLowerCase()
+      let lcOption = option.name.toLowerCase()
       if (lcOption.startsWith(lcText)) {
         filtered.push(option)
       }
@@ -23,7 +24,7 @@
   }
   let visible = false
   let focused = false
-  let selected = ''
+  let selected: Option = { name: '' }
   function onInput(e: any) {
     if (focused && !visible) {
       if (e.inputType === 'insertText' && e?.data) {
@@ -45,7 +46,7 @@
   }
   function close() {
     visible = false
-    text = value
+    text = value.name
   }
   function focus() {
     focused = true
@@ -85,21 +86,21 @@
   }
   function keydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'ArrowUp')) {
-      let i = filteredOptions.findIndex((o) => o === selected)
+      let i = filteredOptions.findIndex((o) => o.name === selected.name)
       if (i >= 1) {
         selected = filteredOptions[i - 1]
         scrollTo(i - 1)
       }
       if (!visible) open()
     } else if (checkShortcut(e, 'ArrowDown')) {
-      let i = filteredOptions.findIndex((o) => o === selected)
+      let i = filteredOptions.findIndex((o) => o.name === selected.name)
       if (i < filteredOptions.length - 1) {
         selected = filteredOptions[i + 1]
         scrollTo(i + 1)
       }
       if (!visible) open()
     } else if (checkShortcut(e, 'Enter')) {
-      if (selected !== '') {
+      if (selected.name !== '') {
         pick(selected)
       }
     } else if (checkShortcut(e, ' ')) {
@@ -128,7 +129,7 @@
       bind:value={text}
       on:focus={focus}
       on:blur={defocus}
-      placeholder={value}
+      placeholder={value.name}
       class:hide-cursor={focused && !visible}
       on:beforeinput={onInput} />
     <div class="icon">
@@ -140,7 +141,7 @@
     class="menu"
     class:visible
     bind:this={menuEl}
-    on:mouseout={() => (selected = '')}
+    on:mouseout={() => (selected = { name: '' })}
     on:blur={() => {}}
     style="max-height: {menuMaxHeight}px">
     {#each filteredOptions as option}
@@ -150,12 +151,14 @@
         on:mouseup={() => itemMouseUp(option)}
         on:click={() => pick(option)}
         on:mouseover={() => (selected = option)}
-        on:focus={() => {}}
-        class:selected={option === selected}
-        class:current={option === value}>{option}</div>
+        on:focus={() => {}}>
+        <slot {option} selected={option === selected}>
+          <div class="default-item" class:selected={option === selected}>{option.name}</div>
+        </slot>
+      </div>
     {/each}
     {#if filteredOptions.length === 0}
-      <div class="item no-options">No options</div>
+      <div class="no-options">No options</div>
     {/if}
   </div>
 </div>
@@ -164,7 +167,7 @@
   .dropdown
     position: relative
     width: var(--dropdown-width, 100%)
-  input, .item
+  input
     font-size: 12px
     padding: 4px 8px
   .field
@@ -215,6 +218,7 @@
       -webkit-user-select: none
   .menu
     display: none
+    font-size: 12px
     position: absolute
     margin-top: 1px
     width: 100%
@@ -228,12 +232,12 @@
     z-index: 10
     &.visible
       display: block
-  .item
-    padding: 4px 6px
+  .default-item
+    padding: 4px 8px
     &.selected
       background-color: #3C63ED
       color: #ffffff
-    &.no-options
-      color: #a6a6a6
-      text-align: center
+  .no-options
+    color: #a6a6a6
+    text-align: center
 </style>

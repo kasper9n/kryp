@@ -2,8 +2,8 @@ import { writable } from 'svelte/store'
 import { refresher, runCmd } from './general'
 
 export type Trade = {
-  base: 'Trade'
-  cat: string
+  type: 'Trade'
+  tag: string
   date: number
   note: string
   hash: string
@@ -19,8 +19,8 @@ export type Trade = {
 }
 
 export type Transfer = {
-  base: 'Transfer'
-  cat: string
+  type: 'Transfer'
+  tag: string
   date: number
   note: string
   hash: string
@@ -34,8 +34,8 @@ export type Transfer = {
 }
 
 export type Deposit = {
-  base: 'Deposit'
-  cat: string
+  type: 'Deposit'
+  tag: string
   date: number
   note: string
   hash: string
@@ -46,8 +46,8 @@ export type Deposit = {
 }
 
 export type Withdrawal = {
-  base: 'Withdrawal'
-  cat: string
+  type: 'Withdrawal'
+  tag: string
   date: number
   note: string
   hash: string
