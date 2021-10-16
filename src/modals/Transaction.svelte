@@ -5,7 +5,7 @@
   import { refresh, popup, runCmd } from '../lib/general'
   import NumericInput from '../lib/NumericInput.svelte'
   import Dropdown from '../lib/Dropdown.svelte'
-  import { DateInput } from '../../../date-picker-svelte/package/index'
+  import { DateInput } from 'date-picker-svelte'
 
   export let visible = false
   function cancel() {
@@ -112,7 +112,21 @@
     }
     return fields
   }
-  function getDefault() {
+  type Info = {
+    date: Date
+    note: string
+    hash: string
+    sent_amount: string
+    sent_asset: string
+    sent_wallet: string
+    recv_amount: string
+    recv_asset: string
+    recv_wallet: string
+    fee_amount: string
+    fee_asset: string
+    cost: string
+  }
+  function getDefault(): Info {
     return {
       date: new Date(),
       note: '',
@@ -137,7 +151,7 @@
 
   let errors: Set<string> = new Set()
   let hasErrors: boolean
-  function validate(info: any, onlyRemove = false) {
+  function validate(info: Info, onlyRemove = false) {
     if (!onlyRemove) {
       errors.add('sent_amount')
       errors.add('sent_asset')

@@ -3,7 +3,7 @@
 
   export let value: Option
   let text = value.name
-  type Option = { name: string; [key: string]: any }
+  type Option = { name: string; [key: string]: unknown }
   export let options: Option[]
   let dragSwitching = false
   export let menuMaxHeight = 300
@@ -25,7 +25,8 @@
   let visible = false
   let focused = false
   let selected: Option = { name: '' }
-  function onInput(e: any) {
+  function onInput(eee: Event) {
+    let e = eee as InputEvent
     if (focused && !visible) {
       if (e.inputType === 'insertText' && e?.data) {
         open()
@@ -63,12 +64,12 @@
       dragSwitching = true
     }
   }
-  function itemMouseUp(newValue: any) {
+  function itemMouseUp(newValue: Option) {
     if (dragSwitching) pick(newValue)
   }
-  function pick(newValue: any) {
+  function pick(newValue: Option) {
     value = newValue
-    text = newValue
+    text = newValue.name
     close()
   }
   let menuEl: HTMLDivElement
@@ -142,7 +143,7 @@
     class:visible
     bind:this={menuEl}
     on:mouseout={() => (selected = { name: '' })}
-    on:blur={() => {}}
+    on:blur={() => (selected = { name: '' })}
     style="max-height: {menuMaxHeight}px">
     {#each filteredOptions as option}
       <div
@@ -151,7 +152,7 @@
         on:mouseup={() => itemMouseUp(option)}
         on:click={() => pick(option)}
         on:mouseover={() => (selected = option)}
-        on:focus={() => {}}>
+        on:focus={() => (selected = option)}>
         <slot {option} selected={option === selected}>
           <div class="default-item" class:selected={option === selected}>{option.name}</div>
         </slot>

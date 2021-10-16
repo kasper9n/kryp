@@ -7,7 +7,8 @@
   export let placeholder = ''
   export let style = ''
   let node: HTMLInputElement
-  function beforeinput(e: any) {
+  function beforeinput(eee: Event) {
+    let e = eee as InputEvent
     e = e as InputEvent
     if (e.data === '.' && node.value.includes('.')) {
       e.preventDefault()
@@ -19,8 +20,8 @@
     mounted = true
   })
 
-  $: if (mounted) filter(value)
-  function filter(_: string) {
+  $: if (mounted && value !== '') filter()
+  function filter() {
     const length = (value && value.length) || 0
     let start = node.selectionStart
     let end = node.selectionEnd

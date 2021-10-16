@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let group: any[] | null = null
+  export let group: unknown[] | null = null
   export let selected = 0
   export let secondary = false
   export let neutral = false
