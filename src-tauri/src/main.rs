@@ -176,7 +176,7 @@ pub fn dialog_sync<S: AsRef<str>>(w: Window, title: S, msg: S) -> bool {
   let title = title.as_ref().to_string();
   let msg = msg.as_ref().to_string();
   thread::spawn(move || {
-    dialog::ask(Some(&w), title, msg, move |res| {
+    dialog::confirm(Some(&w), title, msg, move |res| {
       sender.send(res).unwrap();
     })
   });

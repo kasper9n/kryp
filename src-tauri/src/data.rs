@@ -108,7 +108,7 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
         let (sender, receiver) = std::sync::mpsc::channel();
         let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["kryp"]);
         if cfg!(any(target_os = "macos", target_os = "windows")) {
-          d = d.set_parent(&dialog::window_parent(&win).unwrap());
+          d = d.set_parent(&win);
         }
         d.pick_file(move |p| {
           sender.send(p).unwrap();
