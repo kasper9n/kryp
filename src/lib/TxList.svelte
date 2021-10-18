@@ -67,8 +67,8 @@
         <div class="recv">{tx.recv_amount} {tx.recv_asset} {tx.recv_wallet}</div>
       {/if}
       <div class="right">
-        <div class="date">{formatDate(new Date(tx.date))}</div>
-        <div class="time">{formatTime(new Date(tx.date))}</div>
+        <span class="date">{formatDate(new Date(tx.date))}</span>
+        <span class="time">{formatTime(new Date(tx.date))}</span>
       </div>
     </div>
   {/each}
@@ -86,7 +86,7 @@
     display: flex
     align-items: center
     border-bottom: 1px solid #e7e8e8
-    padding: 10px 16px
+    padding: 0px 16px
   .icon
     width: $kind-icon-width
     display: block
@@ -121,6 +121,8 @@
   .right
     width: 100px
     min-width: 100px
+    text-align: right
+    padding: 10px 0px
   .sent
     width: 0px
     flex-grow: 1
@@ -134,8 +136,6 @@
     text-align: center
     svg
       fill: #4c4f57
-  .right
-    text-align: right
   .time
     font-size: 13px
     color: #656e76

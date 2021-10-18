@@ -1,26 +1,26 @@
 <script lang="ts">
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
-  import DashboardPage from './routes/index.svelte'
-  import TransactionsPage from './routes/transactions.svelte'
-  import PricesPage from './routes/prices.svelte'
-  import HelpPage from './routes/help.svelte'
   import { refresh, runCmd } from './lib/general'
   import { opened } from './lib/data'
   import NewFileModal from './modals/NewFile.svelte'
   import Button from './lib/Button.svelte'
-  const pages = [DashboardPage, TransactionsPage, PricesPage, HelpPage]
-  let page = 0
-  function link(node: HTMLElement, num: number) {
-    function handler(e: MouseEvent) {
-      e.preventDefault()
-      page = num
-    }
-    node.addEventListener('click', handler)
-    return {
-      destroy() {
-        node.removeEventListener('click', handler)
-      },
+  import { Route, active, router } from 'tinro'
+
+  import DashboardPage from './routes/index.svelte'
+  import TransactionsPage from './routes/transactions.svelte'
+  import PricesPage from './routes/prices.svelte'
+  import HelpPage from './routes/help.svelte'
+  // prevent history from being written, to hide context menu Back/Forwards buttons
+  function go(e: MouseEvent) {
+    if (e.target instanceof HTMLElement) {
+      const href = e.target.getAttribute('href')
+      if (href !== null) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+        router.goto(href, true)
+      }
     }
   }
 
@@ -42,9 +42,9 @@
   }
   const unlistenFuture = event.listen('menu', ({ payload }) => {
     if (payload === 'Dashboard') {
-      page = 0
+      router.goto('/', true)
     } else if (payload === 'Transactions') {
-      page = 1
+      router.goto('/transactions', true)
     } else if (payload === 'New') {
       newFileModalVisible = true
     } else if (payload === 'Open...') {
@@ -65,17 +65,20 @@
 
 {#if $opened}
   <div class="nav">
-    <button class="link" use:link={0} class:current={page === 0}>Dashboard</button>
-    <button class="link" use:link={1} class:current={page === 1}>Transactions</button>
+    <a on:click={go} use:active data-exact href="/">Dashboard</a>
+    <a on:click={go} use:active href="/transactions">Transactions</a>
     <div class="nav-mid" />
-    <button class="link" use:link={2} class:current={page === 2}>Prices</button>
-    <button class="link" use:link={3} class:current={page === 3}>Help</button>
+    <a on:click={go} use:active href="/prices">Prices</a>
+    <a on:click={go} use:active href="/help">Help</a>
     <button on:click={() => open()}>Load</button>
     <button on:click={save}>Save</button>
     <button on:click={saveAs}>Save As...</button>
   </div>
 
-  <svelte:component this={pages[page]} />
+  <Route path="/"><DashboardPage /></Route>
+  <Route path="/transactions"><TransactionsPage /></Route>
+  <Route path="/prices"><PricesPage /></Route>
+  <Route path="/help"><HelpPage /></Route>
 {:else}
   <div class="start-page">
     <h1>Kryp</h1>
@@ -110,15 +113,15 @@
   .nav
     display: flex
     align-items: center
-    // user-select: none
-    // -webkit-user-select: none
+    user-select: none
+    -webkit-user-select: none
     background-color: #ffffff
     border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
   .nav-mid
     width: 50px
     flex-grow: 1
-  .link
+  .nav a
     background-color: transparent
     border: none
     font: inherit
@@ -127,7 +130,7 @@
     font-weight: 600
     text-decoration: none
     padding: 15px
-    &.current
+    &:global(.active)
       color: #000000
   .start-page
     width: 100vw
