@@ -203,17 +203,17 @@
               placeholder="Wallet" />
           </div>
           <div class="row">
+            <NumericInput
+              bind:value={info.sent_amount}
+              invalid={errors.has('sent_amount')}
+              style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+              placeholder="Amount" />
             <input
               type="text"
               class="asset"
               class:invalid={errors.has('sent_asset')}
               bind:value={info.sent_asset}
               placeholder="Asset" />
-            <NumericInput
-              bind:value={info.sent_amount}
-              invalid={errors.has('sent_amount')}
-              style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
-              placeholder="Amount" />
           </div>
         {/if}
       </div>
@@ -229,17 +229,17 @@
               placeholder="Wallet" />
           </div>
           <div class="row">
+            <NumericInput
+              bind:value={info.recv_amount}
+              invalid={errors.has('recv_amount')}
+              style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+              placeholder="Amount" />
             <input
               type="text"
               class="asset"
               class:invalid={errors.has('recv_asset')}
               bind:value={info.recv_asset}
               placeholder="Asset" />
-            <NumericInput
-              bind:value={info.recv_amount}
-              invalid={errors.has('recv_amount')}
-              style={'border-top-left-radius: 0px; border-bottom-left-radius: 0px'}
-              placeholder="Amount" />
           </div>
         {/if}
       </div>
@@ -247,10 +247,10 @@
         <div class="fee">
           <h4>Fee</h4>
           <div class="row">
-            <input type="text" bind:value={info.fee_asset} placeholder="Asset" />
+            <NumericInput bind:value={info.fee_amount} placeholder="Amount" />
           </div>
           <div class="row">
-            <NumericInput bind:value={info.fee_amount} placeholder="Amount" />
+            <input type="text" bind:value={info.fee_asset} placeholder="Asset" />
           </div>
         </div>
       {/if}
@@ -341,7 +341,8 @@
     border: 1px solid #c6cddd
     border-radius: 3px
     outline: none
-    transition: all 80ms var(--ease)
+    transition: 80ms var(--ease)
+    transition-property: border-color, box-shadow
     &:focus
       border-color: #0269f7
       box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
@@ -363,9 +364,9 @@
   .asset
     min-width: 60px
     width: 0px
-    margin-right: -1px
-    border-top-right-radius: 0px
-    border-bottom-right-radius: 0px
+    margin-left: -1px
+    border-top-left-radius: 0px
+    border-bottom-left-radius: 0px
   .bottom
     display: grid
     grid-auto-flow: column
