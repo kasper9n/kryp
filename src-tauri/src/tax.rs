@@ -43,12 +43,14 @@ impl Tax {
       .binary_search_by(|current_tx| current_tx.date().cmp(&tx.date()))
       .unwrap_or_else(|pos| pos);
     self.transactions.insert(pos, tx);
+    self.dirty = true;
     Ok(())
   }
   pub fn calculate(&mut self) -> Result<(), String> {
     let output = calculate(&mut self.transactions)?;
     self.balances = output.balances;
     self.realized_gains = output.realized_gains;
+    self.dirty = true;
     Ok(())
   }
   pub fn save<P: AsRef<Path>>(&self, file_path: P) {

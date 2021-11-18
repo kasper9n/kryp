@@ -129,13 +129,17 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
 }
 
 #[command]
-pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
+pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  if let None = kryp.file_path {
-    save_as = true;
-  }
-  println!("save as? {}", save_as);
+  let mut save_path = &kryp.file_path;
   if save_as {
+    save_path = &None;
+  }
+  println!("save as? {}", save_path.is_none());
+  if let Some(path) = save_path {
+    kryp.tax.save(path);
+    kryp.tax.dirty = false;
+  } else {
     let (sender, receiver) = std::sync::mpsc::channel();
     dialog::FileDialogBuilder::new()
       .set_file_name("report.kryp")
@@ -147,6 +151,7 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
       Some(file_path) => {
         kryp.tax.save(&file_path);
         kryp.file_path = Some(file_path);
+        kryp.tax.dirty = false;
       }
       None => return Ok(()),
     };
