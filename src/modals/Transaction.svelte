@@ -15,6 +15,10 @@
     if (str === '') return '0'
     else return str
   }
+  function optionalStr(str: string) {
+    if (str === '') return null
+    else return str
+  }
 
   async function save() {
     validate(info, false)
@@ -35,8 +39,8 @@
         recv_wallet: info.recv_wallet,
         fee_amount: numStr(info.fee_amount),
         fee_asset: info.fee_asset,
-        manual_worth_amount: info.manual_worth_amount,
-        manual_worth_asset: info.manual_worth_asset,
+        manual_worth_amount: optionalStr(info.manual_worth_amount),
+        manual_worth_asset: optionalStr(info.manual_worth_asset),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Transfer') {
@@ -52,8 +56,8 @@
         recv_amount: numStr(info.recv_amount),
         recv_asset: info.recv_asset,
         recv_wallet: info.recv_wallet,
-        manual_worth_amount: info.manual_worth_amount,
-        manual_worth_asset: info.manual_worth_asset,
+        manual_worth_amount: optionalStr(info.manual_worth_amount),
+        manual_worth_asset: optionalStr(info.manual_worth_asset),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Deposit') {
@@ -66,8 +70,8 @@
         amount: numStr(info.recv_amount),
         asset: info.recv_asset,
         wallet: info.recv_wallet,
-        from_amount: info.from_amount,
-        from_asset: info.from_asset,
+        from_amount: optionalStr(info.manual_worth_amount),
+        from_asset: optionalStr(info.manual_worth_asset),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Withdrawal') {
@@ -80,8 +84,8 @@
         amount: numStr(info.recv_amount),
         asset: info.recv_asset,
         wallet: info.recv_wallet,
-        to_amount: info.to_amount,
-        to_asset: info.to_asset,
+        to_amount: optionalStr(info.manual_worth_amount),
+        to_asset: optionalStr(info.manual_worth_asset),
         cost: numStr(info.cost),
       }
     } else {
