@@ -35,6 +35,8 @@
         recv_wallet: info.recv_wallet,
         fee_amount: numStr(info.fee_amount),
         fee_asset: info.fee_asset,
+        manual_worth_amount: info.manual_worth_amount,
+        manual_worth_asset: info.manual_worth_asset,
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Transfer') {
@@ -50,6 +52,8 @@
         recv_amount: numStr(info.recv_amount),
         recv_asset: info.recv_asset,
         recv_wallet: info.recv_wallet,
+        manual_worth_amount: info.manual_worth_amount,
+        manual_worth_asset: info.manual_worth_asset,
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Deposit') {
@@ -62,6 +66,8 @@
         amount: numStr(info.recv_amount),
         asset: info.recv_asset,
         wallet: info.recv_wallet,
+        from_amount: info.from_amount,
+        from_asset: info.from_asset,
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Withdrawal') {
@@ -74,6 +80,8 @@
         amount: numStr(info.recv_amount),
         asset: info.recv_asset,
         wallet: info.recv_wallet,
+        to_amount: info.to_amount,
+        to_asset: info.to_asset,
         cost: numStr(info.cost),
       }
     } else {
@@ -124,6 +132,8 @@
     recv_wallet: string
     fee_amount: string
     fee_asset: string
+    manual_worth_amount: string
+    manual_worth_asset: string
     cost: string
   }
   function getDefault(): Info {
@@ -139,16 +149,21 @@
       recv_wallet: '',
       fee_amount: '',
       fee_asset: '',
+      manual_worth_amount: '',
+      manual_worth_asset: '',
       cost: '',
     }
   }
   let info = getDefault()
+  let showNetWorth = false
   function open() {
     info = getDefault()
+    showNetWorth = false
     errors.clear()
   }
   $: if (visible) open()
 
+  let validDate: boolean
   let errors: Set<string> = new Set()
   let hasErrors: boolean
   function validate(info: Info, onlyRemove = false) {
@@ -170,10 +185,16 @@
     hasErrors = !!errors.size || !validDate
   }
   $: validate(info, true)
-  let validDate: boolean
+
+  function keydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      cancel()
+    }
+  }
 </script>
 
-<Modal bind:visible>
+<Modal bind:visible on:keydown={keydown}>
   <form on:submit|preventDefault={save} class="googoogaga">
     <h2>Add transaction</h2>
     <div class="row">
@@ -255,7 +276,23 @@
         </div>
       {/if}
     </div>
-    <h4>Optional Details</h4>
+    {#if !showNetWorth}
+      <div class="set-net-worth">
+        <div on:click={() => (showNetWorth = true)}>Set Net Worth</div>
+      </div>
+    {/if}
+    {#if showNetWorth}
+      <div class="row">
+        <p>Net Worth</p>
+        <div class="amount-container">
+          <NumericInput
+            bind:value={info.manual_worth_amount}
+            style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+            placeholder="Amount" />
+        </div>
+        <input type="text" class="asset" bind:value={info.manual_worth_asset} placeholder="Asset" />
+      </div>
+    {/if}
     <div class="row">
       <p>Tx Hash</p>
       <input type="text" class="note" bind:value={info.hash} />
@@ -273,7 +310,7 @@
 
 <style lang="sass">
   .googoogaga
-    width: 560px
+    width: 580px
     max-width: 100%
     user-select: none
     -webkit-user-select: none
@@ -287,10 +324,13 @@
     align-items: center
     border: 1px solid transparent
     &.selected
-      background-color: #4d73ff
-      color: #ffffff
+      background-color: rgba(#4d88ff, 0.25)
+      color: #2974ff
     svg
       margin-right: 5px
+      transform: scale(1) // for rendering glitch
+      width: 7px
+      height: 7px
     &[data-type='Deposit'] svg
       fill: #35d085
     &[data-type='Trade'] svg
@@ -315,7 +355,7 @@
     width: 40%
   .row
     display: flex
-    margin: 10px 0px
+    margin-top: 10px
   .main-info
     position: relative
     > :last-child
@@ -325,13 +365,11 @@
       margin: 9px
   .fee
     width: 25%
-  h4
-    margin: 10px 0px
   p
     display: inline-block
-    min-width: 65px
-    margin: 3px 0px
-    font-size: 14px
+    min-width: 80px
+    margin: 4px 0px
+    font-size: 13px
     cursor: default
   input, textarea
     width: 100%
@@ -367,6 +405,17 @@
     margin-left: -1px
     border-top-left-radius: 0px
     border-bottom-left-radius: 0px
+  .set-net-worth
+    color: #0269f7
+    font-size: 12px
+    text-align: right
+    div
+      display: inline-block
+      cursor: pointer
+      margin: 2px
+      padding: 2px 4px
+  .amount-container
+    max-width: 130px
   .bottom
     display: grid
     grid-auto-flow: column

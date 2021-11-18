@@ -1,6 +1,6 @@
 use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{Transaction, TxType};
+use crate::transaction::Transaction;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -130,11 +130,11 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
 
 #[command]
 pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
-  let kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().unwrap();
   if let None = kryp.file_path {
     save_as = true;
   }
-  println!("save as {}", save_as);
+  println!("save as? {}", save_as);
   if save_as {
     let (sender, receiver) = std::sync::mpsc::channel();
     dialog::FileDialogBuilder::new()
@@ -144,7 +144,10 @@ pub async fn save(mut save_as: bool, kryp: State<'_, Data>) -> Result<(), String
         sender.send(p).unwrap();
       });
     match receiver.recv().unwrap_or_default() {
-      Some(file_path) => kryp.tax.save(file_path),
+      Some(file_path) => {
+        kryp.tax.save(&file_path);
+        kryp.file_path = Some(file_path);
+      }
       None => return Ok(()),
     };
   }
@@ -206,12 +209,10 @@ pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub fn add_transaction(ttype: TxType, json: String, kryp: State<Data>) -> Result<(), String> {
+pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().unwrap();
-  let mut tx = Transaction::from_json(ttype, &json)?;
   let tax = &mut kryp.tax;
-  let cost = tx.calculate_cost(&mut tax.price_data, &tax.base_currency);
-  tx.set_cost(cost);
+  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.base_currency)?;
   kryp.tax.add_transaction(tx)?;
   Ok(())
 }

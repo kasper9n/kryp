@@ -1,12 +1,16 @@
 <script lang="ts">
   export let visible = false
+  let modalBg: HTMLDivElement
+  $: if (visible && modalBg) {
+    modalBg.focus()
+  }
   function close() {
     visible = false
   }
 </script>
 
 {#if visible}
-  <div class="modal-bg" on:click|self={close}>
+  <div class="modal-bg" on:click|self={close} tabindex="-1" on:keydown bind:this={modalBg}>
     <div class="box">
       <slot />
     </div>

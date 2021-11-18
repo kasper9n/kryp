@@ -16,6 +16,7 @@
 <Modal bind:visible>
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
+    <p>Base currency</p>
     <input type="text" bind:value={baseCurrency} use:focus />
     <div class="bottom">
       <Button secondary on:click={() => (visible = false)}>Cancel</Button>
@@ -25,6 +26,9 @@
 </Modal>
 
 <style lang="sass">
+  p
+    font-size: 13px
+    margin-bottom: 5px
   input
     min-width: 0px
     padding: 4px 8px

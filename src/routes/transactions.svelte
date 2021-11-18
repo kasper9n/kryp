@@ -38,7 +38,6 @@
   $border: #c6cddd
   .page
     padding: 20px
-    max-width: 1000px
     margin: auto
   .toolbar
     padding: 10px 0px

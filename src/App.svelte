@@ -70,9 +70,6 @@
     <div class="nav-mid" />
     <a on:click={go} use:active href="/prices">Prices</a>
     <a on:click={go} use:active href="/help">Help</a>
-    <button on:click={() => open()}>Load</button>
-    <button on:click={save}>Save</button>
-    <button on:click={saveAs}>Save As...</button>
   </div>
 
   <Route path="/"><DashboardPage /></Route>
@@ -94,6 +91,7 @@
 <style lang="sass">
   :global(body)
     background-color: #f8f9fc
+    color: #191c1f
     margin: 0px
   :global(h2)
     font-size: 24px

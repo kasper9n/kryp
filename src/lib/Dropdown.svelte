@@ -110,10 +110,13 @@
       } else if (!visible) {
         open()
       }
+    } else if (checkShortcut(e, 'Escape') && visible) {
+      close()
     } else {
       return
     }
     e.preventDefault()
+    e.stopPropagation()
     let el = e.target as HTMLElement
     let menu = el.parentElement
     if (menu) {

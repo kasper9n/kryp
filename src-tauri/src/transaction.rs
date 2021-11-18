@@ -6,6 +6,7 @@ use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Trade {
   tag: String,
   pub date: i64,
@@ -19,31 +20,39 @@ pub struct Trade {
   pub recv_wallet: String,
   pub fee_amount: Decimal,
   pub fee_asset: String,
+  manual_worth_amount: Option<Decimal>,
+  manual_worth_asset: Option<String>,
   /// Includes fee
-  pub cost: Decimal,
+  cost: Decimal,
 }
 impl Trade {
+  pub fn cost(&self) -> Decimal {
+    self.cost
+  }
   #[cfg(test)]
-  pub fn new(date: i64, sent: (Decimal, &str, &str), recv: (Decimal, &str, &str)) -> Self {
+  pub fn default() -> Self {
     Trade {
-      tag: "Transfer".to_string(),
-      date,
+      tag: "Trade".to_string(),
+      date: 0,
       note: "".to_string(),
       hash: "".to_string(),
-      recv_amount: recv.0,
-      recv_asset: recv.1.to_string(),
-      recv_wallet: recv.2.to_string(),
-      sent_amount: sent.0,
-      sent_asset: sent.1.to_string(),
-      sent_wallet: sent.2.to_string(),
+      recv_amount: dec!(0),
+      recv_asset: "".to_string(),
+      recv_wallet: "".to_string(),
+      sent_amount: dec!(0),
+      sent_asset: "".to_string(),
+      sent_wallet: "".to_string(),
       fee_amount: dec!(0),
       fee_asset: "".to_string(),
+      manual_worth_amount: None,
+      manual_worth_asset: None,
       cost: dec!(0),
     }
   }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Transfer {
   tag: String,
   pub date: i64,
@@ -55,29 +64,34 @@ pub struct Transfer {
   pub recv_amount: Decimal,
   pub recv_asset: String,
   pub recv_wallet: String,
+  manual_worth_amount: Option<Decimal>,
+  manual_worth_asset: Option<String>,
   /// Includes fee
-  pub cost: Decimal,
+  cost: Decimal,
 }
 impl Transfer {
   #[cfg(test)]
-  pub fn new(date: i64, sent: (Decimal, &str, &str), recv: (Decimal, &str, &str)) -> Self {
+  pub fn default() -> Self {
     Transfer {
       tag: "Transfer".to_string(),
-      date,
+      date: 0,
       note: "".to_string(),
       hash: "".to_string(),
-      recv_amount: recv.0,
-      recv_asset: recv.1.to_string(),
-      recv_wallet: recv.2.to_string(),
-      sent_amount: sent.0,
-      sent_asset: sent.1.to_string(),
-      sent_wallet: sent.2.to_string(),
+      recv_amount: dec!(0),
+      recv_asset: "".to_string(),
+      recv_wallet: "".to_string(),
+      sent_amount: dec!(0),
+      sent_asset: "".to_string(),
+      sent_wallet: "".to_string(),
+      manual_worth_amount: None,
+      manual_worth_asset: None,
       cost: dec!(0),
     }
   }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Deposit {
   tag: String,
   pub date: i64,
@@ -86,26 +100,34 @@ pub struct Deposit {
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,
+  from_amount: Option<Decimal>,
+  from_asset: Option<String>,
   /// Includes fee
-  pub cost: Decimal,
+  cost: Decimal,
 }
 impl Deposit {
   #[cfg(test)]
-  pub fn new(date: i64, recv: (Decimal, &str, &str)) -> Self {
+  pub fn default() -> Self {
     Deposit {
       tag: "Deposit".to_string(),
-      date,
+      date: 0,
       note: "".to_string(),
       hash: "".to_string(),
-      amount: recv.0,
-      asset: recv.1.to_string(),
-      wallet: recv.2.to_string(),
+      amount: dec!(0),
+      asset: "".to_string(),
+      wallet: "".to_string(),
+      from_amount: None,
+      from_asset: None,
       cost: dec!(0),
     }
+  }
+  pub fn cost(&self) -> Decimal {
+    self.cost
   }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Withdrawal {
   tag: String,
   pub date: i64,
@@ -114,20 +136,27 @@ pub struct Withdrawal {
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,
+  pub to_amount: Option<Decimal>,
+  pub to_asset: Option<String>,
   /// Includes fee
   pub cost: Decimal,
 }
 impl Withdrawal {
+  pub fn cost(&self) -> Decimal {
+    self.cost
+  }
   #[cfg(test)]
-  pub fn new(date: i64, sent: (Decimal, &str, &str)) -> Self {
+  pub fn default() -> Self {
     Withdrawal {
       tag: "Withdrawal".to_string(),
-      date,
+      date: 0,
       note: "".to_string(),
       hash: "".to_string(),
-      amount: sent.0,
-      asset: sent.1.to_string(),
-      wallet: sent.2.to_string(),
+      amount: dec!(0),
+      asset: "".to_string(),
+      wallet: "".to_string(),
+      to_amount: None,
+      to_asset: None,
       cost: dec!(0),
     }
   }
@@ -159,48 +188,76 @@ impl Transaction {
       Transaction::Withdrawal(tx) => tx.date,
     }
   }
-  pub fn set_cost(&mut self, v: Decimal) {
+  pub fn from_json(json: &str, price_data: &mut PriceData, base: &str) -> Result<Self, String> {
+    let tx_result: Result<Self, _> = serde_json::from_str(&json);
+    let mut tx = match tx_result {
+      Err(e) => return Err(e.to_string()),
+      Ok(tx) => tx,
+    };
+    tx.determine_cost(price_data, base);
+    Ok(tx)
+  }
+  /// Gets the manual worth of a transaction.
+  /// For deposits, this is the from_amount and from_asset.
+  /// For withdrawals, this is the to_amount and to_asset.
+  pub fn manual_worth(&self) -> Option<(Decimal, &String)> {
     match self {
-      Transaction::Trade(tx) => tx.cost = v,
-      Transaction::Transfer(tx) => tx.cost = v,
-      Transaction::Deposit(tx) => tx.cost = v,
-      Transaction::Withdrawal(tx) => tx.cost = v,
+      Transaction::Trade(tx) => {
+        if let Some(manual_worth_amount) = tx.manual_worth_amount {
+          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
+            return Some((manual_worth_amount, manual_worth_asset));
+          }
+        }
+      }
+      Transaction::Transfer(tx) => {
+        if let Some(manual_worth_amount) = tx.manual_worth_amount {
+          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
+            return Some((manual_worth_amount, manual_worth_asset));
+          }
+        }
+      }
+      Transaction::Deposit(tx) => {
+        if let Some(from_amount) = tx.from_amount {
+          if let Some(from_asset) = &tx.from_asset {
+            return Some((from_amount, from_asset));
+          }
+        }
+      }
+      Transaction::Withdrawal(tx) => {
+        if let Some(to_amount) = tx.to_amount {
+          if let Some(to_asset) = &tx.to_asset {
+            return Some((to_amount, to_asset));
+          }
+        }
+      }
+    }
+    return None;
+  }
+  /// Set the cost. If a manual cost is set, that will be used.
+  #[cfg(test)]
+  pub fn refresh_cost(&mut self, price_data: &mut PriceData, base: &str) {
+    let cost = self.determine_cost(price_data, base);
+    match self {
+      Transaction::Trade(tx) => tx.cost = cost,
+      Transaction::Transfer(tx) => tx.cost = cost,
+      Transaction::Deposit(tx) => tx.cost = cost,
+      Transaction::Withdrawal(tx) => tx.cost = cost,
     }
   }
-  pub fn from_json(tx_type: TxType, json: &str) -> Result<Self, String> {
-    match tx_type {
-      TxType::Trade => {
-        let tx: Result<Trade, _> = serde_json::from_str(&json);
-        match tx {
-          Err(e) => Err(e.to_string()),
-          Ok(tx) => Ok(Transaction::Trade(tx)),
-        }
+  /// Get the cost. If a manual cost is set, that will be used.
+  fn determine_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
+    if let Some((amount, asset)) = self.manual_worth() {
+      if asset == base {
+        amount.clone()
+      } else {
+        price_data.get_value(amount.clone(), &asset, self.date(), base)
       }
-      TxType::Transfer => {
-        let tx: Result<Transfer, _> = serde_json::from_str(&json);
-        match tx {
-          Err(e) => Err(e.to_string()),
-          Ok(tx) => Ok(Transaction::Transfer(tx)),
-        }
-      }
-      TxType::Deposit => {
-        let tx: Result<Deposit, _> = serde_json::from_str(&json);
-        match tx {
-          Err(e) => Err(e.to_string()),
-          Ok(tx) => Ok(Transaction::Deposit(tx)),
-        }
-      }
-      TxType::Withdrawal => {
-        let tx: Result<Withdrawal, _> = serde_json::from_str(&json);
-        match tx {
-          Err(e) => Err(e.to_string()),
-          Ok(tx) => Ok(Transaction::Withdrawal(tx)),
-        }
-      }
+    } else {
+      self.calculate_cost(price_data, base)
     }
   }
   /// Calculates and returns the cost of the transaction
-  pub fn calculate_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
+  fn calculate_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
     let mut cost;
     match self {
       Transaction::Trade(tx) => {

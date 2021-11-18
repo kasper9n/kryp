@@ -45,6 +45,5 @@
 <style lang="sass">
   .page
     padding: 20px
-    max-width: 1000px
     margin: auto
 </style>

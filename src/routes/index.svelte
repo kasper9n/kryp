@@ -45,12 +45,10 @@
   h3
     margin: 0px
     display: block
-    // color: #444444
     font-weight: 600
     margin-bottom: 10px
   .page
     padding: 20px
-    max-width: 1000px
     margin: auto
   .card
     font-size: 14px

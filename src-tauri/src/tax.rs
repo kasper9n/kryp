@@ -10,6 +10,9 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::time::Instant;
 
+#[cfg(test)]
+use crate::transaction::{Deposit, Trade, Transfer, Withdrawal};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tax {
   pub version: String,
@@ -80,6 +83,67 @@ impl Tax {
       Err(e) => throw!("Error opening file: {}", e),
     }
   }
+
+  #[cfg(test)]
+  pub fn new_trade(
+    &mut self,
+    date: i64,
+    sent: (Decimal, &str, &str),
+    recv: (Decimal, &str, &str),
+  ) -> Transaction {
+    let mut trade = Trade::default();
+    trade.date = date;
+    trade.sent_amount = sent.0;
+    trade.sent_asset = sent.1.to_string();
+    trade.sent_wallet = sent.2.to_string();
+    trade.recv_amount = recv.0;
+    trade.recv_asset = recv.1.to_string();
+    trade.recv_wallet = recv.2.to_string();
+    let mut tx = Transaction::Trade(trade);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx
+  }
+  #[cfg(test)]
+  pub fn new_transfer(
+    &mut self,
+    date: i64,
+    sent: (Decimal, &str, &str),
+    recv: (Decimal, &str, &str),
+  ) -> Transaction {
+    let mut transfer = Transfer::default();
+    transfer.date = date;
+    transfer.sent_amount = sent.0;
+    transfer.sent_asset = sent.1.to_string();
+    transfer.sent_wallet = sent.2.to_string();
+    transfer.recv_amount = recv.0;
+    transfer.recv_asset = recv.1.to_string();
+    transfer.recv_wallet = recv.2.to_string();
+    let mut tx = Transaction::Transfer(transfer);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx
+  }
+  #[cfg(test)]
+  pub fn new_deposit(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+    let mut deposit = Deposit::default();
+    deposit.date = date;
+    deposit.amount = recv.0;
+    deposit.asset = recv.1.to_string();
+    deposit.wallet = recv.2.to_string();
+    let mut tx = Transaction::Deposit(deposit);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx
+  }
+  #[cfg(test)]
+  pub fn new_withdrawal(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+    let mut withdrawal = Withdrawal::default();
+    withdrawal.date = date;
+    withdrawal.amount = recv.0;
+    withdrawal.asset = recv.1.to_string();
+    withdrawal.wallet = recv.2.to_string();
+    let mut tx = Transaction::Withdrawal(withdrawal);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx
+  }
 }
 
 struct CalculationOutput {
@@ -92,35 +156,38 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
   let mut realized_gains = Vec::new();
   for transaction in transactions {
     match transaction {
-      Transaction::Trade(transaction) => {
-        let mut cost = deduct(
+      Transaction::Trade(trade) => {
+        // deduct the sent amount from balance
+        let mut balance_cost = deduct(
           &mut balances,
-          &transaction.sent_wallet,
-          &transaction.sent_asset,
-          transaction.sent_amount,
+          &trade.sent_wallet,
+          &trade.sent_asset,
+          trade.sent_amount,
         )?;
-        if transaction.fee_asset != "" {
-          cost += deduct(
+        if trade.fee_asset != "" {
+          balance_cost += deduct(
             &mut balances,
-            &transaction.sent_wallet,
-            &transaction.fee_asset,
-            transaction.fee_amount,
+            &trade.sent_wallet,
+            &trade.fee_asset,
+            trade.fee_amount,
           )?;
         }
-        if cost != transaction.cost {
+        // add realized gains/losses if the cost of the balance is different
+        // from the worth of the transaction
+        if balance_cost != trade.cost() {
           realized_gains.push(Realized {
-            date: transaction.date,
-            input: cost,
-            output: transaction.cost,
-            wallet: transaction.sent_wallet.clone(),
+            date: trade.date,
+            input: balance_cost,
+            output: trade.cost(),
+            wallet: trade.sent_wallet.clone(),
           });
         }
         balances.push(Balance {
-          acquire_date: transaction.date,
-          amount: transaction.recv_amount,
-          currency: transaction.recv_asset.clone(),
-          wallet: transaction.sent_wallet.clone(),
-          cost: transaction.cost,
+          acquire_date: trade.date,
+          amount: trade.recv_amount,
+          currency: trade.recv_asset.clone(),
+          wallet: trade.sent_wallet.clone(),
+          cost: trade.cost(),
         });
       }
       Transaction::Transfer(transaction) => {
@@ -149,28 +216,28 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
           &transaction.recv_wallet,
         )?;
       }
-      Transaction::Deposit(transaction) => {
+      Transaction::Deposit(deposit) => {
         balances.push(Balance {
-          acquire_date: transaction.date,
-          amount: transaction.amount,
-          currency: transaction.asset.clone(),
-          wallet: transaction.wallet.clone(),
-          cost: transaction.cost,
+          acquire_date: deposit.date,
+          amount: deposit.amount,
+          currency: deposit.asset.clone(),
+          wallet: deposit.wallet.clone(),
+          cost: deposit.cost(),
         });
       }
-      Transaction::Withdrawal(transaction) => {
+      Transaction::Withdrawal(withdrawal) => {
         let cost = deduct(
           &mut balances,
-          &transaction.wallet,
-          &transaction.asset,
-          transaction.amount,
+          &withdrawal.wallet,
+          &withdrawal.asset,
+          withdrawal.amount,
         )?;
-        if cost != transaction.cost {
+        if cost != withdrawal.cost() {
           realized_gains.push(Realized {
-            date: transaction.date,
+            date: withdrawal.date,
             input: cost,
-            output: transaction.cost,
-            wallet: transaction.wallet.clone(),
+            output: withdrawal.cost(),
+            wallet: withdrawal.wallet.clone(),
           });
         }
       }
@@ -182,7 +249,7 @@ fn calculate(transactions: &mut Vec<Transaction>) -> Result<CalculationOutput, S
   });
 }
 
-/// Returns the NOK cost of the deducted amount
+/// Deduct from a balance. Returns the cost of the deducted amount.
 fn deduct(
   balances: &mut Vec<Balance>,
   wallet: &str,
@@ -272,29 +339,27 @@ pub struct Realized {
 
 #[test]
 pub fn trades() {
-  use crate::transaction::{Deposit, Trade, Transaction, Transfer};
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    Transaction::Deposit(Deposit::new(1500000000000, (dec!(1000), "NOK", "Binance"))),
-    Transaction::Trade(Trade::new(
+    tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance")),
+    tax.new_trade(
       1500100000000,
       (dec!(800), "NOK", "Binance"),
       (dec!(0.5), "BTC", "Binance"),
-    )),
-    Transaction::Transfer(Transfer::new(
+    ),
+    tax.new_transfer(
       1500200000000,
       (dec!(0.5), "BTC", "Binance"),
       (dec!(0.5), "BTC", "Coinbase"),
-    )),
-    Transaction::Trade(Trade::new(
+    ),
+    tax.new_trade(
       1500300000000,
       (dec!(0.5), "BTC", "Coinbase"),
       (dec!(3), "ETH", "Coinbase"),
-    )),
+    ),
   ];
   for transaction in tax.transactions.iter_mut() {
-    let cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
-    transaction.set_cost(cost);
+    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
   }
   tax.calculate().unwrap();
   assert_eq!(
@@ -336,19 +401,17 @@ pub fn trades() {
 
 #[test]
 pub fn transfer_fee() {
-  use crate::transaction::{Deposit, Transaction, Transfer};
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    Transaction::Deposit(Deposit::new(1500000000000, (dec!(1000), "NOK", "Binance"))),
-    Transaction::Transfer(Transfer::new(
+    tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance")),
+    tax.new_transfer(
       1500100000000,
       (dec!(1000), "NOK", "Binance"),
       (dec!(750), "NOK", "Coinbase"),
-    )),
+    ),
   ];
   for transaction in tax.transactions.iter_mut() {
-    let cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
-    transaction.set_cost(cost);
+    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
   }
   tax.calculate().unwrap();
   assert_eq!(
@@ -366,15 +429,16 @@ pub fn transfer_fee() {
 
 #[test]
 pub fn deposit_withdraw_crypto() {
-  use crate::transaction::{Deposit, Transaction, Withdrawal};
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    Transaction::Deposit(Deposit::new(1500000000000, (dec!(2), "ETH", "Coinbase"))),
-    Transaction::Withdrawal(Withdrawal::new(1500100000000, (dec!(1), "ETH", "Coinbase"))),
+    tax.new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase")),
+    tax.new_withdrawal(
+      1500100000000, //
+      (dec!(1), "ETH", "Coinbase"),
+    ),
   ];
   for transaction in tax.transactions.iter_mut() {
-    let cost = transaction.calculate_cost(&mut tax.price_data, &tax.base_currency);
-    transaction.set_cost(cost);
+    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
   }
   tax.calculate().unwrap();
   println!("{:?}", tax.balances);
