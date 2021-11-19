@@ -1,5 +1,4 @@
 <script context="module">
-  // persist variable by defining in in module
   import { writable } from 'svelte/store'
   let view = writable(0)
 </script>
@@ -14,10 +13,6 @@
     showAdd = true
   }
 </script>
-
-<svelte:head>
-  <title>Transactions - Kryp</title>
-</svelte:head>
 
 <div class="page">
   <div class="toolbar">

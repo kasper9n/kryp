@@ -106,28 +106,32 @@
     margin-bottom: 0.5em
     font-weight: 600
   :global(body), :global(input)
-    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
     --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
   .nav
     display: flex
     align-items: center
     user-select: none
     -webkit-user-select: none
-    background-color: #ffffff
-    border-bottom: 1px solid #e7e8e8
     padding: 0px 20px
   .nav-mid
     width: 50px
     flex-grow: 1
   .nav a
-    background-color: transparent
     border: none
     font: inherit
+    cursor: default
     margin: 0px
-    color: #676d7e
-    font-weight: 600
+    color: hsl(226, 9%, 46%)
+    font-weight: 500
+    font-size: 15px
     text-decoration: none
-    padding: 15px
+    padding: 10px 10px
+    margin: 5px 0px
+    transition: color 120ms var(--ease)
+    &:hover
+      color: hsl(226, 15%, 25%)
+      color: #000000
     &:global(.active)
       color: #000000
   .start-page

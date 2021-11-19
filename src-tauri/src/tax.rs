@@ -73,13 +73,14 @@ impl Tax {
           Ok(_) => {}
           Err(err) => throw!("Error reading file: {}", err),
         };
-        let tax: Self = match serde_json::from_str(&mut json_str) {
+        let mut tax: Self = match serde_json::from_str(&mut json_str) {
           Ok(library) => library,
           Err(err) => {
             throw!("Error parsing file: {:?}", err.to_string());
           }
         };
         println!("Load library: {}ms", now.elapsed().as_millis());
+        tax.calculate()?;
         return Ok(tax);
       }
       Err(e) => throw!("Error opening file: {}", e),

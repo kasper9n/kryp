@@ -126,12 +126,11 @@ fn main() {
       data::open,
       data::save,
       data::close,
-      data::calculate,
       data::get_data,
       data::get_tax,
       data::get_transactions,
       data::add_transaction,
-      data::get_balances_by_asset,
+      data::get_holdings,
       data::get_prices,
     ])
     .menu(menu)

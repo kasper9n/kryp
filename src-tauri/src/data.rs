@@ -201,13 +201,6 @@ pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub async fn calculate(kryp: State<'_, Data>) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
-  kryp.tax.calculate()?;
-  Ok(())
-}
-
-#[command]
 pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
   to_json(&kryp.tax.transactions)
@@ -219,6 +212,7 @@ pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
   let tax = &mut kryp.tax;
   let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.base_currency)?;
   kryp.tax.add_transaction(tx)?;
+  kryp.tax.calculate()?;
   Ok(())
 }
 
@@ -230,7 +224,7 @@ struct Holding {
 }
 
 #[command]
-pub async fn get_balances_by_asset(kryp: State<'_, Data>) -> Result<Value, String> {
+pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().unwrap();
   let mut holdings_map: HashMap<String, Holding> = HashMap::new();
   for balance in &kryp.tax.balances {

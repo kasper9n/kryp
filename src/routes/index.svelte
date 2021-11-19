@@ -1,43 +1,33 @@
 <script lang="ts">
-  import { tax } from '../lib/data'
-  import { refresher, runCmd } from '../lib/general'
+  import { runCmd } from '../lib/general'
   type Holding = {
     key: string
     amount: string
     cost: string
   }
 
-  // let holdings = []
-  refresher.subscribe(async () => {
-    const v: Holding[] = await runCmd('get_balances_by_asset')
-    console.log(v)
-    // holdings = v
-  })
+  const holdings: Promise<Holding[]> = runCmd('get_holdings')
 </script>
-
-<svelte:head>
-  <title>Dashboard - Kryp</title>
-</svelte:head>
 
 <div class="page">
   <div class="card">
-    <h3>Current Balance</h3>
-    <table>
-      <tr class="header">
-        <td>Asset</td>
-        <td>Amount</td>
-        <td>Cost</td>
-        <td>Wallet</td>
-      </tr>
-      {#each $tax.balances as balance}
-        <tr>
-          <td>{balance.currency}</td>
-          <td class="align-right">{balance.amount}</td>
-          <td class="align-right">{balance.cost}</td>
-          <td>{balance.wallet}</td>
+    <h3>Balance by Currency</h3>
+    {#await holdings then holdings}
+      <table>
+        <tr class="header">
+          <td>Asset</td>
+          <td>Amount</td>
+          <td>Cost</td>
         </tr>
-      {/each}
-    </table>
+        {#each holdings as holding}
+          <tr>
+            <td>{holding.key}</td>
+            <td class="align-right">{holding.amount}</td>
+            <td class="align-right">{holding.cost}</td>
+          </tr>
+        {/each}
+      </table>
+    {/await}
   </div>
 </div>
 
@@ -45,7 +35,6 @@
   h3
     margin: 0px
     display: block
-    font-weight: 600
     margin-bottom: 10px
   .page
     padding: 20px
@@ -56,6 +45,7 @@
     border: 1px solid #e7e8e8
     border-radius: 3px
     background-color: #ffffff
+    box-shadow: 0px 0px 10px 0px hsla(0, 0%, 50%, 0.1)
   .header
     font-weight: 600
     color: #444444
