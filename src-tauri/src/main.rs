@@ -150,7 +150,7 @@ fn main() {
     tauri::Event::CloseRequested { label, api, .. } => {
       if label == "main" {
         let st: St<'_> = app_handle.state();
-        let kryp = st.0.lock().unwrap();
+        let kryp = tauri::async_runtime::block_on(st.0.lock());
         if kryp.has_unsaved_changes() {
           api.prevent_close();
           let app_handle = app_handle.clone();

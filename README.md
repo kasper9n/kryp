@@ -14,6 +14,7 @@
 - `npm run dev`: Start in dev mode
 - `npm run build`: Build
 - `npm run preview`: Preview production app
+- `npm run test`: Runs tests. Some of these could fail due to API rate limiting or downtime.
 
 ### ToDo
 - https://www.coingecko.com/en/api

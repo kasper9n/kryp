@@ -6,14 +6,16 @@
     "tauri": "tauri",
     "build": "tauri build",
     "build:web": "vite build",
+    "test": "cargo test --manifest-path ./src-tauri/Cargo.toml -- --test-threads=1",
     "preview": "vite preview",
     "check": "svelte-check",
-    "lint": "prettier --write src *.js && eslint --fix src *.js"
+    "lint": "prettier --write --plugin-search-dir=. src *.js && eslint --fix src *.js"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "1.0.0-next.30",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "chart.js": "^3.6.0",
     "date-picker-svelte": "^1.1.0",
     "eslint": "^8.2.0",
     "eslint-config-prettier": "^8.3.0",
@@ -40,7 +42,6 @@
     "svelteSortOrder": "options-scripts-markup-styles",
     "svelteStrictMode": false,
     "svelteAllowShorthand": true,
-    "svelteBracketNewLine": false,
     "svelteIndentScriptAndStyle": true
   }
 }

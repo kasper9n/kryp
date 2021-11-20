@@ -7,9 +7,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use std::time::SystemTime;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
+use tokio::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Kryp {
@@ -75,7 +77,7 @@ pub async fn new_file(
   kryp: State<'_, Data>,
   win: Window,
 ) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   if kryp.opened == false {
     kryp.tax = Tax::new(&base_currency);
     kryp.opened = true;
@@ -87,7 +89,7 @@ pub async fn new_file(
 
 #[command]
 pub async fn load_file(path: PathBuf, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   if kryp.opened == false {
     println!("open file {:?}", path);
     kryp.tax = Tax::load(&path)?;
@@ -100,7 +102,7 @@ pub async fn load_file(path: PathBuf, kryp: State<'_, Data>, win: Window) -> Res
 
 #[command]
 pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   if kryp.opened == false {
     let file_path = match path {
       Some(path) => path,
@@ -130,7 +132,7 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
 
 #[command]
 pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   let mut save_path = &kryp.file_path;
   if save_as {
     save_path = &None;
@@ -162,7 +164,7 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 #[command]
 /// Returns a hideApp bool
 pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
-  let mut kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   if kryp.has_unsaved_changes() {
     let res = crate::dialog_sync(
       win.clone(),
@@ -187,7 +189,7 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
 
 #[command]
 pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
+  let kryp = kryp.0.lock().await;
   let v = serde_json::json!({
     "opened": kryp.opened,
   });
@@ -196,21 +198,21 @@ pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
 
 #[command]
 pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
+  let kryp = kryp.0.lock().await;
   to_json(&kryp.tax)
 }
 
 #[command]
 pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
+  let kryp = kryp.0.lock().await;
   to_json(&kryp.tax.transactions)
 }
 
 #[command]
-pub fn add_transaction(json: String, kryp: State<Data>) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().unwrap();
+pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
-  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.base_currency)?;
+  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.base_currency).await?;
   kryp.tax.add_transaction(tx)?;
   kryp.tax.calculate()?;
   Ok(())
@@ -221,23 +223,38 @@ struct Holding {
   key: String,
   amount: Decimal,
   cost: Decimal,
+  value: Decimal,
 }
 
 #[command]
 pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
+  let mut kryp = kryp.0.lock().await;
   let mut holdings_map: HashMap<String, Holding> = HashMap::new();
-  for balance in &kryp.tax.balances {
+  let tax = &mut kryp.tax;
+  for balance in &tax.balances {
     let key = balance.currency.clone();
     let holding = holdings_map.entry(key.clone()).or_insert(Holding {
       key,
       amount: dec!(0),
       cost: dec!(0),
+      value: dec!(0),
     });
     holding.amount += balance.amount;
     holding.cost += balance.cost;
   }
-  let mut holdings: Vec<Holding> = holdings_map.into_iter().map(|(_k, v)| v).collect();
+  let timestamp = SystemTime::now()
+    .duration_since(SystemTime::UNIX_EPOCH)
+    .expect("System time error, maybe before UNIX epoch")
+    .as_millis() as i64;
+
+  let mut holdings = Vec::new();
+  for (_key, mut holding) in holdings_map.into_iter() {
+    holding.value = tax
+      .price_data
+      .get_value(holding.amount, &holding.key, timestamp, &tax.base_currency)
+      .await;
+    holdings.push(holding);
+  }
   holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
 
   to_json(&holdings)
@@ -245,6 +262,6 @@ pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
 
 #[command]
 pub async fn get_prices(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().unwrap();
+  let kryp = kryp.0.lock().await;
   to_json(&kryp.tax.price_data)
 }

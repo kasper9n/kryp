@@ -40,23 +40,30 @@ impl PriceData {
     });
     return price_data_asset;
   }
-  pub fn get_value(&mut self, amount: Decimal, asset: &str, date: i64, base: &str) -> Decimal {
-    if asset == base {
-      return amount;
-    } else if asset == "USD" {
-      let usd_price = self.get_price_dec(asset, date);
-      return amount * usd_price;
+  pub async fn get_value(
+    &mut self,
+    amount: Decimal,
+    asset: &str,
+    date: i64,
+    base: &str,
+  ) -> Decimal {
+    if base == asset {
+      amount
+    } else if base == "USD" {
+      let usd_price = self.get_usd_price_dec(asset, date).await;
+      amount * usd_price
     } else {
-      let usd_price = self.get_price_dec(asset, date);
-      let price = usd_price / self.get_price_dec(base, date);
-      return amount * price;
+      let usd_price = self.get_usd_price_dec(asset, date).await;
+      let base_usd_price = self.get_usd_price_dec(base, date).await;
+      let price = usd_price / base_usd_price;
+      amount * price
     }
   }
-  pub fn get_price_dec(&mut self, currency: &str, date: i64) -> Decimal {
-    let price = self.get_price(currency, date);
+  pub async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Decimal {
+    let price = self.get_usd_price(currency, date).await;
     return Decimal::from_f64(price).expect("Error getting price");
   }
-  pub fn get_price(&mut self, currency: &str, date: i64) -> f64 {
+  pub async fn get_usd_price(&mut self, currency: &str, date: i64) -> f64 {
     let currency = currency.to_uppercase();
     if currency == "USD" {
       return 1.0;
@@ -65,7 +72,7 @@ impl PriceData {
     match price_data_asset.local_price(date, false) {
       Some(price) => return price.1,
       None => {
-        price_data_asset.fetch(date);
+        price_data_asset.fetch(date).await;
         match price_data_asset.local_price(date, true) {
           Some(price) => return price.1,
           None => panic!("No price found"),
@@ -73,6 +80,47 @@ impl PriceData {
       }
     }
   }
+}
+
+#[cfg(test)]
+macro_rules! map(
+  ($($k:expr => $v:expr),* $(,)?) => {
+    std::iter::Iterator::collect(std::array::IntoIter::new([$(($k, $v),)*]))
+  };
+);
+
+#[tokio::test]
+async fn get_value() {
+  use rust_decimal_macros::dec;
+  let mut pd = PriceData::new();
+  pd.asset("USD").prices = map! {
+    // this should never be used, usd price in usd is always 1
+    1640000000000 => 999.0
+  };
+  pd.asset("NOK").prices = map! {
+    1640000000000 => 0.1
+  };
+  pd.asset("ETH").prices = map! {
+    1640000000000 => 5000.0
+  };
+
+  assert_eq!(
+    pd.get_value(dec!(2), "USD", 1640000000000, "USD").await,
+    dec!(2),
+    "2 USD in base USD"
+  );
+
+  assert_eq!(
+    pd.get_value(dec!(2), "NOK", 1640000000000, "USD").await,
+    dec!(0.2),
+    "2 NOK in base USD"
+  );
+
+  assert_eq!(
+    pd.get_value(dec!(2), "ETH", 1640000000000, "NOK").await,
+    dec!(100_000), // 2 * 5000 / 0.1
+    "2 ETH in base NOK"
+  );
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -95,7 +143,6 @@ impl PriceDataAsset {
     return Some((*closest.0, *closest.1));
   }
 
-  #[tokio::main]
   async fn fetch(&mut self, date: i64) {
     let result = match self.kind {
       AssetKind::Fiat => self.fetch_fiat(date).await,
@@ -231,13 +278,6 @@ pub enum AssetKind {
   Crypto = 1,
 }
 
-#[cfg(test)]
-macro_rules! map(
-  ($($k:expr => $v:expr),* $(,)?) => {
-    std::iter::Iterator::collect(std::array::IntoIter::new([$(($k, $v),)*]))
-  };
-);
-
 #[test]
 fn crypto() {
   let mut pd = PriceData::new();
@@ -260,13 +300,12 @@ fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
   return min..=max;
 }
 
-#[test]
-fn api_fetch() {
+#[tokio::test]
+async fn api_fetch() {
   let mut pd = PriceData::new();
   let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
-  let nok_price = pd.get_price("NOK", date.timestamp_millis());
-  println!("nok_price {}", nok_price);
+  let nok_price = pd.get_usd_price("NOK", date.timestamp_millis()).await;
   assert!(tolerance_pct(0.1125, 0.2).contains(&nok_price));
-  let eth_price = pd.get_price("ETH", date.timestamp_millis());
+  let eth_price = pd.get_usd_price("ETH", date.timestamp_millis()).await;
   assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
 }

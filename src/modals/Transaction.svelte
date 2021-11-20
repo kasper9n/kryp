@@ -225,20 +225,23 @@
               class="wallet"
               class:invalid={errors.has('sent_wallet')}
               bind:value={info.sent_wallet}
-              placeholder="Wallet" />
+              placeholder="Wallet"
+            />
           </div>
           <div class="row">
             <NumericInput
               bind:value={info.sent_amount}
               invalid={errors.has('sent_amount')}
               style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
-              placeholder="Amount" />
+              placeholder="Amount"
+            />
             <input
               type="text"
               class="asset"
               class:invalid={errors.has('sent_asset')}
               bind:value={info.sent_asset}
-              placeholder="Asset" />
+              placeholder="Asset"
+            />
           </div>
         {/if}
       </div>
@@ -251,20 +254,23 @@
               class="wallet"
               class:invalid={errors.has('recv_wallet')}
               bind:value={info.recv_wallet}
-              placeholder="Wallet" />
+              placeholder="Wallet"
+            />
           </div>
           <div class="row">
             <NumericInput
               bind:value={info.recv_amount}
               invalid={errors.has('recv_amount')}
               style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
-              placeholder="Amount" />
+              placeholder="Amount"
+            />
             <input
               type="text"
               class="asset"
               class:invalid={errors.has('recv_asset')}
               bind:value={info.recv_asset}
-              placeholder="Asset" />
+              placeholder="Asset"
+            />
           </div>
         {/if}
       </div>
@@ -292,7 +298,8 @@
           <NumericInput
             bind:value={info.manual_worth_amount}
             style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
-            placeholder="Amount" />
+            placeholder="Amount"
+          />
         </div>
         <input type="text" class="asset" bind:value={info.manual_worth_asset} placeholder="Asset" />
       </div>

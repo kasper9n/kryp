@@ -32,7 +32,8 @@
   bind:this={editCell}
   on:keydown={keydown}
   on:blur={editBoxBlur}
-  bind:value={editText} />
+  bind:value={editText}
+/>
 
 <table>
   <thead>
@@ -55,7 +56,8 @@
     {#each $transactions as tx, i}
       <tr class:odd={i % 2 === 0}>
         <td class="type" class:green={tx.type === 'Deposit'} class:red={tx.type === 'Withdrawal'}
-          >{tx.tag}</td>
+          >{tx.tag}</td
+        >
         {#if tx.type === 'Trade'}
           <td class="sent amount">{tx.sent_amount}</td>
           <td class="sent asset">{tx.sent_asset}</td>

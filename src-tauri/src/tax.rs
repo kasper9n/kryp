@@ -88,7 +88,8 @@ impl Tax {
   }
 
   #[cfg(test)]
-  pub fn new_trade(
+  #[tokio::main]
+  pub async fn new_trade(
     &mut self,
     date: i64,
     sent: (Decimal, &str, &str),
@@ -103,11 +104,13 @@ impl Tax {
     trade.recv_asset = recv.1.to_string();
     trade.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Trade(trade);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+      .await;
     tx
   }
   #[cfg(test)]
-  pub fn new_transfer(
+  #[tokio::main]
+  pub async fn new_transfer(
     &mut self,
     date: i64,
     sent: (Decimal, &str, &str),
@@ -122,29 +125,34 @@ impl Tax {
     transfer.recv_asset = recv.1.to_string();
     transfer.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Transfer(transfer);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+      .await;
     tx
   }
   #[cfg(test)]
-  pub fn new_deposit(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+  #[tokio::main]
+  pub async fn new_deposit(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
     let mut deposit = Deposit::default();
     deposit.date = date;
     deposit.amount = recv.0;
     deposit.asset = recv.1.to_string();
     deposit.wallet = recv.2.to_string();
     let mut tx = Transaction::Deposit(deposit);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+      .await;
     tx
   }
   #[cfg(test)]
-  pub fn new_withdrawal(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+  #[tokio::main]
+  pub async fn new_withdrawal(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
     let mut withdrawal = Withdrawal::default();
     withdrawal.date = date;
     withdrawal.amount = recv.0;
     withdrawal.asset = recv.1.to_string();
     withdrawal.wallet = recv.2.to_string();
     let mut tx = Transaction::Withdrawal(withdrawal);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency);
+    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+      .await;
     tx
   }
 }
@@ -361,9 +369,6 @@ pub fn trades() {
       (dec!(3), "ETH", "Coinbase"),
     ),
   ];
-  for transaction in tax.transactions.iter_mut() {
-    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
-  }
   tax.calculate().unwrap();
   assert_eq!(
     tax.balances,
@@ -413,9 +418,6 @@ pub fn transfer_fee() {
       (dec!(750), "NOK", "Coinbase"),
     ),
   ];
-  for transaction in tax.transactions.iter_mut() {
-    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
-  }
   tax.calculate().unwrap();
   assert_eq!(
     tax.balances,
@@ -440,9 +442,6 @@ pub fn deposit_withdraw_crypto() {
       (dec!(1), "ETH", "Coinbase"),
     ),
   ];
-  for transaction in tax.transactions.iter_mut() {
-    transaction.refresh_cost(&mut tax.price_data, &tax.base_currency);
-  }
   tax.calculate().unwrap();
   println!("{:?}", tax.balances);
   println!("{:?}", tax.realized_gains);

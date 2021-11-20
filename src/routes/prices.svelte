@@ -46,7 +46,8 @@
       <div>
         {#each assets as asset, i}
           <div class="asset-item" class:current={currentI === i} on:click={() => (currentI = i)}
-            >{asset.symbol}</div>
+            >{asset.symbol}</div
+          >
         {/each}
       </div>
       {#if current}

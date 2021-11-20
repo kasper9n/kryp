@@ -68,6 +68,7 @@
     <a on:click={go} use:active data-exact href="/">Dashboard</a>
     <a on:click={go} use:active href="/transactions">Transactions</a>
     <div class="nav-mid" />
+    <span class="base">NOK</span>
     <a on:click={go} use:active href="/prices">Prices</a>
     <a on:click={go} use:active href="/help">Help</a>
   </div>
@@ -91,7 +92,7 @@
 <style lang="sass">
   :global(body)
     background-color: #f8f9fc
-    color: #191c1f
+    color: hsl(0, 0%, 27%)
     margin: 0px
   :global(h2)
     font-size: 24px
@@ -114,26 +115,32 @@
     user-select: none
     -webkit-user-select: none
     padding: 0px 20px
+    a, .base
+      font-size: 15px
+      padding: 10px 5px
+      margin: 5px
+      cursor: default
+    a
+      border: none
+      font: inherit
+      font-weight: 500
+      text-decoration: none
+      transition: all 120ms var(--ease)
+      color: hsl(226, 5%, 20%)
+      &:hover
+        color: hsl(226, 5%, 28%)
+        opacity: 0.8
+      &:global(.active)
+        color: #15b28d
+        opacity: 1
+    .base
+      background-color: #ffffff
+      padding: 2px 5px
+      border-radius: 4px
+      border: 1px solid #e7e8e8
   .nav-mid
     width: 50px
     flex-grow: 1
-  .nav a
-    border: none
-    font: inherit
-    cursor: default
-    margin: 0px
-    color: hsl(226, 9%, 46%)
-    font-weight: 500
-    font-size: 15px
-    text-decoration: none
-    padding: 10px 10px
-    margin: 5px 0px
-    transition: color 120ms var(--ease)
-    &:hover
-      color: hsl(226, 15%, 25%)
-      color: #000000
-    &:global(.active)
-      color: #000000
   .start-page
     width: 100vw
     height: 100vh

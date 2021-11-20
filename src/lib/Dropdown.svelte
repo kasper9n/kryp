@@ -135,10 +135,12 @@
       on:blur={defocus}
       placeholder={value.name}
       class:hide-cursor={focused && !visible}
-      on:beforeinput={onInput} />
+      on:beforeinput={onInput}
+    />
     <div class="icon">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-        ><path d="M5 3l3.057-3 11.943 12-11.943 12-3.057-3 9-9z" /></svg>
+        ><path d="M5 3l3.057-3 11.943 12-11.943 12-3.057-3 9-9z" /></svg
+      >
     </div>
   </div>
   <div
@@ -147,7 +149,8 @@
     bind:this={menuEl}
     on:mouseout={() => (selected = { name: '' })}
     on:blur={() => (selected = { name: '' })}
-    style="max-height: {menuMaxHeight}px">
+    style="max-height: {menuMaxHeight}px"
+  >
     {#each filteredOptions as option}
       <div
         class="item"
@@ -155,7 +158,8 @@
         on:mouseup={() => itemMouseUp(option)}
         on:click={() => pick(option)}
         on:mouseover={() => (selected = option)}
-        on:focus={() => (selected = option)}>
+        on:focus={() => (selected = option)}
+      >
         <slot {option} selected={option === selected}>
           <div class="default-item" class:selected={option === selected}>{option.name}</div>
         </slot>

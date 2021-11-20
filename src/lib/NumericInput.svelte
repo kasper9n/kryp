@@ -56,7 +56,8 @@
   class:noLeftBorder
   bind:value
   {placeholder}
-  {style} />
+  {style}
+/>
 
 <style lang="sass">
   input
