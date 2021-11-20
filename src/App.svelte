@@ -1,16 +1,17 @@
 <script lang="ts">
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
-  import { refresh, runCmd } from './lib/general'
-  import { opened } from './lib/data'
-  import NewFileModal from './modals/NewFile.svelte'
-  import Button from './lib/Button.svelte'
   import { Route, active, router } from 'tinro'
+  import { refresh, runCmd } from '$lib/general'
+  import { opened } from '$lib/data'
+  import NewFileModal from '$modals/NewFile.svelte'
+  import Button from '$lib/Button.svelte'
 
-  import DashboardPage from './routes/index.svelte'
-  import TransactionsPage from './routes/transactions.svelte'
-  import PricesPage from './routes/prices.svelte'
-  import HelpPage from './routes/help.svelte'
+  import DashboardPage from '$routes/index.svelte'
+  import TransactionsPage from '$routes/transactions.svelte'
+  import PricesPage from '$routes/prices.svelte'
+  import HelpPage from '$routes/help.svelte'
+  import FileDrop from '$lib/FileDrop.svelte'
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
     if (e.target instanceof HTMLElement) {
@@ -84,6 +85,11 @@
       <Button neutral on:click={() => open()}>Open</Button>
       <Button neutral on:click={() => (newFileModalVisible = true)}>New</Button>
     </div>
+    <FileDrop fileExtensions={['kryp']} handleOneFile={open}>
+      <div class="drop-modal">
+        <h1>Drop to open</h1>
+      </div>
+    </FileDrop>
   </div>
 {/if}
 
@@ -148,4 +154,11 @@
     flex-direction: column
     align-items: center
     justify-content: center
+  .drop-modal
+    background-color: hsla(0, 0%, 100%, 0.9)
+    border: 1px solid #e7e8e8
+    padding: 35px 60px
+    border-radius: 10px
+    h1
+      margin: 0px
 </style>

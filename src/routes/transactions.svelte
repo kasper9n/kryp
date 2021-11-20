@@ -4,10 +4,10 @@
 </script>
 
 <script lang="ts">
-  import TxTable from '../lib/TxTable.svelte'
-  import TxList from '../lib/TxList.svelte'
-  import TransactionModal from '../modals/Transaction.svelte'
-  import Button from '../lib/Button.svelte'
+  import TxTable from '$lib/TxTable.svelte'
+  import TxList from '$lib/TxList.svelte'
+  import TransactionModal from '$modals/Transaction.svelte'
+  import Button from '$lib/Button.svelte'
   let showAdd = false
   function add() {
     showAdd = true

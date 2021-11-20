@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { runCmd } from '../lib/general'
+  import { runCmd } from '$lib/general'
   import { Chart, registerables } from 'chart.js'
   Chart.register(...registerables)
 
@@ -36,8 +36,8 @@
         datasets: [
           {
             label: 'Value',
-            backgroundColor: holdings.map((item, index) => getColor(index) + 'cc'),
-            hoverBackgroundColor: holdings.map((item, index) => getColor(index)),
+            backgroundColor: holdings.map((_, index) => getColor(index) + 'cc'),
+            hoverBackgroundColor: holdings.map((_, index) => getColor(index)),
             borderColor: '#ffffff',
             hoverBorderColor: '#ffffff',
             data: holdings.map((item) => item.value),
@@ -54,7 +54,7 @@
           },
           tooltip: {
             animation: {
-              duration: 250,
+              duration: 240,
             },
           },
         },

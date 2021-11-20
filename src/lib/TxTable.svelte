@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { transactions, formatDateTime } from '../lib/transactions'
+  import { transactions, formatDateTime } from '$lib/transactions'
   let hideEditBox = true
   let editText = ''
   let editCell: HTMLInputElement

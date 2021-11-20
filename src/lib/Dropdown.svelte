@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { checkShortcut } from './general'
+  import { checkShortcut } from '$lib/general'
 
   export let value: Option
   let text = value.name

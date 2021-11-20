@@ -1,11 +1,11 @@
 <script lang="ts">
-  import Button from '../lib/Button.svelte'
-  import Modal from '../lib/Modal.svelte'
-  import type { Transaction } from '../lib/transactions'
-  import { refresh, popup, runCmd } from '../lib/general'
-  import NumericInput from '../lib/NumericInput.svelte'
-  import Dropdown from '../lib/Dropdown.svelte'
   import { DateInput } from 'date-picker-svelte'
+  import Button from '$lib/Button.svelte'
+  import Modal from '$lib/Modal.svelte'
+  import type { Transaction } from '$lib/transactions'
+  import { refresh, popup, runCmd } from '$lib/general'
+  import NumericInput from '$lib/NumericInput.svelte'
+  import Dropdown from '$lib/Dropdown.svelte'
 
   export let visible = false
   function cancel() {

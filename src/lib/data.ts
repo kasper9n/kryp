@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
-import { refresher, runCmd } from './general'
-import type { Transaction } from './transactions'
+import { refresher, runCmd } from '$lib/general'
+import type { Transaction } from '$lib/transactions'
 
 type Tax = {
   transactions: Transaction[]

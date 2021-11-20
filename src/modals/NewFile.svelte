@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { refresh, focus, runCmd } from '../lib/general'
-  import Modal from '../lib/Modal.svelte'
-  import Button from '../lib/Button.svelte'
+  import { refresh, focus, runCmd } from '$lib/general'
+  import Modal from '$lib/Modal.svelte'
+  import Button from '$lib/Button.svelte'
   export let visible = false
   let baseCurrency = 'USD'
   async function create() {

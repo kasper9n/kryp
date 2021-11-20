@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { transactions, formatDate, formatTime } from './transactions'
+  import { transactions, formatDate, formatTime } from '$lib/transactions'
 </script>
 
 <div class="list">

@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { refresher, runCmd } from './general'
+import { refresher, runCmd } from '$lib/general'
 
 export type Trade = {
   type: 'Trade'
