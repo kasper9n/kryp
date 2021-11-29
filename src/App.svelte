@@ -41,7 +41,7 @@
     await runCmd('close')
     refresh()
   }
-  const unlistenFuture = event.listen('menu', ({ payload }) => {
+  const unlistenFuture = event.listen('menu', async ({ payload }) => {
     if (payload === 'Dashboard') {
       router.goto('/', true)
     } else if (payload === 'Transactions') {
@@ -54,6 +54,8 @@
       save()
     } else if (payload === 'Save As...') {
       saveAs()
+    } else if (payload === 'Export...') {
+      await runCmd('export')
     } else if (payload === 'Close') {
       close()
     }
@@ -85,7 +87,7 @@
       <Button neutral on:click={() => open()}>Open</Button>
       <Button neutral on:click={() => (newFileModalVisible = true)}>New</Button>
     </div>
-    <FileDrop fileExtensions={['kryp']} handleOneFile={open}>
+    <FileDrop fileExtensions={['json']} handleOneFile={open}>
       <div class="drop-modal">
         <h1>Drop to open</h1>
       </div>

@@ -132,6 +132,7 @@ pub struct PriceDataAsset {
 }
 
 impl PriceDataAsset {
+  /// Returns (date, price)
   pub fn local_price(&self, target_date: i64, extra_tolerance: bool) -> Option<(i64, f64)> {
     let max_offset = match self.interval {
       Interval::Daily => 1000 * 60 * 60 * if extra_tolerance { 25 } else { 12 },

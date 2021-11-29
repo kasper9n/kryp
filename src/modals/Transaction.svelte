@@ -327,8 +327,8 @@
     -webkit-user-select: none
     cursor: default
     font-size: 12px
-    --date-input-width: 128px
-    --dropdown-width: 128px
+    --date-input-width: 136px
+    --dropdown-width: 136px
   .tag-option
     padding: 4px 8px
     display: flex

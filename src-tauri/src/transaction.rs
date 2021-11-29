@@ -1,5 +1,6 @@
 use crate::prices::{AssetKind, PriceData};
 use crate::round_8;
+use chrono::TimeZone;
 use rust_decimal::Decimal;
 #[cfg(test)]
 use rust_decimal_macros::dec;
@@ -200,6 +201,93 @@ impl Transaction {
     };
     tx.refresh_cost(price_data, base).await;
     Ok(tx)
+  }
+  pub fn to_csv_record<'a>(&'a self) -> Vec<String> {
+    match self {
+      Transaction::Trade(trade) => {
+        // let date = chrono::Utc.timestamp_millis(trade.date);
+        vec![
+          trade.tag.clone(),
+          trade.sent_amount.to_string(),
+          trade.sent_asset.clone(),
+          trade.sent_wallet.clone(),
+          trade.recv_amount.to_string(),
+          trade.recv_asset.clone(),
+          trade.recv_wallet.clone(),
+          trade.fee_amount.to_string(),
+          trade.fee_asset.clone(),
+          trade.note.clone(),
+          trade.hash.clone(),
+          chrono::Utc.timestamp_millis(trade.date).to_string(),
+          // manual_worth_amount: Option<Decimal>,
+          // manual_worth_asset: Option<String>,
+          // cost: Decimal,
+        ]
+      }
+      Transaction::Transfer(transfer) => {
+        vec![
+          transfer.tag.clone(),
+          transfer.sent_amount.to_string(),
+          transfer.sent_asset.clone(),
+          transfer.sent_wallet.clone(),
+          transfer.recv_amount.to_string(),
+          transfer.recv_asset.clone(),
+          transfer.recv_wallet.clone(),
+          "".to_string(),
+          "".to_string(),
+          transfer.note.clone(),
+          transfer.hash.clone(),
+          chrono::Utc.timestamp_millis(transfer.date).to_string(),
+          // manual_worth_amount: Option<Decimal>,
+          // manual_worth_asset: Option<String>,
+          // cost: Decimal,
+        ]
+      }
+      Transaction::Deposit(deposit) => {
+        vec![
+          deposit.tag.clone(),
+          match deposit.from_amount {
+            Some(amount) => amount.to_string(),
+            None => "".to_string(),
+          },
+          deposit.from_asset.clone().unwrap_or("".to_string()),
+          "".to_string(),
+          deposit.amount.to_string(),
+          deposit.asset.clone(),
+          deposit.wallet.clone(),
+          "".to_string(),
+          "".to_string(),
+          deposit.note.clone(),
+          deposit.hash.clone(),
+          chrono::Utc.timestamp_millis(deposit.date).to_string(),
+          // manual_worth_amount: Option<Decimal>,
+          // manual_worth_asset: Option<String>,
+          // cost: Decimal,
+        ]
+      }
+      Transaction::Withdrawal(withdrawal) => {
+        vec![
+          withdrawal.tag.clone(),
+          withdrawal.amount.to_string(),
+          withdrawal.asset.clone(),
+          withdrawal.wallet.clone(),
+          match withdrawal.to_amount {
+            Some(amount) => amount.to_string(),
+            None => "".to_string(),
+          },
+          withdrawal.to_asset.clone().unwrap_or("".to_string()),
+          "".to_string(),
+          "".to_string(),
+          "".to_string(),
+          withdrawal.note.clone(),
+          withdrawal.hash.clone(),
+          chrono::Utc.timestamp_millis(withdrawal.date).to_string(),
+          // manual_worth_amount: Option<Decimal>,
+          // manual_worth_asset: Option<String>,
+          // cost: Decimal,
+        ]
+      }
+    }
   }
   /// Gets the manual worth of a transaction.
   /// For deposits, this is the from_amount and from_asset.

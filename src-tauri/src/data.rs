@@ -111,6 +111,9 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
 #[command]
 pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
+  if !kryp.opened {
+    return Ok(());
+  }
   let mut save_path = &kryp.file_path;
   if save_as {
     save_path = &None;
@@ -122,8 +125,8 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
   } else {
     let (sender, receiver) = std::sync::mpsc::channel();
     dialog::FileDialogBuilder::new()
-      .set_file_name("report.kryp")
-      .add_filter("Kryp", &["kryp"])
+      .set_file_name("Kryp Report.json")
+      .add_filter("Kryp", &["json"])
       .save_file(move |p| {
         sender.send(p).unwrap();
       });
@@ -156,13 +159,54 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
   if !kryp.opened {
     win.close().unwrap();
     *kryp = Kryp::default();
-    refresh_menu_bar!(kryp, win);
     return Ok(true);
   } else {
     *kryp = Kryp::default();
-    refresh_menu_bar!(kryp, win);
     return Ok(false);
   }
+}
+
+#[command]
+pub async fn export(kryp: State<'_, Data>) -> Result<(), String> {
+  let kryp = kryp.0.lock().await;
+  if !kryp.opened {
+    return Ok(());
+  }
+  let (sender, receiver) = std::sync::mpsc::channel();
+  dialog::FileDialogBuilder::new()
+    .set_file_name("Kryp.csv")
+    .add_filter("CSV", &["csv"])
+    .save_file(move |p| {
+      sender.send(p).unwrap();
+    });
+  let file_path = match receiver.recv().unwrap_or_default() {
+    Some(file_path) => file_path,
+    None => return Ok(()),
+  };
+  println!("Export to {}", file_path.to_string_lossy());
+
+  let mut writer = match csv::Writer::from_path(file_path) {
+    Ok(writer) => writer,
+    Err(e) => throw!("Unable to write to file: {}", e),
+  };
+  let header_record = vec![
+    "Type", "Sent", "Asset", "Wallet", "Received", "Asset", "Wallet", "Fee", "Asset", "Note",
+    "Tx Hash", "Date",
+  ];
+  match writer.write_record(&header_record) {
+    Ok(()) => {}
+    Err(e) => throw!("Unable to write record: {}", e),
+  };
+
+  for transaction in &kryp.tax.transactions {
+    let record = transaction.to_csv_record();
+    match writer.write_record(&record) {
+      Ok(()) => {}
+      Err(e) => throw!("Unable to write record: {}", e),
+    };
+  }
+
+  Ok(())
 }
 
 #[command]

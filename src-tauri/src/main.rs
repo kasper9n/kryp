@@ -64,6 +64,8 @@ fn main() {
         .add_native_item(MenuItem::Separator)
         .add_item(custom_menu("Save").accelerator("cmdOrControl+S"))
         .add_item(custom_menu("Save As...").accelerator("shift+cmdOrControl+S"))
+        .add_native_item(MenuItem::Separator)
+        .add_item(custom_menu("Export...").accelerator("cmdOrControl+E"))
         .add_item(custom_menu("Close").accelerator("cmdOrControl+W")),
     ))
     .add_submenu(Submenu::new("Edit", {
@@ -122,6 +124,7 @@ fn main() {
       data::open,
       data::save,
       data::close,
+      data::export,
       data::get_data,
       data::get_tax,
       data::get_transactions,

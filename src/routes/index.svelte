@@ -73,7 +73,7 @@
 
 <div class="page">
   <div class="card">
-    <h3>Balance by Currency</h3>
+    <h3>Balance by Asset</h3>
     {#await holdings then holdings}
       <div class="canvas-container">
         <canvas use:createChart={holdings} />
