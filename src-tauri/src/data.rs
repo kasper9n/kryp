@@ -51,51 +51,30 @@ pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
   }
 }
 
-// Call whenever opened is updated
-macro_rules! refresh_menu_bar {
-  ($kryp:ident, $win:ident) => {{
-    let menu_handle = $win.menu_handle();
-    menu_handle
-      .get_item(&"Save".to_string())
-      .set_enabled($kryp.opened)
-      .unwrap();
-    menu_handle
-      .get_item(&"Save As...".to_string())
-      .set_enabled($kryp.opened)
-      .unwrap();
-  }};
-}
-
 #[derive(Default)]
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
 pub type St<'a> = State<'a, Data>;
 
 #[command]
-pub async fn new_file(
-  base_currency: String,
-  kryp: State<'_, Data>,
-  win: Window,
-) -> Result<(), String> {
+pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
   if kryp.opened == false {
     kryp.tax = Tax::new(&base_currency);
     kryp.opened = true;
     kryp.file_path = None;
-    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }
 
 #[command]
-pub async fn load_file(path: PathBuf, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
+pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
   if kryp.opened == false {
     println!("open file {:?}", path);
     kryp.tax = Tax::load(&path)?;
     kryp.opened = true;
     kryp.file_path = Some(path);
-    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }
@@ -108,7 +87,7 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
       Some(path) => path,
       None => {
         let (sender, receiver) = std::sync::mpsc::channel();
-        let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["kryp"]);
+        let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["json"]);
         if cfg!(any(target_os = "macos", target_os = "windows")) {
           d = d.set_parent(&win);
         }
@@ -125,7 +104,6 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
     kryp.tax = Tax::load(&file_path)?;
     kryp.opened = true;
     kryp.file_path = Some(file_path);
-    refresh_menu_bar!(kryp, win);
   }
   Ok(())
 }

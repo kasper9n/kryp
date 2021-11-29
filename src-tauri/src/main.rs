@@ -62,12 +62,8 @@ fn main() {
         .add_item(custom_menu("New").accelerator("cmdOrControl+N"))
         .add_item(custom_menu("Open...").accelerator("cmdOrControl+O"))
         .add_native_item(MenuItem::Separator)
-        .add_item(custom_menu("Save").disabled().accelerator("cmdOrControl+S"))
-        .add_item(
-          custom_menu("Save As...")
-            .disabled()
-            .accelerator("shift+cmdOrControl+S"),
-        )
+        .add_item(custom_menu("Save").accelerator("cmdOrControl+S"))
+        .add_item(custom_menu("Save As...").accelerator("shift+cmdOrControl+S"))
         .add_item(custom_menu("Close").accelerator("cmdOrControl+W")),
     ))
     .add_submenu(Submenu::new("Edit", {
