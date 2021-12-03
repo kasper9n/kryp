@@ -11,7 +11,8 @@
   import TransactionsPage from '$routes/transactions.svelte'
   import PricesPage from '$routes/prices.svelte'
   import HelpPage from '$routes/help.svelte'
-  import FileDrop from '$lib/FileDrop.svelte'
+  import FileDrop from 'svelte-tauri-filedrop'
+  import { fade } from 'svelte/transition'
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
     if (e.target instanceof HTMLElement) {
@@ -87,10 +88,12 @@
       <Button neutral on:click={() => open()}>Open</Button>
       <Button neutral on:click={() => (newFileModalVisible = true)}>New</Button>
     </div>
-    <FileDrop fileExtensions={['json']} handleOneFile={open}>
-      <div class="drop-modal">
-        <h1>Drop to open</h1>
-      </div>
+    <FileDrop extensions={['json']} handleOneFile={open} let:files>
+      {#if files.length > 0}
+        <div class="dropzone-overlay" transition:fade={{ duration: 100 }}>
+          <h1>Drop to open</h1>
+        </div>
+      {/if}
     </FileDrop>
   </div>
 {/if}
@@ -156,11 +159,19 @@
     flex-direction: column
     align-items: center
     justify-content: center
-  .drop-modal
-    background-color: hsla(0, 0%, 100%, 0.9)
-    border: 1px solid #e7e8e8
-    padding: 35px 60px
-    border-radius: 10px
+  .dropzone-overlay
+    position: absolute
+    width: 100%
+    height: 100%
+    top: 0px
+    left: 0px
+    display: flex
+    align-items: center
+    justify-content: center
     h1
       margin: 0px
+      background-color: #ffffff
+      border: 1px solid #e7e8e8
+      padding: 35px 60px
+      border-radius: 10px
 </style>
