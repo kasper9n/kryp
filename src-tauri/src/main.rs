@@ -156,7 +156,7 @@ fn main() {
           let w = app_handle.get_window(&label).unwrap();
           let res = dialog_sync(
             w.clone(),
-            "You have unsaved changes. Close without saving?",
+            "You have unsaved changes or newly fetched prices. Close without saving?",
             "",
           );
           if res == true {

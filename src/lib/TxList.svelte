@@ -1,10 +1,77 @@
 <script lang="ts">
   import { transactions, formatDate, formatTime } from '$lib/transactions'
+  import { newSelection } from './selection'
+  import { checkMouseShortcut, checkShortcut } from './general'
+
+  const selection = newSelection()
+
+  let possibleRowClick = false
+  function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
+    if (e.button !== 0 && !ctx) return
+    if ($selection.list[index]) {
+      possibleRowClick = true
+    } else if (checkMouseShortcut(e)) {
+      selection.clear()
+      selection.add(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+      selection.toggle(index)
+    } else if (checkMouseShortcut(e, { shift: true })) {
+      selection.selectTo(index)
+      e.preventDefault()
+    }
+  }
+  function rowClick(e: MouseEvent, index: number) {
+    if (possibleRowClick && e.button === 0) {
+      if (checkMouseShortcut(e)) {
+        selection.clear()
+        selection.add(index)
+      } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+        selection.toggle(index)
+      }
+    }
+    possibleRowClick = false
+  }
+  async function rowKeydown(e: KeyboardEvent) {
+    const lastAdded = $selection.lastAdded
+    if (checkShortcut(e, 'Escape')) {
+      selection.clear()
+    } else if (checkShortcut(e, 'ArrowUp')) {
+      if (lastAdded !== null && lastAdded > 0) {
+        selection.clear()
+        selection.add(lastAdded - 1)
+      } else if ($selection.count === 0) {
+        selection.add($transactions.length - 1)
+      }
+    } else if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
+      selection.clear()
+      selection.add(0)
+    } else if (checkShortcut(e, 'ArrowDown')) {
+      const lastAdded = $selection.lastAdded
+      if (lastAdded !== null && lastAdded + 1 < $transactions.length) {
+        selection.clear()
+        selection.add(lastAdded + 1)
+      } else if ($selection.count === 0) {
+        selection.add(0)
+      }
+    } else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
+      selection.clear()
+      selection.add($transactions.length - 1)
+    } else {
+      return
+    }
+    e.preventDefault()
+  }
 </script>
 
-<div class="list">
-  {#each $transactions as tx}
-    <div class="item">
+<svelte:body on:keydown|self={rowKeydown} />
+<button class="list" on:keydown={rowKeydown}>
+  {#each $transactions as tx, i}
+    <div
+      class="item"
+      class:selected={$selection.list[i] === true}
+      on:mousedown={(e) => rowMouseDown(e, i)}
+      on:click={(e) => rowClick(e, i)}
+    >
       <div class="icon">
         {#if tx.type === 'Trade'}
           <svg
@@ -82,21 +149,36 @@
       </div>
     </div>
   {/each}
-</div>
+</button>
 
 <style lang="sass">
   $kind-icon-width: 26px
   $kind-width: 50px
   .list
-    border: 1px solid #e7e8e8
     background-color: #ffffff
     border-bottom: 0px
+    outline: none
+    border: none
+    color: inherit
+    display: block
+    width: 100%
+    padding: 0px
+    display: block
+    &:focus
+      box-shadow: 0px 0px 0px 2px #e5ecff
   .item
     font-size: 15px
     display: flex
     align-items: center
-    border-bottom: 1px solid #e7e8e8
+    border: 1px solid #e7e8e8
+    margin-bottom: -1px
     padding: 0px 16px
+    position: relative
+    &.selected
+      background-color: #dbe5ff
+      border: 1px solid #c7d5ff
+      z-index: 5
+      position: relative
   .icon
     width: $kind-icon-width
     display: block

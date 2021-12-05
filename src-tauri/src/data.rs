@@ -149,7 +149,7 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
   if kryp.has_unsaved_changes() {
     let res = crate::dialog_sync(
       win.clone(),
-      "You have unsaved changes. Close without saving?",
+      "You have unsaved changes or newly fetched prices. Close without saving?",
       "",
     );
     if res == false {

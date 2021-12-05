@@ -69,12 +69,12 @@
 
 {#if $opened}
   <div class="nav">
-    <a on:click={go} use:active data-exact href="/">Dashboard</a>
-    <a on:click={go} use:active href="/transactions">Transactions</a>
+    <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
+    <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
     <div class="nav-mid" />
     <span class="base">NOK</span>
-    <a on:click={go} use:active href="/prices">Prices</a>
-    <a on:click={go} use:active href="/help">Help</a>
+    <a on:click={go} use:active href="/prices"><button>Prices</button></a>
+    <a on:click={go} use:active href="/help"><button>Help</button></a>
   </div>
 
   <Route path="/"><DashboardPage /></Route>
@@ -144,6 +144,13 @@
       &:global(.active)
         color: #15b28d
         opacity: 1
+      button
+        border: none
+        font: inherit
+        background-color: transparent
+        color: inherit
+        padding: 0px
+        margin: 0px
     .base
       background-color: #ffffff
       padding: 2px 5px

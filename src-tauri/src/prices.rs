@@ -204,6 +204,7 @@ impl PriceDataAsset {
     let end_dt = start_dt + Duration::days(30);
 
     #[derive(Deserialize, Debug)]
+    #[allow(dead_code)]
     struct Coin {
       id: String,
       symbol: String,
