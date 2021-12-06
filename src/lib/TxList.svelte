@@ -8,15 +8,19 @@
   let possibleRowClick = false
   function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
     if (e.button !== 0 && !ctx) return
-    if ($selection.list[index]) {
+
+    const isSelected = $selection.list[index]
+    if (isSelected) {
       possibleRowClick = true
-    } else if (checkMouseShortcut(e)) {
+    }
+
+    if (checkMouseShortcut(e) && !isSelected) {
       selection.clear()
       selection.add(index)
-    } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
-      selection.toggle(index)
+    } else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
+      selection.add(index)
     } else if (checkMouseShortcut(e, { shift: true })) {
-      selection.selectTo(index)
+      selection.shiftSelectTo(index)
       e.preventDefault()
     }
   }
@@ -32,30 +36,28 @@
     possibleRowClick = false
   }
   async function rowKeydown(e: KeyboardEvent) {
-    const lastAdded = $selection.lastAdded
     if (checkShortcut(e, 'Escape')) {
       selection.clear()
     } else if (checkShortcut(e, 'ArrowUp')) {
-      if (lastAdded !== null && lastAdded > 0) {
-        selection.clear()
-        selection.add(lastAdded - 1)
-      } else if ($selection.count === 0) {
-        selection.add($transactions.length - 1)
-      }
-    } else if (checkShortcut(e, 'ArrowUp', { cmdOrCtrl: true })) {
+      selection.goBackward($transactions.length - 1)
+    } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
+      selection.shiftSelectBackward()
+    } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
       selection.clear()
       selection.add(0)
+    } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
+      selection.shiftSelectTo(0)
     } else if (checkShortcut(e, 'ArrowDown')) {
-      const lastAdded = $selection.lastAdded
-      if (lastAdded !== null && lastAdded + 1 < $transactions.length) {
-        selection.clear()
-        selection.add(lastAdded + 1)
-      } else if ($selection.count === 0) {
-        selection.add(0)
-      }
-    } else if (checkShortcut(e, 'ArrowDown', { cmdOrCtrl: true })) {
+      selection.goForward($transactions.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
+      selection.shiftSelectForward($transactions.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
       selection.clear()
       selection.add($transactions.length - 1)
+    } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
+      selection.shiftSelectTo($transactions.length - 1)
+    } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
+      selection.add(0, $transactions.length - 1)
     } else {
       return
     }
