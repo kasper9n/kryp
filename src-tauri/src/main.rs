@@ -7,9 +7,7 @@ use crate::data::St;
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
-use tauri::{
-  command, CustomMenuItem, Manager, Menu, MenuItem, Submenu, Window, WindowBuilder, WindowUrl,
-};
+use tauri::{command, CustomMenuItem, Manager, Menu, MenuItem, Window, WindowBuilder, WindowUrl};
 
 mod data;
 mod prices;
@@ -35,73 +33,11 @@ pub fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
-fn custom_menu(name: &str) -> CustomMenuItem {
-  let c = CustomMenuItem::new(name.to_string(), name);
-  return c;
+fn custom_item(name: &str) -> CustomMenuItem {
+  CustomMenuItem::new(name.to_string(), name)
 }
 
 fn main() {
-  let menu = Menu::new()
-    .add_submenu(Submenu::new(
-      // on macOS first menu is always app name
-      "Kryp",
-      Menu::new()
-        .add_native_item(MenuItem::About("Kryp".to_string()))
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Services)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Hide)
-        .add_native_item(MenuItem::HideOthers)
-        .add_native_item(MenuItem::ShowAll)
-        .add_native_item(MenuItem::Separator)
-        .add_native_item(MenuItem::Quit),
-    ))
-    .add_submenu(Submenu::new(
-      "File",
-      Menu::new()
-        .add_item(custom_menu("New").accelerator("cmdOrControl+N"))
-        .add_item(custom_menu("Open...").accelerator("cmdOrControl+O"))
-        .add_native_item(MenuItem::Separator)
-        .add_item(custom_menu("Save").accelerator("cmdOrControl+S"))
-        .add_item(custom_menu("Save As...").accelerator("shift+cmdOrControl+S"))
-        .add_native_item(MenuItem::Separator)
-        .add_item(custom_menu("Export...").accelerator("cmdOrControl+E"))
-        .add_item(custom_menu("Close").accelerator("cmdOrControl+W")),
-    ))
-    .add_submenu(Submenu::new("Edit", {
-      let mut menu = Menu::new();
-      menu = menu.add_native_item(MenuItem::Undo);
-      menu = menu.add_native_item(MenuItem::Redo);
-      menu = menu.add_native_item(MenuItem::Separator);
-      menu = menu.add_native_item(MenuItem::Cut);
-      menu = menu.add_native_item(MenuItem::Copy);
-      menu = menu.add_native_item(MenuItem::Paste);
-      #[cfg(not(target_os = "macos"))]
-      {
-        menu = menu.add_native_item(MenuItem::Separator);
-      }
-      menu = menu.add_native_item(MenuItem::SelectAll);
-      menu
-    }))
-    .add_submenu(Submenu::new(
-      "View",
-      Menu::new()
-        .add_item(custom_menu("Dashboard").accelerator("cmdOrControl+1"))
-        .add_item(custom_menu("Transactions").accelerator("cmdOrControl+2"))
-        .add_native_item(MenuItem::EnterFullScreen),
-    ))
-    .add_submenu(Submenu::new(
-      "Window",
-      Menu::new()
-        .add_native_item(MenuItem::Minimize)
-        .add_native_item(MenuItem::Zoom),
-    ))
-    .add_submenu(Submenu::new(
-      "Help",
-      Menu::new().add_item(custom_menu("Learn More")),
-    ))
-    .add_native_item(MenuItem::Copy);
-
   let ctx = tauri::generate_context!();
   let tauri_app = tauri::Builder::default()
     .create_window("main", WindowUrl::default(), |win, webview| {
@@ -132,7 +68,68 @@ fn main() {
       data::get_holdings,
       data::get_prices,
     ])
-    .menu(menu)
+    .menu(Menu::with_items([
+      #[cfg(target_os = "macos")]
+      MenuItem::new_submenu(
+        &ctx.package_info().name,
+        [
+          MenuItem::About(ctx.package_info().name.clone()),
+          MenuItem::Separator,
+          MenuItem::Services,
+          MenuItem::Separator,
+          MenuItem::Hide,
+          MenuItem::HideOthers,
+          MenuItem::ShowAll,
+          MenuItem::Separator,
+          MenuItem::Quit,
+        ],
+      ),
+      MenuItem::new_submenu(
+        "File",
+        [
+          custom_item("New").accelerator("cmdOrControl+N").into(),
+          custom_item("Open...").accelerator("cmdOrControl+O").into(),
+          MenuItem::Separator,
+          custom_item("Save").accelerator("cmdOrControl+S").into(),
+          custom_item("Save As...")
+            .accelerator("shift+cmdOrControl+S")
+            .into(),
+          MenuItem::Separator,
+          custom_item("Export...")
+            .accelerator("cmdOrControl+E")
+            .into(),
+          custom_item("Close").accelerator("cmdOrControl+W").into(),
+        ],
+      ),
+      MenuItem::new_submenu(
+        "Edit",
+        [
+          MenuItem::Undo,
+          MenuItem::Redo,
+          MenuItem::Separator,
+          MenuItem::Cut,
+          MenuItem::Copy,
+          MenuItem::Paste,
+          #[cfg(not(target_os = "macos"))]
+          MenuItem::Separator,
+          MenuItem::SelectAll,
+        ],
+      ),
+      MenuItem::new_submenu(
+        "View",
+        [
+          custom_item("Dashboard")
+            .accelerator("cmdOrControl+1")
+            .into(),
+          custom_item("Transactions")
+            .accelerator("cmdOrControl+2")
+            .into(),
+          MenuItem::EnterFullScreen,
+        ],
+      ),
+      MenuItem::new_submenu("Window", [MenuItem::Minimize, MenuItem::Zoom]),
+      MenuItem::new_submenu("Help", [custom_item("Learn More").into()]),
+    ]))
     .on_menu_event(|event| {
       let event_name = event.menu_item_id();
       let _ = event.window().emit("menu", event_name);

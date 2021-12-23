@@ -2856,7 +2856,7 @@ dependencies = [
 [[package]]
 name = "tao"
 version = "0.5.2"
-source = "git+https://github.com/tauri-apps/tao?branch=next#196f22ac19cd56153245af13429c9f24242aac05"
+source = "git+https://github.com/tauri-apps/tao?branch=next#9f699a345788fbb08bc483a3f335ca4a94339676"
 dependencies = [
  "bitflags",
  "cairo-rs",
@@ -2905,7 +2905,7 @@ dependencies = [
 [[package]]
 name = "tauri"
 version = "1.0.0-beta.8"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "attohttpc",
  "bincode",
@@ -2937,7 +2937,7 @@ dependencies = [
  "tauri-macros",
  "tauri-runtime",
  "tauri-runtime-wry",
- "tauri-utils 1.0.0-beta.3 (git+https://github.com/tauri-apps/tauri?rev=b4fcb36)",
+ "tauri-utils 1.0.0-beta.3 (git+https://github.com/probablykasper/tauri?branch=menu-revamp)",
  "tempfile",
  "thiserror",
  "tokio",
@@ -2963,7 +2963,7 @@ dependencies = [
 [[package]]
 name = "tauri-codegen"
 version = "1.0.0-beta.4"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "blake3",
  "kuchiki",
@@ -2972,7 +2972,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
- "tauri-utils 1.0.0-beta.3 (git+https://github.com/tauri-apps/tauri?rev=b4fcb36)",
+ "tauri-utils 1.0.0-beta.3 (git+https://github.com/probablykasper/tauri?branch=menu-revamp)",
  "thiserror",
  "walkdir",
  "zstd",
@@ -2981,7 +2981,7 @@ dependencies = [
 [[package]]
 name = "tauri-macros"
 version = "1.0.0-beta.5"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2992,7 +2992,7 @@ dependencies = [
 [[package]]
 name = "tauri-runtime"
 version = "0.2.1"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "gtk",
  "http",
@@ -3000,7 +3000,7 @@ dependencies = [
  "infer",
  "serde",
  "serde_json",
- "tauri-utils 1.0.0-beta.3 (git+https://github.com/tauri-apps/tauri?rev=b4fcb36)",
+ "tauri-utils 1.0.0-beta.3 (git+https://github.com/probablykasper/tauri?branch=menu-revamp)",
  "thiserror",
  "uuid",
  "webview2-com",
@@ -3010,14 +3010,14 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "0.2.1"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "gtk",
  "ico",
  "infer",
  "png 0.16.8",
  "tauri-runtime",
- "tauri-utils 1.0.0-beta.3 (git+https://github.com/tauri-apps/tauri?rev=b4fcb36)",
+ "tauri-utils 1.0.0-beta.3 (git+https://github.com/probablykasper/tauri?branch=menu-revamp)",
  "uuid",
  "webview2-com",
  "windows 0.25.0",
@@ -3045,7 +3045,7 @@ dependencies = [
 [[package]]
 name = "tauri-utils"
 version = "1.0.0-beta.3"
-source = "git+https://github.com/tauri-apps/tauri?rev=b4fcb36#b4fcb364d301a3db2e0a53eab996f5ef54baf067"
+source = "git+https://github.com/probablykasper/tauri?branch=menu-revamp#6dcc7392d8b6e186ca5a902736ab06d29f2e5e6b"
 dependencies = [
  "heck",
  "html5ever",
