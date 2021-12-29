@@ -5,34 +5,32 @@
 
   const selection = newSelection()
 
-  let possibleRowClick = false
+  let justSelected = false
   function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
     if (e.button !== 0 && !ctx) return
-
     const isSelected = $selection.list[index]
-    if (isSelected) {
-      possibleRowClick = true
-    }
 
     if (checkMouseShortcut(e) && !isSelected) {
       selection.clear()
       selection.add(index)
     } else if (checkMouseShortcut(e, { cmdOrCtrl: true }) && !isSelected) {
       selection.add(index)
+      justSelected = true
     } else if (checkMouseShortcut(e, { shift: true })) {
       selection.shiftSelectTo(index)
       e.preventDefault()
     }
   }
   function rowClick(e: MouseEvent, index: number) {
+    if (e.button === 0) {
       if (checkMouseShortcut(e)) {
         selection.clear()
         selection.add(index)
-      } else if (checkMouseShortcut(e, { cmdOrCtrl: true })) {
+      } else if (!justSelected && checkMouseShortcut(e, { cmdOrCtrl: true })) {
         selection.toggle(index)
       }
     }
-    possibleRowClick = false
+    justSelected = false
   }
   async function rowKeydown(e: KeyboardEvent) {
     if (checkShortcut(e, 'Escape')) {
