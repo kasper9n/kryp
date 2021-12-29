@@ -160,14 +160,13 @@ fn main() {
           api.prevent_close();
           let app_handle = app_handle.clone();
           let w = app_handle.get_window(&label).unwrap();
-          let res = dialog_sync(
-            w.clone(),
-            "You have unsaved changes or newly fetched prices. Close without saving?",
-            "",
-          );
-          if res == true {
-            w.close().unwrap();
-          }
+          let title = "You have unsaved changes or newly fetched prices. Close without saving?";
+          let dialog_w = w.clone();
+          dialog::confirm(Some(&dialog_w), title, "", move |res| {
+            if res == true {
+              w.close().unwrap();
+            }
+          });
         }
       }
     }
@@ -175,14 +174,12 @@ fn main() {
   })
 }
 
-pub fn dialog_sync<S: AsRef<str>>(w: Window, title: S, msg: S) -> bool {
-  let (sender, receiver) = std::sync::mpsc::channel();
+pub async fn confirm_async<S: AsRef<str>>(w: Window, title: S, msg: S) -> bool {
+  let (sender, receiver) = tokio::sync::oneshot::channel();
   let title = title.as_ref().to_string();
   let msg = msg.as_ref().to_string();
-  thread::spawn(move || {
-    dialog::confirm(Some(&w), title, msg, move |res| {
-      sender.send(res).unwrap();
-    })
+  dialog::confirm(Some(&w), title, msg, move |res| {
+    sender.send(res).unwrap();
   });
-  receiver.recv().unwrap_or(false)
+  receiver.await.unwrap_or(false)
 }

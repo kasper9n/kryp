@@ -1,6 +1,6 @@
 use crate::tax::Tax;
-use crate::throw;
 use crate::transaction::Transaction;
+use crate::{confirm_async, throw};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -147,12 +147,9 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
   let mut kryp = kryp.0.lock().await;
   if kryp.has_unsaved_changes() {
-    let res = crate::dialog_sync(
-      win.clone(),
-      "You have unsaved changes or newly fetched prices. Close without saving?",
-      "",
-    );
-    if res == false {
+    let title = "You have unsaved changes or newly fetched prices. Close without saving?";
+    let res = confirm_async(win.clone(), title, "");
+    if res.await == false {
       return Ok(false);
     }
   }

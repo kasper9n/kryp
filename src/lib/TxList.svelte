@@ -25,7 +25,6 @@
     }
   }
   function rowClick(e: MouseEvent, index: number) {
-    if (possibleRowClick && e.button === 0) {
       if (checkMouseShortcut(e)) {
         selection.clear()
         selection.add(index)
