@@ -36,10 +36,6 @@ pub fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
-fn custom_item(name: &str) -> CustomMenuItem {
-  CustomMenuItem::new(name.to_string(), name)
-}
-
 fn main() {
   let ctx = tauri::generate_context!();
   let tauri_app = tauri::Builder::default()
@@ -90,18 +86,26 @@ fn main() {
       MenuEntry::Submenu(Submenu::new(
         "File",
         Menu::with_items([
-          custom_item("New").accelerator("cmdOrControl+N").into(),
-          custom_item("Open...").accelerator("cmdOrControl+O").into(),
+          CustomMenuItem::new("New", "New")
+            .accelerator("cmdOrControl+N")
+            .into(),
+          CustomMenuItem::new("Open...", "Open...")
+            .accelerator("cmdOrControl+O")
+            .into(),
           MenuItem::Separator.into(),
-          custom_item("Save").accelerator("cmdOrControl+S").into(),
-          custom_item("Save As...")
+          CustomMenuItem::new("Save", "Save")
+            .accelerator("cmdOrControl+S")
+            .into(),
+          CustomMenuItem::new("Save As...", "Save As...")
             .accelerator("shift+cmdOrControl+S")
             .into(),
           MenuItem::Separator.into(),
-          custom_item("Export...")
+          CustomMenuItem::new("Export...", "Export...")
             .accelerator("cmdOrControl+E")
             .into(),
-          custom_item("Close").accelerator("cmdOrControl+W").into(),
+          CustomMenuItem::new("Close", "Close")
+            .accelerator("cmdOrControl+W")
+            .into(),
         ]),
       )),
       MenuEntry::Submenu(Submenu::new(
@@ -121,10 +125,10 @@ fn main() {
       MenuEntry::Submenu(Submenu::new(
         "View",
         Menu::with_items([
-          custom_item("Dashboard")
+          CustomMenuItem::new("Dashboard", "Dashboard")
             .accelerator("cmdOrControl+1")
             .into(),
-          custom_item("Transactions")
+          CustomMenuItem::new("Transactions", "Transactions")
             .accelerator("cmdOrControl+2")
             .into(),
           MenuItem::EnterFullScreen.into(),
@@ -136,7 +140,7 @@ fn main() {
       )),
       MenuEntry::Submenu(Submenu::new(
         "Help",
-        Menu::with_items([custom_item("Learn More").into()]),
+        Menu::with_items([CustomMenuItem::new("Learn More", "Learn More").into()]),
       )),
     ]))
     .on_menu_event(|event| {
