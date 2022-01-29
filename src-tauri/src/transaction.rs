@@ -199,7 +199,7 @@ impl Transaction {
       Err(e) => return Err(e.to_string()),
       Ok(tx) => tx,
     };
-    tx.refresh_cost(price_data, base).await;
+    tx.refresh_cost(price_data, base).await?;
     Ok(tx)
   }
   pub fn to_csv_record<'a>(&'a self) -> Vec<String> {
@@ -326,31 +326,46 @@ impl Transaction {
     return None;
   }
   /// Set the cost. If a manual cost is set, that will be used.
-  pub async fn refresh_cost(&mut self, price_data: &mut PriceData, base: &str) {
-    let cost = self.determine_cost(price_data, base).await;
+  pub async fn refresh_cost(
+    &mut self,
+    price_data: &mut PriceData,
+    base: &str,
+  ) -> Result<(), String> {
+    let cost = self.determine_cost(price_data, base).await?;
     match self {
       Transaction::Trade(tx) => tx.cost = cost,
       Transaction::Transfer(tx) => tx.cost = cost,
       Transaction::Deposit(tx) => tx.cost = cost,
       Transaction::Withdrawal(tx) => tx.cost = cost,
     }
+    Ok(())
   }
   /// Get the cost. If a manual cost is set, that will be used.
-  async fn determine_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
+  async fn determine_cost(
+    &mut self,
+    price_data: &mut PriceData,
+    base: &str,
+  ) -> Result<Decimal, String> {
     if let Some((amount, asset)) = self.manual_worth() {
       if asset == base {
-        amount.clone()
+        Ok(amount.clone())
       } else {
-        price_data
-          .get_value(amount.clone(), &asset, self.date(), base)
-          .await
+        Ok(
+          price_data
+            .get_value(amount.clone(), &asset, self.date(), base)
+            .await?,
+        )
       }
     } else {
-      self.calculate_cost(price_data, base).await
+      Ok(self.calculate_cost(price_data, base).await?)
     }
   }
   /// Calculates and returns the cost of the transaction
-  async fn calculate_cost(&mut self, price_data: &mut PriceData, base: &str) -> Decimal {
+  async fn calculate_cost(
+    &mut self,
+    price_data: &mut PriceData,
+    base: &str,
+  ) -> Result<Decimal, String> {
     let mut cost;
     match self {
       Transaction::Trade(tx) => {
@@ -363,34 +378,34 @@ impl Transaction {
         if let (AssetKind::Crypto, AssetKind::Fiat) = (sent_kind, recv_kind) {
           cost = price_data
             .get_value(tx.recv_amount, &tx.recv_asset, tx.date, base)
-            .await;
+            .await?;
         } else {
           cost = price_data
             .get_value(tx.sent_amount, &tx.sent_asset, tx.date, base)
-            .await;
+            .await?;
         }
         if tx.fee_asset != "" {
           cost += price_data
             .get_value(tx.fee_amount, &tx.fee_asset, tx.date, base)
-            .await;
+            .await?;
         }
       }
       Transaction::Transfer(tx) => {
         cost = price_data
           .get_value(tx.sent_amount, &tx.sent_asset, tx.date, base)
-          .await;
+          .await?;
       }
       Transaction::Deposit(tx) => {
         cost = price_data
           .get_value(tx.amount, &tx.asset, tx.date, base)
-          .await;
+          .await?;
       }
       Transaction::Withdrawal(tx) => {
         cost = price_data
           .get_value(tx.amount, &tx.asset, tx.date, base)
-          .await;
+          .await?;
       }
     }
-    return round_8(cost);
+    Ok(round_8(cost))
   }
 }

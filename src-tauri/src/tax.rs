@@ -94,7 +94,7 @@ impl Tax {
     date: i64,
     sent: (Decimal, &str, &str),
     recv: (Decimal, &str, &str),
-  ) -> Transaction {
+  ) -> Result<Transaction, String> {
     let mut trade = Trade::default();
     trade.date = date;
     trade.sent_amount = sent.0;
@@ -105,8 +105,8 @@ impl Tax {
     trade.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Trade(trade);
     tx.refresh_cost(&mut self.price_data, &self.base_currency)
-      .await;
-    tx
+      .await?;
+    Ok(tx)
   }
   #[cfg(test)]
   #[tokio::main]
@@ -115,7 +115,7 @@ impl Tax {
     date: i64,
     sent: (Decimal, &str, &str),
     recv: (Decimal, &str, &str),
-  ) -> Transaction {
+  ) -> Result<Transaction, String> {
     let mut transfer = Transfer::default();
     transfer.date = date;
     transfer.sent_amount = sent.0;
@@ -126,12 +126,16 @@ impl Tax {
     transfer.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Transfer(transfer);
     tx.refresh_cost(&mut self.price_data, &self.base_currency)
-      .await;
-    tx
+      .await?;
+    Ok(tx)
   }
   #[cfg(test)]
   #[tokio::main]
-  pub async fn new_deposit(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+  pub async fn new_deposit(
+    &mut self,
+    date: i64,
+    recv: (Decimal, &str, &str),
+  ) -> Result<Transaction, String> {
     let mut deposit = Deposit::default();
     deposit.date = date;
     deposit.amount = recv.0;
@@ -139,12 +143,16 @@ impl Tax {
     deposit.wallet = recv.2.to_string();
     let mut tx = Transaction::Deposit(deposit);
     tx.refresh_cost(&mut self.price_data, &self.base_currency)
-      .await;
-    tx
+      .await?;
+    Ok(tx)
   }
   #[cfg(test)]
   #[tokio::main]
-  pub async fn new_withdrawal(&mut self, date: i64, recv: (Decimal, &str, &str)) -> Transaction {
+  pub async fn new_withdrawal(
+    &mut self,
+    date: i64,
+    recv: (Decimal, &str, &str),
+  ) -> Result<Transaction, String> {
     let mut withdrawal = Withdrawal::default();
     withdrawal.date = date;
     withdrawal.amount = recv.0;
@@ -152,8 +160,8 @@ impl Tax {
     withdrawal.wallet = recv.2.to_string();
     let mut tx = Transaction::Withdrawal(withdrawal);
     tx.refresh_cost(&mut self.price_data, &self.base_currency)
-      .await;
-    tx
+      .await?;
+    Ok(tx)
   }
 }
 
@@ -352,22 +360,30 @@ pub struct Realized {
 pub fn trades() {
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance")),
-    tax.new_trade(
-      1500100000000,
-      (dec!(800), "NOK", "Binance"),
-      (dec!(0.5), "BTC", "Binance"),
-    ),
-    tax.new_transfer(
-      1500200000000,
-      (dec!(0.5), "BTC", "Binance"),
-      (dec!(0.5), "BTC", "Coinbase"),
-    ),
-    tax.new_trade(
-      1500300000000,
-      (dec!(0.5), "BTC", "Coinbase"),
-      (dec!(3), "ETH", "Coinbase"),
-    ),
+    tax
+      .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
+      .unwrap(),
+    tax
+      .new_trade(
+        1500100000000,
+        (dec!(800), "NOK", "Binance"),
+        (dec!(0.5), "BTC", "Binance"),
+      )
+      .unwrap(),
+    tax
+      .new_transfer(
+        1500200000000,
+        (dec!(0.5), "BTC", "Binance"),
+        (dec!(0.5), "BTC", "Coinbase"),
+      )
+      .unwrap(),
+    tax
+      .new_trade(
+        1500300000000,
+        (dec!(0.5), "BTC", "Coinbase"),
+        (dec!(3), "ETH", "Coinbase"),
+      )
+      .unwrap(),
   ];
   tax.calculate().unwrap();
   assert_eq!(
@@ -411,12 +427,16 @@ pub fn trades() {
 pub fn transfer_fee() {
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance")),
-    tax.new_transfer(
-      1500100000000,
-      (dec!(1000), "NOK", "Binance"),
-      (dec!(750), "NOK", "Coinbase"),
-    ),
+    tax
+      .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
+      .unwrap(),
+    tax
+      .new_transfer(
+        1500100000000,
+        (dec!(1000), "NOK", "Binance"),
+        (dec!(750), "NOK", "Coinbase"),
+      )
+      .unwrap(),
   ];
   tax.calculate().unwrap();
   assert_eq!(
@@ -436,11 +456,15 @@ pub fn transfer_fee() {
 pub fn deposit_withdraw_crypto() {
   let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
   tax.transactions = vec![
-    tax.new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase")),
-    tax.new_withdrawal(
-      1500100000000, //
-      (dec!(1), "ETH", "Coinbase"),
-    ),
+    tax
+      .new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase"))
+      .unwrap(),
+    tax
+      .new_withdrawal(
+        1500100000000, //
+        (dec!(1), "ETH", "Coinbase"),
+      )
+      .unwrap(),
   ];
   tax.calculate().unwrap();
   println!("{:?}", tax.balances);

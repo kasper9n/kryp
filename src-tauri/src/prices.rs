@@ -7,6 +7,8 @@ use std::collections::{BTreeMap, HashMap};
 use std::ops::RangeInclusive;
 use std::{thread, time};
 
+use crate::throw;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceData {
   assets: HashMap<String, PriceDataAsset>,
@@ -46,36 +48,40 @@ impl PriceData {
     asset: &str,
     date: i64,
     base: &str,
-  ) -> Decimal {
+  ) -> Result<Decimal, String> {
     if base == asset {
-      amount
+      Ok(amount)
     } else if base == "USD" {
-      let usd_price = self.get_usd_price_dec(asset, date).await;
-      amount * usd_price
+      let usd_price = self.get_usd_price_dec(asset, date).await?;
+      Ok(amount * usd_price)
     } else {
-      let usd_price = self.get_usd_price_dec(asset, date).await;
-      let base_usd_price = self.get_usd_price_dec(base, date).await;
+      let usd_price = self.get_usd_price_dec(asset, date).await?;
+      let base_usd_price = self.get_usd_price_dec(base, date).await?;
       let price = usd_price / base_usd_price;
-      amount * price
+      Ok(amount * price)
     }
   }
-  pub async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Decimal {
-    let price = self.get_usd_price(currency, date).await;
-    return Decimal::from_f64(price).expect("Error getting price");
+  pub async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Result<Decimal, String> {
+    let price = self.get_usd_price(currency, date).await?;
+    match Decimal::from_f64(price) {
+      Some(price) => Ok(price),
+      None => throw!("Unable to convert price from float to decimal"),
+    }
   }
-  pub async fn get_usd_price(&mut self, currency: &str, date: i64) -> f64 {
+  pub async fn get_usd_price(&mut self, currency: &str, date: i64) -> Result<f64, String> {
     let currency = currency.to_uppercase();
     if currency == "USD" {
-      return 1.0;
+      return Ok(1.0);
     }
     let price_data_asset = self.asset(&currency);
+    // println!("{}",);
     match price_data_asset.local_price(date, false) {
-      Some(price) => return price.1,
+      Some(price) => return Ok(price.1),
       None => {
         price_data_asset.fetch(date).await;
         match price_data_asset.local_price(date, true) {
-          Some(price) => return price.1,
-          None => panic!("No price found"),
+          Some(price) => return Ok(price.1),
+          None => throw!("No price found"),
         };
       }
     }
@@ -105,19 +111,25 @@ async fn get_value() {
   };
 
   assert_eq!(
-    pd.get_value(dec!(2), "USD", 1640000000000, "USD").await,
+    pd.get_value(dec!(2), "USD", 1640000000000, "USD")
+      .await
+      .unwrap(),
     dec!(2),
     "2 USD in base USD"
   );
 
   assert_eq!(
-    pd.get_value(dec!(2), "NOK", 1640000000000, "USD").await,
+    pd.get_value(dec!(2), "NOK", 1640000000000, "USD")
+      .await
+      .unwrap(),
     dec!(0.2),
     "2 NOK in base USD"
   );
 
   assert_eq!(
-    pd.get_value(dec!(2), "ETH", 1640000000000, "NOK").await,
+    pd.get_value(dec!(2), "ETH", 1640000000000, "NOK")
+      .await
+      .unwrap(),
     dec!(100_000), // 2 * 5000 / 0.1
     "2 ETH in base NOK"
   );
@@ -306,8 +318,14 @@ fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
 async fn api_fetch() {
   let mut pd = PriceData::new();
   let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
-  let nok_price = pd.get_usd_price("NOK", date.timestamp_millis()).await;
+  let nok_price = pd
+    .get_usd_price("NOK", date.timestamp_millis())
+    .await
+    .unwrap();
   assert!(tolerance_pct(0.1125, 0.2).contains(&nok_price));
-  let eth_price = pd.get_usd_price("ETH", date.timestamp_millis()).await;
+  let eth_price = pd
+    .get_usd_price("ETH", date.timestamp_millis())
+    .await
+    .unwrap();
   assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
 }

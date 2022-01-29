@@ -271,7 +271,7 @@ pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
     holding.value = tax
       .price_data
       .get_value(holding.amount, &holding.key, timestamp, &tax.base_currency)
-      .await;
+      .await?;
     holdings.push(holding);
   }
   holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
