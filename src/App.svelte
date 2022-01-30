@@ -124,7 +124,6 @@
     display: flex
     align-items: center
     user-select: none
-    -webkit-user-select: none
     padding: 0px 20px
     a, .base
       font-size: 15px

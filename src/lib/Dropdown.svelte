@@ -215,7 +215,6 @@
     outline: none
     border: none
     user-select: text
-    -webkit-user-select: text
     background-color: transparent
     cursor: default
     margin: 0px
@@ -223,7 +222,6 @@
       color: transparent
       text-shadow: 0 0 0 #000000
       user-select: none
-      -webkit-user-select: none
   .menu
     display: none
     font-size: 12px

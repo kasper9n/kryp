@@ -324,7 +324,6 @@
     width: 580px
     max-width: 100%
     user-select: none
-    -webkit-user-select: none
     cursor: default
     font-size: 12px
     --date-input-width: 136px

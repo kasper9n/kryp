@@ -31,7 +31,6 @@
   button
     cursor: pointer
     user-select: none
-    -webkit-user-select: none
     margin: 0px
     height: 34px
     padding: 0px 18px
