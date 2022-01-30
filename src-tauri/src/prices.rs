@@ -1,4 +1,5 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime};
+use lazy_static::lazy_static;
 use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
@@ -14,6 +15,13 @@ pub struct PriceData {
   assets: HashMap<String, PriceDataAsset>,
 }
 
+const ALL_FIAT_ASSETS_JSON: &str = include_str!("../assets/fiat.json");
+
+type AllFiatAssets = HashMap<String, String>;
+lazy_static! {
+  static ref ALL_FIAT_ASSETS: AllFiatAssets = serde_json::from_str(&ALL_FIAT_ASSETS_JSON).unwrap();
+}
+
 impl PriceData {
   pub fn new() -> Self {
     return PriceData {
@@ -21,10 +29,11 @@ impl PriceData {
     };
   }
   pub fn symbol_kind(&mut self, symbol: &str) -> AssetKind {
-    return match symbol {
-      "USD" | "EUR" | "NOK" => AssetKind::Fiat,
-      _ => AssetKind::Crypto,
-    };
+    if ALL_FIAT_ASSETS.contains_key(symbol) {
+      AssetKind::Fiat
+    } else {
+      AssetKind::Crypto
+    }
   }
   pub fn asset(&mut self, symbol: &str) -> &mut PriceDataAsset {
     let symbol = symbol.to_uppercase();

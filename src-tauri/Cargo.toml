@@ -21,6 +21,7 @@ tauri = { git = "https://github.com/tauri-apps/tauri", rev = "722d9ed", features
 chrono = { version = "0.4.19", features = ["serde"] }
 csv = "1.1.6"
 atomicwrites = "0.3.0"
+lazy_static = "1.4.0"
 
 [features]
 default = [ "custom-protocol" ]
