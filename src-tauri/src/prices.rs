@@ -15,11 +15,11 @@ pub struct PriceData {
   assets: HashMap<String, PriceDataAsset>,
 }
 
-const ALL_FIAT_ASSETS_JSON: &str = include_str!("../assets/fiat.json");
+const FIAT_LIST_JSON: &str = include_str!("../../public/assets/fiat-list.json");
 
 type AllFiatAssets = HashMap<String, String>;
 lazy_static! {
-  static ref ALL_FIAT_ASSETS: AllFiatAssets = serde_json::from_str(&ALL_FIAT_ASSETS_JSON).unwrap();
+  static ref FIAT_LIST: AllFiatAssets = serde_json::from_str(&FIAT_LIST_JSON).unwrap();
 }
 
 impl PriceData {
@@ -29,7 +29,7 @@ impl PriceData {
     };
   }
   pub fn symbol_kind(&mut self, symbol: &str) -> AssetKind {
-    if ALL_FIAT_ASSETS.contains_key(symbol) {
+    if FIAT_LIST.contains_key(symbol) {
       AssetKind::Fiat
     } else {
       AssetKind::Crypto
@@ -272,6 +272,7 @@ impl PriceDataAsset {
       from = start_dt.timestamp(),
       to = end_dt.timestamp(),
     );
+    println!("{}", request_url);
     let market_chart_res = reqwest::get(request_url).await?;
     if !market_chart_res.status().is_success() {
       if market_chart_res.status() == 429 {
@@ -281,6 +282,7 @@ impl PriceDataAsset {
       }
     }
     let market_chart: MarketChart = market_chart_res.json().await?;
+    println!("{:?}", market_chart);
 
     for (price_date, price_rate) in market_chart.prices {
       self.prices.entry(price_date).or_insert(price_rate);
