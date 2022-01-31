@@ -164,14 +164,6 @@ impl Withdrawal {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub enum TxType {
-  Trade = 0,
-  Transfer = 1,
-  Deposit = 2,
-  Withdrawal = 4,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Transaction {
   Trade(Trade),

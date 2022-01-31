@@ -54,8 +54,6 @@ pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
 #[derive(Default)]
 pub struct Data(pub Arc<Mutex<Kryp>>);
 
-pub type St<'a> = State<'a, Data>;
-
 #[command]
 pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
@@ -63,18 +61,6 @@ pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<()
     kryp.tax = Tax::new(&base_currency);
     kryp.opened = true;
     kryp.file_path = None;
-  }
-  Ok(())
-}
-
-#[command]
-pub async fn load_file(path: PathBuf, kryp: State<'_, Data>) -> Result<(), String> {
-  let mut kryp = kryp.0.lock().await;
-  if kryp.opened == false {
-    println!("open file {:?}", path);
-    kryp.tax = Tax::load(&path)?;
-    kryp.opened = true;
-    kryp.file_path = Some(path);
   }
   Ok(())
 }

@@ -2,24 +2,27 @@
   import { refresh, focus, runCmd } from '$lib/general'
   import Modal from '$lib/Modal.svelte'
   import Button from '$lib/Button.svelte'
-  export let visible = false
+  import { createEventDispatcher } from 'svelte'
+
+  const dispatch = createEventDispatcher()
   let baseCurrency = 'USD'
+
   async function create() {
     await runCmd('new_file', {
       baseCurrency: baseCurrency,
     })
     refresh()
-    visible = false
+    dispatch('close')
   }
 </script>
 
-<Modal bind:visible>
+<Modal width="340px" on:close>
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
     <p>Base currency</p>
     <input type="text" bind:value={baseCurrency} use:focus />
     <div class="bottom">
-      <Button secondary on:click={() => (visible = false)}>Cancel</Button>
+      <Button secondary on:click={() => dispatch('close')}>Cancel</Button>
       <Button type="submit">Create</Button>
     </div>
   </form>

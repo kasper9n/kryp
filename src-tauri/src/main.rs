@@ -3,16 +3,17 @@
   windows_subsystem = "windows"
 )]
 
-use crate::data::St;
+use data::Data;
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
 use tauri::{
-  command, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window, WindowBuilder,
-  WindowUrl,
+  command, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window,
+  WindowBuilder, WindowUrl,
 };
 
 mod data;
+mod import;
 mod prices;
 mod tax;
 mod transaction;
@@ -55,7 +56,6 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
       error_popup,
       data::new_file,
-      data::load_file,
       data::open,
       data::save,
       data::close,
@@ -66,6 +66,7 @@ fn main() {
       data::add_transaction,
       data::get_holdings,
       data::get_prices,
+      import::import,
     ])
     .menu(Menu::with_items([
       #[cfg(target_os = "macos")]
@@ -158,7 +159,7 @@ fn main() {
   tauri_app.run(|app_handle, e| match e {
     tauri::Event::CloseRequested { label, api, .. } => {
       if label == "main" {
-        let st: St<'_> = app_handle.state();
+        let st = app_handle.state::<Data>();
         let kryp = tauri::async_runtime::block_on(st.0.lock());
         if kryp.has_unsaved_changes() {
           api.prevent_close();

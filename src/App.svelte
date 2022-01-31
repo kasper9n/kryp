@@ -98,7 +98,9 @@
   </div>
 {/if}
 
-<NewFileModal bind:visible={newFileModalVisible} />
+{#if newFileModalVisible}
+  <NewFileModal bind:visible={newFileModalVisible} on:close={() => (newFileModalVisible = false)} />
+{/if}
 
 <style lang="sass">
   :global(body)

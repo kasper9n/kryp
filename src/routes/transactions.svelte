@@ -7,18 +7,19 @@
   import TxTable from '$lib/TxTable.svelte'
   import TxList from '$lib/TxList.svelte'
   import TransactionModal from '$modals/Transaction.svelte'
+  import ImportModal from '$modals/Import.svelte'
   import Button from '$lib/Button.svelte'
   let showAdd = false
-  function add() {
-    showAdd = true
-  }
+  let showImport = false
 </script>
 
 <div class="page">
   <div class="toolbar">
     <Button group={['List', 'Table']} bind:selected={$view} />
-    <div class="spacer" />
-    <Button on:click={add}>Add</Button>
+    <div style="padding: 6px;" />
+    <Button on:click={() => (showAdd = true)}>Add</Button>
+    <div style="padding: 6px;" />
+    <Button secondary on:click={() => (showImport = true)}>Import</Button>
   </div>
   {#if $view === 0}
     <TxList />
@@ -26,7 +27,13 @@
     <TxTable />
   {/if}
 </div>
-<TransactionModal bind:visible={showAdd} />
+
+{#if showAdd}
+  <TransactionModal on:close={() => (showAdd = false)} />
+{/if}
+{#if showImport}
+  <ImportModal on:close={() => (showImport = false)} />
+{/if}
 
 <style lang="sass">
   $accent: #3061F6
@@ -38,7 +45,4 @@
     padding: 10px 0px
     display: flex
     align-items: center
-  .spacer
-    width: 10px
-    height: 10px
 </style>

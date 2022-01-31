@@ -6,10 +6,11 @@
   import { refresh, popup, runCmd } from '$lib/general'
   import NumericInput from '$lib/NumericInput.svelte'
   import Dropdown from '$lib/Dropdown.svelte'
+  import { createEventDispatcher, onMount } from 'svelte'
 
-  export let visible = false
-  function cancel() {
-    visible = false
+  const dispatch = createEventDispatcher()
+  function close() {
+    dispatch('close')
   }
   function numStr(str: string) {
     if (str === '') return '0'
@@ -93,7 +94,7 @@
       return
     }
     await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
-    visible = false
+    close()
     refresh()
   }
   const tags = [
@@ -160,12 +161,11 @@
   }
   let info = getDefault()
   let showNetWorth = false
-  function open() {
+  onMount(() => {
     info = getDefault()
     showNetWorth = false
     errors.clear()
-  }
-  $: if (visible) open()
+  })
 
   let validDate: boolean
   let errors: Set<string> = new Set()
@@ -193,13 +193,13 @@
   function keydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
       e.preventDefault()
-      cancel()
+      close()
     }
   }
 </script>
 
-<Modal bind:visible on:keydown={keydown}>
-  <form on:submit|preventDefault={save} class="googoogaga">
+<Modal on:keydown={keydown} on:close>
+  <form on:submit|preventDefault={save} class="container">
     <h2>Add transaction</h2>
     <div class="row">
       <p>Type</p>
@@ -288,7 +288,7 @@
     </div>
     {#if !showNetWorth}
       <div class="set-net-worth">
-        <div on:click={() => (showNetWorth = true)}>Set Net Worth</div>
+        <div on:click={() => (showNetWorth = true)}>Set Worth</div>
       </div>
     {/if}
     {#if showNetWorth}
@@ -313,14 +313,14 @@
       <textarea class="note" bind:value={info.note} />
     </div>
     <div class="bottom">
-      <Button secondary on:click={cancel}>Cancel</Button>
+      <Button secondary on:click={close}>Cancel</Button>
       <Button type="submit">Add</Button>
     </div>
   </form>
 </Modal>
 
 <style lang="sass">
-  .googoogaga
+  .container
     width: 580px
     max-width: 100%
     user-select: none
