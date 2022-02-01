@@ -18,10 +18,9 @@
 - `npm run test`: Runs tests. Some of these could fail due to API rate limiting or downtime.
 
 ### ToDo
-- https://www.coingecko.com/en/api
+- https://crates.io/crates/undo
 - https://www.quandl.com/tools/api
 - https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
-- https://exchangerate.host/
 - https://openexchangerates.org/
 - https://www.amdoren.com/currency-api/
 

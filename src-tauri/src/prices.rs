@@ -4,11 +4,12 @@ use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::error::Error;
 #[cfg(test)]
 use std::ops::RangeInclusive;
 use std::{thread, time};
 
-use crate::throw;
+use crate::{err, throw};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceData {
@@ -83,14 +84,16 @@ impl PriceData {
       return Ok(1.0);
     }
     let price_data_asset = self.asset(&currency);
-    // println!("{}",);
     match price_data_asset.local_price(date, false) {
       Some(price) => return Ok(price.1),
       None => {
-        price_data_asset.fetch(date).await;
+        match price_data_asset.fetch(date).await {
+          Ok(()) => {}
+          Err(e) => throw!("Error fetching price of {}: {}", currency, e),
+        };
         match price_data_asset.local_price(date, true) {
           Some(price) => return Ok(price.1),
-          None => throw!("No price found"),
+          None => throw!("No price found for {}", currency),
         };
       }
     }
@@ -165,17 +168,18 @@ impl PriceDataAsset {
     return Some((*closest.0, *closest.1));
   }
 
-  async fn fetch(&mut self, date: i64) {
+  async fn fetch(&mut self, date: i64) -> Result<(), String> {
     let result = match self.kind {
       AssetKind::Fiat => self.fetch_fiat(date).await,
       AssetKind::Crypto => self.fetch_crypto(date).await,
     };
     if let Err(e) = result {
-      panic!("Error fetching prices: {}", e);
+      return Err(format!("{}", e));
     }
+    Ok(())
   }
 
-  async fn fetch_fiat(&mut self, date: i64) -> Result<(), reqwest::Error> {
+  async fn fetch_fiat(&mut self, date: i64) -> Result<(), Box<dyn Error>> {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
     let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
@@ -199,11 +203,11 @@ impl PriceDataAsset {
     );
     let timeseries_res = reqwest::get(request_url).await?;
     if !timeseries_res.status().is_success() {
-      panic!("Error fetching coins {}", self.symbol);
+      return err!("Error fetching coins {}", self.symbol);
     }
     let timeseries: Timeseries = timeseries_res.json().await?;
     if !timeseries.success || !timeseries.timeseries {
-      panic!("Unknown error fetching prices");
+      return err!("Unknown error fetching prices");
     }
     for (date, price_map) in timeseries.rates {
       let rate: f64 = match price_map.get("USD") {
@@ -217,7 +221,7 @@ impl PriceDataAsset {
     Ok(())
   }
 
-  async fn fetch_crypto(&mut self, date: i64) -> Result<(), reqwest::Error> {
+  async fn fetch_crypto(&mut self, date: i64) -> Result<(), Box<dyn Error>> {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 1; // 1 day before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
     let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
@@ -237,9 +241,10 @@ impl PriceDataAsset {
     let coins_res = reqwest::get(request_url).await?;
     if !coins_res.status().is_success() {
       if coins_res.status() == 429 {
-        panic!("Rate limit, please try again");
+        let x = err!("Rate limit, please try again");
+        return x;
       } else {
-        panic!("Error fetching coins {}", self.symbol);
+        return err!("Error fetching coins {}", self.symbol);
       }
     }
     let coins: Vec<Coin> = coins_res.json().await?;
@@ -255,9 +260,9 @@ impl PriceDataAsset {
     }
     let id = coin_id_map
       .get(&self.symbol)
-      .expect(&format!("No coin ID found for {}", self.symbol));
+      .ok_or(format!("No coin ID found for {}", self.symbol))?;
     if id == "" {
-      panic!("Ticker {} has multiple coins", self.symbol);
+      return err!("Ticker {} has multiple coins", self.symbol);
     }
 
     #[derive(Deserialize, Debug)]
@@ -276,9 +281,9 @@ impl PriceDataAsset {
     let market_chart_res = reqwest::get(request_url).await?;
     if !market_chart_res.status().is_success() {
       if market_chart_res.status() == 429 {
-        panic!("Rate limit, please try again");
+        return err!("Rate limit, please try again");
       } else {
-        panic!("Error fetching {} prices", self.symbol);
+        return err!("Error fetching {} prices", self.symbol);
       }
     }
     let market_chart: MarketChart = market_chart_res.json().await?;

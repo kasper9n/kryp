@@ -13,6 +13,8 @@
   import HelpPage from '$routes/help.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
+  import ImportModal from './modals/Import.svelte'
+
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
     if (e.target instanceof HTMLElement) {
@@ -27,6 +29,7 @@
   }
 
   let newFileModalVisible = false
+  let showImport = false
 
   async function open(path?: string) {
     await runCmd('open', { path })
@@ -55,6 +58,8 @@
       save()
     } else if (payload === 'Save As...') {
       saveAs()
+    } else if (payload === 'Import...' && $opened) {
+      showImport = true
     } else if (payload === 'Export...') {
       await runCmd('export')
     } else if (payload === 'Close') {
@@ -78,7 +83,7 @@
   </div>
 
   <Route path="/"><DashboardPage /></Route>
-  <Route path="/transactions"><TransactionsPage /></Route>
+  <Route path="/transactions"><TransactionsPage on:import={() => (showImport = true)} /></Route>
   <Route path="/prices"><PricesPage /></Route>
   <Route path="/help"><HelpPage /></Route>
 {:else}
@@ -100,6 +105,9 @@
 
 {#if newFileModalVisible}
   <NewFileModal bind:visible={newFileModalVisible} on:close={() => (newFileModalVisible = false)} />
+{/if}
+{#if showImport}
+  <ImportModal on:close={() => (showImport = false)} />
 {/if}
 
 <style lang="sass">

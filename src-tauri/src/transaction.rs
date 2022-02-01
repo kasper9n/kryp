@@ -2,17 +2,18 @@ use crate::prices::{AssetKind, PriceData};
 use crate::round_8;
 use chrono::TimeZone;
 use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
+
 #[cfg(test)]
 use rust_decimal_macros::dec;
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Trade {
-  tag: String,
+  pub tag: String,
   pub date: i64,
-  note: String,
-  hash: String,
+  pub note: String,
+  pub hash: String,
   pub sent_amount: Decimal,
   pub sent_asset: String,
   pub sent_wallet: String,
@@ -21,10 +22,10 @@ pub struct Trade {
   pub recv_wallet: String,
   pub fee_amount: Decimal,
   pub fee_asset: String,
-  manual_worth_amount: Option<Decimal>,
-  manual_worth_asset: Option<String>,
+  pub manual_worth_amount: Option<Decimal>,
+  pub manual_worth_asset: Option<String>,
   /// Includes fee
-  cost: Decimal,
+  pub cost: Decimal,
 }
 impl Trade {
   pub fn cost(&self) -> Decimal {
@@ -55,20 +56,20 @@ impl Trade {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Transfer {
-  tag: String,
+  pub tag: String,
   pub date: i64,
-  note: String,
-  hash: String,
+  pub note: String,
+  pub hash: String,
   pub sent_amount: Decimal,
   pub sent_asset: String,
   pub sent_wallet: String,
   pub recv_amount: Decimal,
   pub recv_asset: String,
   pub recv_wallet: String,
-  manual_worth_amount: Option<Decimal>,
-  manual_worth_asset: Option<String>,
+  pub manual_worth_amount: Option<Decimal>,
+  pub manual_worth_asset: Option<String>,
   /// Includes fee
-  cost: Decimal,
+  pub cost: Decimal,
 }
 impl Transfer {
   #[cfg(test)]
@@ -94,17 +95,17 @@ impl Transfer {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Deposit {
-  tag: String,
+  pub tag: String,
   pub date: i64,
-  note: String,
-  hash: String,
+  pub note: String,
+  pub hash: String,
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,
-  from_amount: Option<Decimal>,
-  from_asset: Option<String>,
+  pub from_amount: Option<Decimal>,
+  pub from_asset: Option<String>,
   /// Includes fee
-  cost: Decimal,
+  pub cost: Decimal,
 }
 impl Deposit {
   #[cfg(test)]
@@ -130,10 +131,10 @@ impl Deposit {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Withdrawal {
-  tag: String,
+  pub tag: String,
   pub date: i64,
-  note: String,
-  hash: String,
+  pub note: String,
+  pub hash: String,
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,

@@ -37,14 +37,13 @@ impl Tax {
       dirty: true,
     }
   }
-  pub fn add_transaction(&mut self, tx: Transaction) -> Result<(), String> {
+  pub fn add_transaction(&mut self, tx: Transaction) {
     let pos = self
       .transactions
       .binary_search_by(|current_tx| current_tx.date().cmp(&tx.date()))
       .unwrap_or_else(|pos| pos);
     self.transactions.insert(pos, tx);
     self.dirty = true;
-    Ok(())
   }
   pub fn calculate(&mut self) -> Result<(), String> {
     let output = calculate(&mut self.transactions)?;

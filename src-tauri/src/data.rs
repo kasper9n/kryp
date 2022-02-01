@@ -15,9 +15,9 @@ use tokio::sync::Mutex;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Kryp {
-  tax: Tax,
-  opened: bool,
-  file_path: Option<PathBuf>,
+  pub tax: Tax,
+  pub opened: bool,
+  pub file_path: Option<PathBuf>,
 }
 
 impl Kryp {
@@ -150,49 +150,6 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
 }
 
 #[command]
-pub async fn export(kryp: State<'_, Data>) -> Result<(), String> {
-  let kryp = kryp.0.lock().await;
-  if !kryp.opened {
-    return Ok(());
-  }
-  let (sender, receiver) = std::sync::mpsc::channel();
-  dialog::FileDialogBuilder::new()
-    .set_file_name("Kryp.csv")
-    .add_filter("CSV", &["csv"])
-    .save_file(move |p| {
-      sender.send(p).unwrap();
-    });
-  let file_path = match receiver.recv().unwrap_or_default() {
-    Some(file_path) => file_path,
-    None => return Ok(()),
-  };
-  println!("Export to {}", file_path.to_string_lossy());
-
-  let mut writer = match csv::Writer::from_path(file_path) {
-    Ok(writer) => writer,
-    Err(e) => throw!("Unable to write to file: {}", e),
-  };
-  let header_record = vec![
-    "Type", "Sent", "Asset", "Wallet", "Received", "Asset", "Wallet", "Fee", "Asset", "Note",
-    "Tx Hash", "Date",
-  ];
-  match writer.write_record(&header_record) {
-    Ok(()) => {}
-    Err(e) => throw!("Unable to write record: {}", e),
-  };
-
-  for transaction in &kryp.tax.transactions {
-    let record = transaction.to_csv_record();
-    match writer.write_record(&record) {
-      Ok(()) => {}
-      Err(e) => throw!("Unable to write record: {}", e),
-    };
-  }
-
-  Ok(())
-}
-
-#[command]
 pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
   let v = serde_json::json!({
@@ -218,7 +175,7 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
   let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.base_currency).await?;
-  kryp.tax.add_transaction(tx)?;
+  kryp.tax.add_transaction(tx);
   kryp.tax.calculate()?;
   Ok(())
 }

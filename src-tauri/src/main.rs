@@ -8,12 +8,12 @@ use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
 use tauri::{
-  command, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window,
-  WindowBuilder, WindowUrl,
+  command, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window, WindowBuilder,
+  WindowUrl,
 };
 
 mod data;
-mod import;
+mod import_export;
 mod prices;
 mod tax;
 mod transaction;
@@ -30,6 +30,13 @@ fn error_popup(msg: String, win: Window) {
 macro_rules! throw {
   ($($arg:tt)*) => {{
     return Err(format!($($arg)*))
+  }};
+}
+
+#[macro_export]
+macro_rules! err {
+  ($($arg:tt)*) => {{
+    Err(From::from(format!($($arg)*)))
   }};
 }
 
@@ -59,14 +66,14 @@ fn main() {
       data::open,
       data::save,
       data::close,
-      data::export,
       data::get_data,
       data::get_tax,
       data::get_transactions,
       data::add_transaction,
       data::get_holdings,
       data::get_prices,
-      import::import,
+      import_export::import,
+      import_export::export,
     ])
     .menu(Menu::with_items([
       #[cfg(target_os = "macos")]
@@ -101,6 +108,9 @@ fn main() {
             .accelerator("shift+cmdOrControl+S")
             .into(),
           MenuItem::Separator.into(),
+          CustomMenuItem::new("Import...", "Import...")
+            .accelerator("cmdOrControl+I")
+            .into(),
           CustomMenuItem::new("Export...", "Export...")
             .accelerator("cmdOrControl+E")
             .into(),

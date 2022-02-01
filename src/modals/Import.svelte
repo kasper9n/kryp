@@ -7,7 +7,7 @@
   const dispatch = createEventDispatcher()
 
   async function importFile() {
-    await runCmd('import', { kind: 'csv' })
+    await runCmd('import')
   }
 
   function keydown(e: KeyboardEvent) {

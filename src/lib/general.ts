@@ -20,9 +20,13 @@ export async function runCmd<T = any>(cmd: string, options: { [key: string]: any
 
 export function focus(el: HTMLElement) {
   let lastActiveElement = document.body
+
   if (document.activeElement instanceof HTMLElement) {
+    // console.log('focus', el)
     lastActiveElement = document.activeElement
-    el.focus()
+    setTimeout(() => {
+      el.focus()
+    })
   }
   return {
     destroy() {

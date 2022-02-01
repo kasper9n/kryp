@@ -31,22 +31,21 @@
   <h3>Transfer</h3>
   <p>
     Move an asset from one wallet to another. Transfers are tax-free, but if you pay a fee for the
-    transfer, this fee will realize capital gains. The fee is automatically calculated as the
+    transfer, capital gains will be realized for the fee. The fee is automatically calculated as the
     difference between the sent and received amount.</p
   >
 
   <h3>Deposit</h3>
   <p>
-    Add an asset to a wallet. By default this transaction does not result in any taxes. If certain
-    tags are added, it will generate income tax (like Airdrop, Fork, Mining, Staking, Referrals,
-    Loan interest, etc). If the deposit is not in your base currency, it will be treated as a
-    purchase, using the price at the time of the deposit.</p
+    Add an asset to a wallet. This will not realize any capital gains, however income tax may be
+    applicable for some types of deposits. If a deposit is not in your base currency, it will be
+    treated as a purchase of that asset with your base currency.</p
   >
 
   <h3>Withdrawal</h3>
   <p>
     Remove an asset from your wallet. By default this transaction will realize capital gains, unless
-    the transaction has a tag that disables capital gains (like Lost, Gift, Donation).</p
+    the transaction has a tag that disables capital gains (like Lost).</p
   >
 </div>
 
