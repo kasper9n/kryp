@@ -3,6 +3,7 @@ use lazy_static::lazy_static;
 use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 #[cfg(test)]
@@ -17,10 +18,26 @@ pub struct PriceData {
 }
 
 const FIAT_LIST_JSON: &str = include_str!("../../public/assets/fiat-list.json");
+const CRYPTO_LIST_JSON: &str = include_str!("../../public/assets/crypto-list.json");
 
-type AllFiatAssets = HashMap<String, String>;
+type FiatList = HashMap<String, String>;
 lazy_static! {
-  static ref FIAT_LIST: AllFiatAssets = serde_json::from_str(&FIAT_LIST_JSON).unwrap();
+  static ref FIAT_LIST: FiatList = serde_json::from_str(&FIAT_LIST_JSON).unwrap();
+}
+
+// Map of (id, name)
+type CryptoList = HashMap<String, (String, String)>;
+lazy_static! {
+  static ref CRYPTO_LIST: CryptoList = serde_json::from_str(&CRYPTO_LIST_JSON).unwrap();
+}
+
+pub fn symbol_kind(symbol: &str) -> AssetKind {
+  if FIAT_LIST.contains_key(symbol) {
+    AssetKind::Fiat
+  } else {
+    AssetKind::Crypto
+  }
+}
 }
 
 impl PriceData {
@@ -29,16 +46,9 @@ impl PriceData {
       assets: HashMap::new(),
     };
   }
-  pub fn symbol_kind(&mut self, symbol: &str) -> AssetKind {
-    if FIAT_LIST.contains_key(symbol) {
-      AssetKind::Fiat
-    } else {
-      AssetKind::Crypto
-    }
-  }
   pub fn asset(&mut self, symbol: &str) -> &mut PriceDataAsset {
     let symbol = symbol.to_uppercase();
-    let kind = self.symbol_kind(&symbol);
+    let kind = symbol_kind(&symbol);
     let entry = self.assets.entry(symbol.clone());
     let interval = match kind {
       AssetKind::Fiat => Interval::Daily,
@@ -147,6 +157,29 @@ async fn get_value() {
   );
 }
 
+#[derive(Deserialize, Debug)]
+struct MarketChart {
+  prices: Vec<(i64, f64)>,
+}
+
+async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
+  let json: Value = match response.json().await {
+    Ok(value) => value,
+    Err(_) => return fallback.to_string(),
+  };
+  match json {
+    Value::Object(obj) => match obj.get("error") {
+      Some(error) => match error {
+        Value::String(error) => return error.to_string(),
+        _ => {}
+      },
+      None => {}
+    },
+    _ => {}
+  }
+  fallback.to_string()
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceDataAsset {
   pub symbol: String,
@@ -183,7 +216,7 @@ impl PriceDataAsset {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
     let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
-    println!("{} {}", self.symbol, start_dt_str);
+    println!("fetch_fiat {} {}", self.symbol, start_dt_str);
     let end_dt = start_dt + Duration::days(365);
 
     type PriceMap = HashMap<String, String>;
@@ -201,6 +234,7 @@ impl PriceDataAsset {
       from = start_dt_str,
       to = end_dt.format("%Y-%m-%d").to_string(),
     );
+    println!("fetch_fiat url {}", request_url);
     let timeseries_res = reqwest::get(request_url).await?;
     if !timeseries_res.status().is_success() {
       return err!("Error fetching coins {}", self.symbol);
@@ -225,7 +259,7 @@ impl PriceDataAsset {
     let start_timestamp = date / 1000 - 60 * 60 * 24 * 1; // 1 day before
     let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
     let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
-    println!("{} {}", self.symbol, start_dt_str);
+    println!("fetch_crypto {} {}", self.symbol, start_dt_str);
     let end_dt = start_dt + Duration::days(30);
 
     #[derive(Deserialize, Debug)]
@@ -249,26 +283,19 @@ impl PriceDataAsset {
     }
     let coins: Vec<Coin> = coins_res.json().await?;
 
-    let mut coin_id_map: HashMap<String, String> = HashMap::new();
+    let mut ids = Vec::new();
     for coin in coins {
-      if coin_id_map.contains_key(&coin.symbol) {
-        // TODO Handle duplicate tickers (instead of ignoring them)
-        coin_id_map.insert(coin.symbol.clone(), "".to_string());
-      } else {
-        coin_id_map.insert(coin.symbol.to_uppercase(), coin.id);
+      if coin.symbol.to_uppercase() == self.symbol {
+        ids.push(coin.id);
       }
     }
-    let id = coin_id_map
-      .get(&self.symbol)
-      .ok_or(format!("No coin ID found for {}", self.symbol))?;
-    if id == "" {
-      return err!("Ticker {} has multiple coins", self.symbol);
+    if ids.len() > 1 {
+      return err!("Multiple crypto assets called \"{}\"", self.symbol);
     }
+    let id = ids
+      .get(0)
+      .ok_or(format!("Crypto asset \"{}\" not found", self.symbol))?;
 
-    #[derive(Deserialize, Debug)]
-    struct MarketChart {
-      prices: Vec<(i64, f64)>,
-    }
     thread::sleep(coingecko_duration);
     let request_url = format!(
       "https://api.coingecko.com/api/v3/coins/{id}/market_chart/range?vs_currency={base}&from={from}&to={to}",
@@ -277,17 +304,18 @@ impl PriceDataAsset {
       from = start_dt.timestamp(),
       to = end_dt.timestamp(),
     );
-    println!("{}", request_url);
+    println!("fetch_crypto url {}", request_url);
     let market_chart_res = reqwest::get(request_url).await?;
     if !market_chart_res.status().is_success() {
       if market_chart_res.status() == 429 {
         return err!("Rate limit, please try again");
       } else {
-        return err!("Error fetching {} prices", self.symbol);
+        let default_err_msg = format!("Error fetching {} prices", self.symbol);
+        let err_msg = parse_error(market_chart_res, &default_err_msg).await;
+        return err!("{}", err_msg);
       }
     }
     let market_chart: MarketChart = market_chart_res.json().await?;
-    println!("{:?}", market_chart);
 
     for (price_date, price_rate) in market_chart.prices {
       self.prices.entry(price_date).or_insert(price_rate);

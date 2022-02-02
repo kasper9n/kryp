@@ -1,4 +1,4 @@
-use crate::prices::{AssetKind, PriceData};
+use crate::prices::{symbol_kind, AssetKind, PriceData};
 use crate::round_8;
 use chrono::TimeZone;
 use rust_decimal::Decimal;
@@ -362,8 +362,8 @@ impl Transaction {
     let mut cost;
     match self {
       Transaction::Trade(tx) => {
-        let sent_kind = price_data.symbol_kind(&tx.sent_asset);
-        let recv_kind = price_data.symbol_kind(&tx.recv_asset);
+        let sent_kind = symbol_kind(&tx.sent_asset);
+        let recv_kind = symbol_kind(&tx.recv_asset);
         // fiat -> fiat: fee+sent
         // fiat -> cryp: fee+sent
         // cryp -> cryp: fee+sent
