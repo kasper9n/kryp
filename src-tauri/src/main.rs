@@ -51,7 +51,6 @@ fn main() {
       let win = win
         .title("Kryp")
         .resizable(true)
-        .transparent(false)
         .decorations(true)
         .always_on_top(false)
         .inner_size(1050.0, 800.0)
@@ -159,7 +158,8 @@ fn main() {
       let _ = event.window().emit("menu", event_name);
       match event_name {
         "Learn More" => {
-          shell::open("https://github.com/probablykasper/kryp".to_string(), None).unwrap();
+          let url = "https://github.com/probablykasper/kryp".to_string();
+          shell::open(&event.window().shell_scope(), url, None).unwrap();
         }
         _ => {}
       }
@@ -167,7 +167,7 @@ fn main() {
     .build(ctx)
     .expect("error while running tauri app");
   tauri_app.run(|app_handle, e| match e {
-    tauri::Event::CloseRequested { label, api, .. } => {
+    tauri::RunEvent::CloseRequested { label, api, .. } => {
       if label == "main" {
         let st = app_handle.state::<Data>();
         let kryp = tauri::async_runtime::block_on(st.0.lock());
