@@ -126,7 +126,7 @@
     return fields
   }
   type Info = {
-    date: Date
+    date: Date | null
     note: string
     hash: string
     sent_amount: string
@@ -185,6 +185,7 @@
     if (!enabledFields.recv || info.recv_amount) errors.delete('recv_amount')
     if (!enabledFields.recv || info.recv_asset) errors.delete('recv_asset')
     if (!enabledFields.recv || info.recv_wallet) errors.delete('recv_wallet')
+    if (!info.date) validDate = false
     errors = errors
     hasErrors = !!errors.size || !validDate
   }
