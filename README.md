@@ -10,11 +10,10 @@
 4. Run `npm install`
 
 ### Commands
-
 - `npm run dev`: Start app in dev mode
 - `npm run build`: Build
+- `npm run lint`: Lint
 - `npm run format`: Format
-- `npm run check`: Check code
 - `npm run test`: Runs tests. Some of these could fail due to API rate limiting or downtime.
 
 ### ToDo
