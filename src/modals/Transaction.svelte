@@ -23,7 +23,7 @@
 
   async function save() {
     validate(info, false)
-    if (hasErrors) return
+    if (hasErrors || !info.date) return
     let json: Transaction
     if (tag.type === 'Trade') {
       json = {

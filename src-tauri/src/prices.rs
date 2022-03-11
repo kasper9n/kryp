@@ -38,6 +38,14 @@ pub fn symbol_kind(symbol: &str) -> AssetKind {
     AssetKind::Crypto
   }
 }
+fn get_id(symbol: &str) -> Option<String> {
+  if let Some(fiat_currency) = FIAT_LIST.get(symbol) {
+    Some(fiat_currency.to_string())
+  } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
+    Some(crypto_asset.0.to_string())
+  } else {
+    None
+  }
 }
 
 impl PriceData {
@@ -56,6 +64,7 @@ impl PriceData {
     };
     let price_data_asset = entry.or_insert(PriceDataAsset {
       symbol: symbol.clone(),
+      id: get_id(&symbol).unwrap_or("".to_string()),
       kind,
       interval,
       prices: BTreeMap::new(),
@@ -81,14 +90,14 @@ impl PriceData {
       Ok(amount * price)
     }
   }
-  pub async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Result<Decimal, String> {
+  async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Result<Decimal, String> {
     let price = self.get_usd_price(currency, date).await?;
     match Decimal::from_f64(price) {
       Some(price) => Ok(price),
       None => throw!("Unable to convert price from float to decimal"),
     }
   }
-  pub async fn get_usd_price(&mut self, currency: &str, date: i64) -> Result<f64, String> {
+  async fn get_usd_price(&mut self, currency: &str, date: i64) -> Result<f64, String> {
     let currency = currency.to_uppercase();
     if currency == "USD" {
       return Ok(1.0);
@@ -183,6 +192,7 @@ async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceDataAsset {
   pub symbol: String,
+  pub id: String,
   pub kind: AssetKind,
   pub interval: Interval,
   pub prices: BTreeMap<i64, f64>,
@@ -191,9 +201,18 @@ pub struct PriceDataAsset {
 impl PriceDataAsset {
   /// Returns (date, price)
   pub fn local_price(&self, target_date: i64, extra_tolerance: bool) -> Option<(i64, f64)> {
-    let max_offset = match self.interval {
-      Interval::Daily => 1000 * 60 * 60 * if extra_tolerance { 25 } else { 12 },
-      Interval::HourlyOrDaily => 1000 * 60 * if extra_tolerance { 60 * 25 } else { 50 },
+    let minute = 1000 * 60;
+    let hour = minute * 60;
+    let max_offset = if extra_tolerance {
+      match self.interval {
+        Interval::Daily => hour * 25,
+        Interval::HourlyOrDaily => hour * 25,
+      }
+    } else {
+      match self.interval {
+        Interval::Daily => hour * 12,
+        Interval::HourlyOrDaily => minute * 50,
+      }
     };
     let number_range = target_date - max_offset..=target_date + max_offset;
     let range = self.prices.range(number_range);
@@ -262,44 +281,12 @@ impl PriceDataAsset {
     println!("fetch_crypto {} {}", self.symbol, start_dt_str);
     let end_dt = start_dt + Duration::days(30);
 
-    #[derive(Deserialize, Debug)]
-    #[allow(dead_code)]
-    struct Coin {
-      id: String,
-      symbol: String,
-      name: String,
-    }
     let coingecko_duration = time::Duration::from_millis(600);
-    thread::sleep(coingecko_duration);
-    let request_url = "https://api.coingecko.com/api/v3/coins/list";
-    let coins_res = reqwest::get(request_url).await?;
-    if !coins_res.status().is_success() {
-      if coins_res.status() == 429 {
-        let x = err!("Rate limit, please try again");
-        return x;
-      } else {
-        return err!("Error fetching coins {}", self.symbol);
-      }
-    }
-    let coins: Vec<Coin> = coins_res.json().await?;
-
-    let mut ids = Vec::new();
-    for coin in coins {
-      if coin.symbol.to_uppercase() == self.symbol {
-        ids.push(coin.id);
-      }
-    }
-    if ids.len() > 1 {
-      return err!("Multiple crypto assets called \"{}\"", self.symbol);
-    }
-    let id = ids
-      .get(0)
-      .ok_or(format!("Crypto asset \"{}\" not found", self.symbol))?;
 
     thread::sleep(coingecko_duration);
     let request_url = format!(
       "https://api.coingecko.com/api/v3/coins/{id}/market_chart/range?vs_currency={base}&from={from}&to={to}",
-      id = id,
+      id = self.id,
       base = "USD",
       from = start_dt.timestamp(),
       to = end_dt.timestamp(),
