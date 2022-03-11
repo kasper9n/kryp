@@ -3,7 +3,7 @@
   import { onDestroy } from 'svelte'
   import { Route, active, router } from 'tinro'
   import { refresh, runCmd } from '$lib/general'
-  import { opened } from '$lib/data'
+  import { opened, tax } from '$lib/data'
   import NewFileModal from '$modals/NewFile.svelte'
   import Button from '$lib/Button.svelte'
 
@@ -77,7 +77,7 @@
     <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
     <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
     <div class="nav-mid" />
-    <span class="base">NOK</span>
+    <span class="base">{$tax.settings.base_currency}</span>
     <a on:click={go} use:active href="/prices"><button>Prices</button></a>
     <a on:click={go} use:active href="/help"><button>Help</button></a>
   </div>

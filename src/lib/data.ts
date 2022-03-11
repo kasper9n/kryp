@@ -4,16 +4,22 @@ import type { Transaction } from '$lib/transactions'
 
 type Tax = {
   transactions: Transaction[]
-  base_currency: string
+  settings: TaxSettings
   price_data: PriceData
   realized_gains: Realized[]
   deposits: Deposit[]
   balances: Balance[]
 }
 
+type TaxSettings = {
+  base_currency: string
+}
+
 const defaultTax: Tax = {
   transactions: [],
-  base_currency: 'USD',
+  settings: {
+    base_currency: 'USD',
+  },
   price_data: {
     assets: {},
   },

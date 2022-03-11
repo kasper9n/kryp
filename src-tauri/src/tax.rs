@@ -17,7 +17,7 @@ use crate::transaction::{Deposit, Trade, Transfer, Withdrawal};
 pub struct Tax {
   pub version: String,
   pub transactions: Vec<Transaction>,
-  pub base_currency: String,
+  pub settings: TaxSettings,
   pub price_data: PriceData,
   pub realized_gains: Vec<Realized>,
   pub balances: Vec<Balance>,
@@ -30,7 +30,9 @@ impl Tax {
     Tax {
       version: "0.1".to_string(),
       transactions: Vec::new(),
-      base_currency: base_currency.to_string(),
+      settings: TaxSettings {
+        base_currency: base_currency.to_string(),
+      },
       price_data: PriceData::new(),
       realized_gains: Vec::new(),
       balances: Vec::new(),
@@ -103,7 +105,7 @@ impl Tax {
     trade.recv_asset = recv.1.to_string();
     trade.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Trade(trade);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
       .await?;
     Ok(tx)
   }
@@ -124,7 +126,7 @@ impl Tax {
     transfer.recv_asset = recv.1.to_string();
     transfer.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Transfer(transfer);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
       .await?;
     Ok(tx)
   }
@@ -141,7 +143,7 @@ impl Tax {
     deposit.asset = recv.1.to_string();
     deposit.wallet = recv.2.to_string();
     let mut tx = Transaction::Deposit(deposit);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
       .await?;
     Ok(tx)
   }
@@ -158,10 +160,15 @@ impl Tax {
     withdrawal.asset = recv.1.to_string();
     withdrawal.wallet = recv.2.to_string();
     let mut tx = Transaction::Withdrawal(withdrawal);
-    tx.refresh_cost(&mut self.price_data, &self.base_currency)
+    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
       .await?;
     Ok(tx)
   }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TaxSettings {
+  pub base_currency: String,
 }
 
 struct CalculationOutput {

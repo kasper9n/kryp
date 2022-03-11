@@ -205,10 +205,10 @@
     <div class="row">
       <p>Type</p>
       <Dropdown options={tags} bind:value={tag} let:option let:selected>
-        <div class="tag-option" class:selected data-type={option.type}
-          ><svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24"
-            ><circle cx="12" cy="12" r="12" /></svg
-          >{option.name}
+        <div class="tag-option" class:selected data-type={option.type}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="12" />
+          </svg>{option.name}
         </div>
       </Dropdown>
     </div>

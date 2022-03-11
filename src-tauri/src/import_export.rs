@@ -343,7 +343,7 @@ async fn from_csv_record(
   };
   println!("{:#?}", transaction);
   transaction
-    .refresh_cost(&mut tax.price_data, &tax.base_currency)
+    .refresh_cost(&mut tax.price_data, &tax.settings.base_currency)
     .await?;
   Ok(transaction)
 }

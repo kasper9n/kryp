@@ -1,10 +1,13 @@
 {
 	"version": "0.1",
 	"transactions": [],
-	"base_currency": "NOK",
+	"settings": {
+		"base_currency": "NOK"
+	},
 	"price_data": {
 		"assets": {
 			"BTC": {
+				"id": "bitcoin",
 				"symbol": "BTC",
 				"kind": "Crypto",
 				"interval": "HourlyOrDaily",
@@ -43,6 +46,7 @@
 				}
 			},
 			"NOK": {
+				"id": "NOK",
 				"symbol": "NOK",
 				"kind": "Fiat",
 				"interval": "Daily",
@@ -415,6 +419,7 @@
 				}
 			},
 			"ETH": {
+				"id": "ethereum",
 				"symbol": "ETH",
 				"kind": "Crypto",
 				"interval": "HourlyOrDaily",
