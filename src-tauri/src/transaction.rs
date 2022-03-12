@@ -1,5 +1,6 @@
 use crate::prices::{symbol_kind, AssetKind, PriceData};
 use crate::round_8;
+use crate::tax::Api;
 use chrono::TimeZone;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -185,6 +186,7 @@ impl Transaction {
   pub async fn from_json(
     json: &str,
     price_data: &mut PriceData,
+    apis: &[Api],
     base: &str,
   ) -> Result<Self, String> {
     let tx_result: Result<Self, _> = serde_json::from_str(&json);
@@ -192,7 +194,7 @@ impl Transaction {
       Err(e) => return Err(e.to_string()),
       Ok(tx) => tx,
     };
-    tx.refresh_cost(price_data, base).await?;
+    tx.refresh_cost(price_data, apis, base).await?;
     Ok(tx)
   }
   pub fn to_csv_record<'a>(&'a self) -> Vec<String> {
@@ -322,9 +324,22 @@ impl Transaction {
   pub async fn refresh_cost(
     &mut self,
     price_data: &mut PriceData,
+    apis: &[Api],
     base: &str,
   ) -> Result<(), String> {
-    let cost = self.determine_cost(price_data, base).await?;
+    let cost;
+    if let Some((amount, asset)) = self.manual_worth() {
+      if asset == base {
+        cost = amount.clone()
+      } else {
+        cost = price_data
+          .get_value(amount.clone(), &asset, self.date(), apis, base)
+          .await?
+      }
+    } else {
+      cost = self.calculate_cost(price_data, apis, base).await?
+    }
+
     match self {
       Transaction::Trade(tx) => tx.cost = cost,
       Transaction::Transfer(tx) => tx.cost = cost,
@@ -333,30 +348,11 @@ impl Transaction {
     }
     Ok(())
   }
-  /// Get the cost. If a manual cost is set, that will be used.
-  async fn determine_cost(
-    &mut self,
-    price_data: &mut PriceData,
-    base: &str,
-  ) -> Result<Decimal, String> {
-    if let Some((amount, asset)) = self.manual_worth() {
-      if asset == base {
-        Ok(amount.clone())
-      } else {
-        Ok(
-          price_data
-            .get_value(amount.clone(), &asset, self.date(), base)
-            .await?,
-        )
-      }
-    } else {
-      Ok(self.calculate_cost(price_data, base).await?)
-    }
-  }
   /// Calculates and returns the cost of the transaction
   async fn calculate_cost(
     &mut self,
     price_data: &mut PriceData,
+    apis: &[Api],
     base: &str,
   ) -> Result<Decimal, String> {
     let mut cost;
@@ -370,32 +366,32 @@ impl Transaction {
         // cryp -> fiat: fee+recv
         if let (AssetKind::Crypto, AssetKind::Fiat) = (sent_kind, recv_kind) {
           cost = price_data
-            .get_value(tx.recv_amount, &tx.recv_asset, tx.date, base)
+            .get_value(tx.recv_amount, &tx.recv_asset, tx.date, apis, base)
             .await?;
         } else {
           cost = price_data
-            .get_value(tx.sent_amount, &tx.sent_asset, tx.date, base)
+            .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
             .await?;
         }
         if tx.fee_asset != "" {
           cost += price_data
-            .get_value(tx.fee_amount, &tx.fee_asset, tx.date, base)
+            .get_value(tx.fee_amount, &tx.fee_asset, tx.date, apis, base)
             .await?;
         }
       }
       Transaction::Transfer(tx) => {
         cost = price_data
-          .get_value(tx.sent_amount, &tx.sent_asset, tx.date, base)
+          .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
           .await?;
       }
       Transaction::Deposit(tx) => {
         cost = price_data
-          .get_value(tx.amount, &tx.asset, tx.date, base)
+          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
           .await?;
       }
       Transaction::Withdrawal(tx) => {
         cost = price_data
-          .get_value(tx.amount, &tx.asset, tx.date, base)
+          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
           .await?;
       }
     }

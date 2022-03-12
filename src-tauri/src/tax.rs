@@ -1,4 +1,4 @@
-use crate::prices::PriceData;
+use crate::prices::{AssetKind, PriceData};
 use crate::transaction::Transaction;
 use crate::{round_8, throw};
 use atomicwrites::{AllowOverwrite, AtomicFile};
@@ -32,6 +32,11 @@ impl Tax {
       transactions: Vec::new(),
       settings: TaxSettings {
         base_currency: base_currency.to_string(),
+        apis: vec![
+          Api::new(ApiName::ExchangerateHost),
+          Api::new(ApiName::CoinGecko),
+          Api::new(ApiName::CryptoCompare),
+        ],
       },
       price_data: PriceData::new(),
       realized_gains: Vec::new(),
@@ -105,7 +110,8 @@ impl Tax {
     trade.recv_asset = recv.1.to_string();
     trade.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Trade(trade);
-    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
+    let base = &self.settings.base_currency;
+    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -126,7 +132,8 @@ impl Tax {
     transfer.recv_asset = recv.1.to_string();
     transfer.recv_wallet = recv.2.to_string();
     let mut tx = Transaction::Transfer(transfer);
-    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
+    let base = &self.settings.base_currency;
+    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -143,7 +150,8 @@ impl Tax {
     deposit.asset = recv.1.to_string();
     deposit.wallet = recv.2.to_string();
     let mut tx = Transaction::Deposit(deposit);
-    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
+    let base = &self.settings.base_currency;
+    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -160,7 +168,8 @@ impl Tax {
     withdrawal.asset = recv.1.to_string();
     withdrawal.wallet = recv.2.to_string();
     let mut tx = Transaction::Withdrawal(withdrawal);
-    tx.refresh_cost(&mut self.price_data, &self.settings.base_currency)
+    let base = &self.settings.base_currency;
+    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -169,6 +178,38 @@ impl Tax {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TaxSettings {
   pub base_currency: String,
+  pub apis: Vec<Api>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Api {
+  pub name: ApiName,
+  pub key: Option<String>,
+  pub disabled: bool,
+}
+
+impl Api {
+  pub fn new(name: ApiName) -> Self {
+    Api {
+      name,
+      key: None,
+      disabled: false,
+    }
+  }
+  pub fn asset_kind(&self) -> AssetKind {
+    match self.name {
+      ApiName::ExchangerateHost => AssetKind::Fiat,
+      ApiName::CoinGecko => AssetKind::Crypto,
+      ApiName::CryptoCompare => AssetKind::Crypto,
+    }
+  }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum ApiName {
+  ExchangerateHost,
+  CoinGecko,
+  CryptoCompare,
 }
 
 struct CalculationOutput {
@@ -364,7 +405,7 @@ pub struct Realized {
 
 #[test]
 pub fn trades() {
-  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
+  let mut tax = Tax::load("./tests/kryp.json").unwrap();
   tax.transactions = vec![
     tax
       .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
@@ -431,7 +472,7 @@ pub fn trades() {
 
 #[test]
 pub fn transfer_fee() {
-  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
+  let mut tax = Tax::load("./tests/kryp.json").unwrap();
   tax.transactions = vec![
     tax
       .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
@@ -460,7 +501,7 @@ pub fn transfer_fee() {
 
 #[test]
 pub fn deposit_withdraw_crypto() {
-  let mut tax = Tax::load("./tests/taxes.kryp").unwrap();
+  let mut tax = Tax::load("./tests/kryp.json").unwrap();
   tax.transactions = vec![
     tax
       .new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase"))

@@ -342,8 +342,9 @@ async fn from_csv_record(
     _ => throw!("Invalid type \"{}\"", kind),
   };
   println!("{:#?}", transaction);
+  let base = &tax.settings.base_currency;
   transaction
-    .refresh_cost(&mut tax.price_data, &tax.settings.base_currency)
+    .refresh_cost(&mut tax.price_data, &tax.settings.apis, base)
     .await?;
   Ok(transaction)
 }

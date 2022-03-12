@@ -1,16 +1,10 @@
-use chrono::{Duration, NaiveDate, NaiveDateTime};
+use crate::tax::Api;
+use crate::{fetch, throw};
+use chrono::NaiveDateTime;
 use lazy_static::lazy_static;
-use reqwest;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use std::error::Error;
-#[cfg(test)]
-use std::ops::RangeInclusive;
-use std::{thread, time};
-
-use crate::{err, throw};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceData {
@@ -39,10 +33,19 @@ pub fn symbol_kind(symbol: &str) -> AssetKind {
   }
 }
 fn get_id(symbol: &str) -> Option<String> {
-  if let Some(fiat_currency) = FIAT_LIST.get(symbol) {
-    Some(fiat_currency.to_string())
+  if let Some(_) = FIAT_LIST.get(symbol) {
+    Some(symbol.to_string())
   } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
     Some(crypto_asset.0.to_string())
+  } else {
+    None
+  }
+}
+fn get_name(symbol: &str) -> Option<String> {
+  if let Some(fiat_currency) = FIAT_LIST.get(symbol) {
+    Some(fiat_currency.clone())
+  } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
+    Some(crypto_asset.1.to_string())
   } else {
     None
   }
@@ -54,7 +57,7 @@ impl PriceData {
       assets: HashMap::new(),
     };
   }
-  pub fn asset(&mut self, symbol: &str) -> &mut PriceDataAsset {
+  pub fn asset(&mut self, symbol: &str) -> Result<&mut PriceDataAsset, String> {
     let symbol = symbol.to_uppercase();
     let kind = symbol_kind(&symbol);
     let entry = self.assets.entry(symbol.clone());
@@ -64,57 +67,89 @@ impl PriceData {
     };
     let price_data_asset = entry.or_insert(PriceDataAsset {
       symbol: symbol.clone(),
-      id: get_id(&symbol).unwrap_or("".to_string()),
+      name: get_name(&symbol).ok_or(format!("Unsupported asset {}", symbol))?,
+      id: get_id(&symbol).ok_or(format!("Unsupported asset {}", symbol))?,
       kind,
       interval,
       prices: BTreeMap::new(),
     });
-    return price_data_asset;
+    Ok(price_data_asset)
   }
   pub async fn get_value(
     &mut self,
     amount: Decimal,
     asset: &str,
     date: i64,
+    apis: &[Api],
     base: &str,
   ) -> Result<Decimal, String> {
     if base == asset {
       Ok(amount)
     } else if base == "USD" {
-      let usd_price = self.get_usd_price_dec(asset, date).await?;
+      let usd_price = self.get_usd_price_dec(asset, date, apis).await?;
       Ok(amount * usd_price)
     } else {
-      let usd_price = self.get_usd_price_dec(asset, date).await?;
-      let base_usd_price = self.get_usd_price_dec(base, date).await?;
+      let usd_price = self.get_usd_price_dec(asset, date, apis).await?;
+      let base_usd_price = self.get_usd_price_dec(base, date, apis).await?;
       let price = usd_price / base_usd_price;
       Ok(amount * price)
     }
   }
-  async fn get_usd_price_dec(&mut self, currency: &str, date: i64) -> Result<Decimal, String> {
-    let price = self.get_usd_price(currency, date).await?;
+  async fn get_usd_price_dec(
+    &mut self,
+    currency: &str,
+    date: i64,
+    apis: &[Api],
+  ) -> Result<Decimal, String> {
+    let price = self.get_usd_price(currency, date, apis).await?;
     match Decimal::from_f64(price) {
       Some(price) => Ok(price),
       None => throw!("Unable to convert price from float to decimal"),
     }
   }
-  async fn get_usd_price(&mut self, currency: &str, date: i64) -> Result<f64, String> {
+  async fn get_usd_price(
+    &mut self,
+    currency: &str,
+    date: i64,
+    apis: &[Api],
+  ) -> Result<f64, String> {
     let currency = currency.to_uppercase();
     if currency == "USD" {
       return Ok(1.0);
     }
-    let price_data_asset = self.asset(&currency);
-    match price_data_asset.local_price(date, false) {
-      Some(price) => return Ok(price.1),
-      None => {
-        match price_data_asset.fetch(date).await {
-          Ok(()) => {}
-          Err(e) => throw!("Error fetching price of {}: {}", currency, e),
-        };
-        match price_data_asset.local_price(date, true) {
+    let price_data_asset = self.asset(&currency)?;
+
+    let mut errors = Vec::new();
+
+    for api in apis {
+      if api.asset_kind() == price_data_asset.kind {
+        match price_data_asset.local_price(date, false) {
           Some(price) => return Ok(price.1),
-          None => throw!("No price found for {}", currency),
-        };
+          None => {
+            match price_data_asset.fetch(date, api).await {
+              Ok(()) => {}
+              Err(e) => {
+                let msg = format!("Error fetching price of {}: {}", currency, e);
+                eprintln!("{}", msg);
+                errors.push(msg);
+              }
+            };
+            match price_data_asset.local_price(date, true) {
+              Some(price) => return Ok(price.1),
+              None => continue,
+            };
+          }
+        }
       }
+    }
+    if errors.len() == 0 {
+      let naive_dt = NaiveDateTime::from_timestamp(date / 1000, 0);
+      let date_str = naive_dt.format("%Y-%m-%d").to_string();
+      throw!("No price found for {} at {}", currency, date_str);
+    } else if errors.len() == 1 {
+      throw!("{}", errors[0]);
+    } else {
+      throw!("{}", errors.join("\n"));
     }
   }
 }
@@ -130,19 +165,21 @@ macro_rules! map(
 async fn get_value() {
   use rust_decimal_macros::dec;
   let mut pd = PriceData::new();
-  pd.asset("USD").prices = map! {
+  pd.asset("USD").unwrap().prices = map! {
     // this should never be used, usd price in usd is always 1
     1640000000000 => 999.0
   };
-  pd.asset("NOK").prices = map! {
+  pd.asset("NOK").unwrap().prices = map! {
     1640000000000 => 0.1
   };
-  pd.asset("ETH").prices = map! {
+  pd.asset("ETH").unwrap().prices = map! {
     1640000000000 => 5000.0
   };
 
+  let apis = &crate::tax::Tax::new("USD").settings.apis;
+
   assert_eq!(
-    pd.get_value(dec!(2), "USD", 1640000000000, "USD")
+    pd.get_value(dec!(2), "USD", 1640000000000, apis, "USD")
       .await
       .unwrap(),
     dec!(2),
@@ -150,7 +187,7 @@ async fn get_value() {
   );
 
   assert_eq!(
-    pd.get_value(dec!(2), "NOK", 1640000000000, "USD")
+    pd.get_value(dec!(2), "NOK", 1640000000000, apis, "USD")
       .await
       .unwrap(),
     dec!(0.2),
@@ -158,7 +195,7 @@ async fn get_value() {
   );
 
   assert_eq!(
-    pd.get_value(dec!(2), "ETH", 1640000000000, "NOK")
+    pd.get_value(dec!(2), "ETH", 1640000000000, apis, "NOK")
       .await
       .unwrap(),
     dec!(100_000), // 2 * 5000 / 0.1
@@ -166,36 +203,16 @@ async fn get_value() {
   );
 }
 
-#[derive(Deserialize, Debug)]
-struct MarketChart {
-  prices: Vec<(i64, f64)>,
-}
-
-async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
-  let json: Value = match response.json().await {
-    Ok(value) => value,
-    Err(_) => return fallback.to_string(),
-  };
-  match json {
-    Value::Object(obj) => match obj.get("error") {
-      Some(error) => match error {
-        Value::String(error) => return error.to_string(),
-        _ => {}
-      },
-      None => {}
-    },
-    _ => {}
-  }
-  fallback.to_string()
-}
+pub type Prices = BTreeMap<i64, f64>;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PriceDataAsset {
+  pub name: String,
   pub symbol: String,
   pub id: String,
   pub kind: AssetKind,
   pub interval: Interval,
-  pub prices: BTreeMap<i64, f64>,
+  pub prices: Prices,
 }
 
 impl PriceDataAsset {
@@ -220,95 +237,16 @@ impl PriceDataAsset {
     return Some((*closest.0, *closest.1));
   }
 
-  async fn fetch(&mut self, date: i64) -> Result<(), String> {
-    let result = match self.kind {
-      AssetKind::Fiat => self.fetch_fiat(date).await,
-      AssetKind::Crypto => self.fetch_crypto(date).await,
-    };
-    if let Err(e) = result {
-      return Err(format!("{}", e));
-    }
-    Ok(())
-  }
-
-  async fn fetch_fiat(&mut self, date: i64) -> Result<(), Box<dyn Error>> {
-    let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
-    let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
-    let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
-    println!("fetch_fiat {} {}", self.symbol, start_dt_str);
-    let end_dt = start_dt + Duration::days(365);
-
-    type PriceMap = HashMap<String, String>;
-    #[derive(Deserialize, Debug)]
-    struct Timeseries {
-      success: bool,
-      timeseries: bool,
-      rates: HashMap<String, PriceMap>,
-    }
-    thread::sleep(time::Duration::from_millis(500));
-    let request_url = format!(
-      "https://api.exchangerate.host/timeseries?base={symbol}&symbols={base}&places=8&start_date={from}&end_date={to}",
-      symbol = self.symbol,
-      base = "USD",
-      from = start_dt_str,
-      to = end_dt.format("%Y-%m-%d").to_string(),
-    );
-    println!("fetch_fiat url {}", request_url);
-    let timeseries_res = reqwest::get(request_url).await?;
-    if !timeseries_res.status().is_success() {
-      return err!("Error fetching coins {}", self.symbol);
-    }
-    let timeseries: Timeseries = timeseries_res.json().await?;
-    if !timeseries.success || !timeseries.timeseries {
-      return err!("Unknown error fetching prices");
-    }
-    for (date, price_map) in timeseries.rates {
-      let rate: f64 = match price_map.get("USD") {
-        None => continue,
-        Some(rate) => rate.parse().expect("Error parsing price"),
-      };
-      let d = NaiveDate::parse_from_str(&date, "%Y-%m-%d").expect("Error parsing price time");
-      let timestamp = d.and_hms(0, 0, 0).timestamp_millis();
-      self.prices.entry(timestamp).or_insert(rate);
-    }
-    Ok(())
-  }
-
-  async fn fetch_crypto(&mut self, date: i64) -> Result<(), Box<dyn Error>> {
-    let start_timestamp = date / 1000 - 60 * 60 * 24 * 1; // 1 day before
-    let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
-    let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
-    println!("fetch_crypto {} {}", self.symbol, start_dt_str);
-    let end_dt = start_dt + Duration::days(30);
-
-    let coingecko_duration = time::Duration::from_millis(600);
-
-    thread::sleep(coingecko_duration);
-    let request_url = format!(
-      "https://api.coingecko.com/api/v3/coins/{id}/market_chart/range?vs_currency={base}&from={from}&to={to}",
-      id = self.id,
-      base = "USD",
-      from = start_dt.timestamp(),
-      to = end_dt.timestamp(),
-    );
-    println!("fetch_crypto url {}", request_url);
-    let market_chart_res = reqwest::get(request_url).await?;
-    if !market_chart_res.status().is_success() {
-      if market_chart_res.status() == 429 {
-        return err!("Rate limit, please try again");
-      } else {
-        let default_err_msg = format!("Error fetching {} prices", self.symbol);
-        let err_msg = parse_error(market_chart_res, &default_err_msg).await;
-        return err!("{}", err_msg);
+  async fn fetch(&mut self, date: i64, api: &Api) -> Result<(), String> {
+    match fetch::fetch_prices(&self, api, date).await {
+      Ok(prices) => {
+        for (timestamp, rate) in prices {
+          self.prices.entry(timestamp).or_insert(rate);
+        }
+        Ok(())
       }
+      Err(e) => return Err(e),
     }
-    let market_chart: MarketChart = market_chart_res.json().await?;
-
-    for (price_date, price_rate) in market_chart.prices {
-      self.prices.entry(price_date).or_insert(price_rate);
-    }
-
-    return Ok(());
   }
 }
 
@@ -317,7 +255,7 @@ pub enum Interval {
   Daily = 0,
   HourlyOrDaily = 1,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum AssetKind {
   Fiat = 0,
   Crypto = 1,
@@ -326,7 +264,7 @@ pub enum AssetKind {
 #[test]
 fn crypto() {
   let mut pd = PriceData::new();
-  let mut eth_pda = pd.asset("ETH");
+  let mut eth_pda = pd.asset("ETH").unwrap();
   eth_pda.prices = map! {
     1600000000000 => 5.2,
     1600009000000 => 6.1
@@ -336,27 +274,55 @@ fn crypto() {
   assert_eq!(eth_pda.local_price(1610000000000, false), None);
 }
 
-/// Get a range from -x% to +x% of value. For example, a 50% tolerance
-/// around 10 gives you 5..15 (not 5..20, which might be better for prices)
 #[cfg(test)]
-fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
-  let min = num - num * tolerance_percent / 100.0;
-  let max = num + num * tolerance_percent / 100.0;
-  return min..=max;
-}
+mod api_fetch {
+  use crate::prices::PriceData;
+  use crate::tax::{Api, ApiName};
+  use std::ops::RangeInclusive;
 
-#[tokio::test]
-async fn api_fetch() {
-  let mut pd = PriceData::new();
-  let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
-  let nok_price = pd
-    .get_usd_price("NOK", date.timestamp_millis())
-    .await
-    .unwrap();
-  assert!(tolerance_pct(0.1125, 0.2).contains(&nok_price));
-  let eth_price = pd
-    .get_usd_price("ETH", date.timestamp_millis())
-    .await
-    .unwrap();
-  assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
+  /// Get a range from -x% to +x% of value. For example, a 50% tolerance
+  /// around 10 gives you 5..15 (not 5..20, which might be better for prices)
+  #[cfg(test)]
+  fn tolerance_pct(num: f64, tolerance_percent: f64) -> RangeInclusive<f64> {
+    let min = num - num * tolerance_percent / 100.0;
+    let max = num + num * tolerance_percent / 100.0;
+    return min..=max;
+  }
+
+  #[tokio::test]
+  async fn exchangerate_host() {
+    let mut pd = PriceData::new();
+    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+
+    let exchangerate_host = Api::new(ApiName::ExchangerateHost);
+    let nok_price = pd
+      .get_usd_price("NOK", date.timestamp_millis(), &[exchangerate_host])
+      .await
+      .unwrap();
+    assert!(tolerance_pct(0.1125, 0.2).contains(&nok_price));
+  }
+
+  #[tokio::test]
+  async fn coin_gecko() {
+    let mut pd = PriceData::new();
+    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+    let coin_gecko = Api::new(ApiName::CoinGecko);
+    let eth_price = pd
+      .get_usd_price("ETH", date.timestamp_millis(), &[coin_gecko])
+      .await
+      .unwrap();
+    assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
+  }
+
+  #[tokio::test]
+  async fn crypto_compare() {
+    let mut pd = PriceData::new();
+    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+    let crypto_compare = Api::new(ApiName::CryptoCompare);
+    let eth_price = pd
+      .get_usd_price("ETH", date.timestamp_millis(), &[crypto_compare])
+      .await
+      .unwrap();
+    assert!(tolerance_pct(137.5, 1.0).contains(&eth_price));
+  }
 }

@@ -165,6 +165,12 @@ pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
+pub async fn get_tax_settings(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().await;
+  to_json(&kryp.tax.settings)
+}
+
+#[command]
 pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
   to_json(&kryp.tax.transactions)
@@ -174,7 +180,8 @@ pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
 pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
-  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.settings.base_currency).await?;
+  let base = &tax.settings.base_currency;
+  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.settings.apis, base).await?;
   kryp.tax.add_transaction(tx);
   kryp.tax.calculate()?;
   Ok(())
@@ -211,10 +218,15 @@ pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
 
   let mut holdings = Vec::new();
   for (_key, mut holding) in holdings_map.into_iter() {
-    let base = &tax.settings.base_currency;
     holding.value = tax
       .price_data
-      .get_value(holding.amount, &holding.key, timestamp, base)
+      .get_value(
+        holding.amount,
+        &holding.key,
+        timestamp,
+        &tax.settings.apis,
+        &tax.settings.base_currency,
+      )
       .await?;
     holdings.push(holding);
   }

@@ -2,11 +2,29 @@
 	"version": "0.1",
 	"transactions": [],
 	"settings": {
-		"base_currency": "NOK"
+		"base_currency": "NOK",
+		"apis": [
+			{
+				"name": "ExchangerateHost",
+				"key": null,
+				"disabled": false
+			},
+			{
+				"name": "CoinGecko",
+				"key": null,
+				"disabled": false
+			},
+			{
+				"name": "CryptoCompare",
+				"key": null,
+				"disabled": false
+			}
+		]
 	},
 	"price_data": {
 		"assets": {
 			"BTC": {
+				"name": "Bitcoin",
 				"id": "bitcoin",
 				"symbol": "BTC",
 				"kind": "Crypto",
@@ -46,6 +64,7 @@
 				}
 			},
 			"NOK": {
+				"name": "Norwegian Krone",
 				"id": "NOK",
 				"symbol": "NOK",
 				"kind": "Fiat",
@@ -419,6 +438,7 @@
 				}
 			},
 			"ETH": {
+				"name": "Ethereum",
 				"id": "ethereum",
 				"symbol": "ETH",
 				"kind": "Crypto",

@@ -7,7 +7,7 @@ edition = "2018"
 build = "src/build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.3", features = [] }
+tauri-build = { version = "1.0.0-rc.4", features = [] }
 
 [dependencies]
 rust_decimal = "1.13.0"
@@ -17,7 +17,7 @@ tokio = { version = "1.6.0", features = ["full"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.0"
-tauri = { version = "1.0.0-rc.3", features = ["dialog-open", "dialog-save", "shell-execute", "shell-open"] }
+tauri = { version = "1.0.0-rc.4", features = ["dialog-open", "dialog-save", "shell-execute", "shell-open"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 csv = "1.1.6"
 atomicwrites = "0.3.0"

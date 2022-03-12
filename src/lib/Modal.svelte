@@ -16,8 +16,8 @@
   }
 </script>
 
-<div class="modal cover">
-  <div class="bg cover" on:click={close} tabindex="-1" on:keydown bind:this={modalBg} />
+<div class="modal cover" on:keydown tabindex="-1">
+  <div class="bg cover" on:click={close} tabindex="-1" bind:this={modalBg} />
   <div class="box" style="width: {width};">
     {#if closeIcon}
       <svg

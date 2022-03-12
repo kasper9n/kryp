@@ -1,7 +1,7 @@
 <script lang="ts">
   import TxTable from '$lib/TxTable.svelte'
   import TxList from '$lib/TxList.svelte'
-  import TransactionModal from '$modals/Transaction.svelte'
+  import TransactionModal from '$lib/modals/Transaction.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
   let view = 0

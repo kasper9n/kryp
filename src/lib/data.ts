@@ -11,14 +11,16 @@ type Tax = {
   balances: Balance[]
 }
 
-type TaxSettings = {
+export type TaxSettings = {
   base_currency: string
+  apis: { name: string; key?: string }[]
 }
 
 const defaultTax: Tax = {
   transactions: [],
   settings: {
     base_currency: 'USD',
+    apis: [],
   },
   price_data: {
     assets: {},

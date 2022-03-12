@@ -4,16 +4,16 @@
   import { Route, active, router } from 'tinro'
   import { refresh, runCmd } from '$lib/general'
   import { opened, tax } from '$lib/data'
-  import NewFileModal from '$modals/NewFile.svelte'
+  import NewFileModal from '$lib/modals/NewFile.svelte'
+  import SettingsModal from '$lib/modals/Settings.svelte'
   import Button from '$lib/Button.svelte'
-
   import DashboardPage from '$routes/index.svelte'
   import TransactionsPage from '$routes/transactions.svelte'
   import PricesPage from '$routes/prices.svelte'
   import HelpPage from '$routes/help.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
-  import ImportModal from './modals/Import.svelte'
+  import ImportModal from '$lib/modals/Import.svelte'
 
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
@@ -29,6 +29,7 @@
   }
 
   let newFileModalVisible = false
+  let settingsModalVisible = false
   let showImport = false
 
   async function open(path?: string) {
@@ -50,8 +51,10 @@
       router.goto('/', true)
     } else if (payload === 'Transactions') {
       router.goto('/transactions', true)
-    } else if (payload === 'New') {
+    } else if (payload === 'New' && !$opened) {
       newFileModalVisible = true
+    } else if (payload === 'Preferences...' && $opened) {
+      settingsModalVisible = true
     } else if (payload === 'Open...') {
       open()
     } else if (payload === 'Save') {
@@ -104,10 +107,15 @@
 {/if}
 
 {#if newFileModalVisible}
-  <NewFileModal bind:visible={newFileModalVisible} on:close={() => (newFileModalVisible = false)} />
+  <NewFileModal on:close={() => (newFileModalVisible = false)} />
 {/if}
 {#if showImport}
   <ImportModal on:close={() => (showImport = false)} />
+{/if}
+{#if settingsModalVisible}
+  {#await runCmd('get_tax_settings') then settings}
+    <SettingsModal {settings} on:close={() => (settingsModalVisible = false)} />
+  {/await}
 {/if}
 
 <style lang="sass">

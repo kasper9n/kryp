@@ -19,7 +19,6 @@ export default defineConfig({
   resolve: {
     alias: {
       $lib: path.resolve(__dirname, './src/lib'),
-      $modals: path.resolve(__dirname, './src/modals'),
       $routes: path.resolve(__dirname, './src/routes'),
     },
   },

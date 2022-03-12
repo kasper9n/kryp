@@ -13,6 +13,7 @@ use tauri::{
 };
 
 mod data;
+mod fetch;
 mod import_export;
 mod prices;
 mod tax;
@@ -58,6 +59,7 @@ fn main() {
         .fullscreen(false);
       return (win, webview);
     })
+    .unwrap()
     .manage(data::Data(Default::default()))
     .invoke_handler(tauri::generate_handler![
       error_popup,
@@ -67,6 +69,7 @@ fn main() {
       data::close,
       data::get_data,
       data::get_tax,
+      data::get_tax_settings,
       data::get_transactions,
       data::add_transaction,
       data::get_holdings,
@@ -80,6 +83,10 @@ fn main() {
         &ctx.package_info().name,
         Menu::with_items([
           MenuItem::About(ctx.package_info().name.clone()).into(),
+          MenuItem::Separator.into(),
+          CustomMenuItem::new("Preferences...", "Preferences...")
+            .accelerator("cmdOrControl+,")
+            .into(),
           MenuItem::Separator.into(),
           MenuItem::Services.into(),
           MenuItem::Separator.into(),
@@ -115,6 +122,12 @@ fn main() {
             .into(),
           CustomMenuItem::new("Close", "Close")
             .accelerator("cmdOrControl+W")
+            .into(),
+          #[cfg(not(target_os = "macos"))]
+          MenuItem::Separator.into(),
+          #[cfg(not(target_os = "macos"))]
+          CustomMenuItem::new("Preferences...", "Options...")
+            .accelerator("cmdOrControl+,")
             .into(),
         ]),
       )),

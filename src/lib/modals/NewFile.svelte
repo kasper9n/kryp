@@ -7,6 +7,12 @@
   const dispatch = createEventDispatcher()
   let baseCurrency = 'USD'
 
+  function keydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      dispatch('close')
+    }
+  }
   async function create() {
     await runCmd('new_file', {
       baseCurrency: baseCurrency,
@@ -16,7 +22,7 @@
   }
 </script>
 
-<Modal width="340px" on:close>
+<Modal width="340px" on:close on:keydown={keydown}>
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
     <p>Base currency</p>
