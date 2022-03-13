@@ -165,6 +165,153 @@ impl Withdrawal {
   }
 }
 
+/// A transaction without a final cost set
+#[derive(Serialize, Deserialize, Debug)]
+pub enum UncostedTransaction {
+  Trade(Trade),
+  Transfer(Transfer),
+  Deposit(Deposit),
+  Withdrawal(Withdrawal),
+}
+impl UncostedTransaction {
+  pub fn date(&self) -> i64 {
+    match self {
+      UncostedTransaction::Trade(tx) => tx.date,
+      UncostedTransaction::Transfer(tx) => tx.date,
+      UncostedTransaction::Deposit(tx) => tx.date,
+      UncostedTransaction::Withdrawal(tx) => tx.date,
+    }
+  }
+  pub fn from_json(json: &str) -> Result<Self, String> {
+    let tx_result: Result<Self, _> = serde_json::from_str(&json);
+    let tx = match tx_result {
+      Err(e) => return Err(e.to_string()),
+      Ok(tx) => tx,
+    };
+    Ok(tx)
+  }
+  /// Set the cost. If a manual cost is set, that will be used.
+  pub async fn auto_cost_and_finalize(
+    mut self,
+    price_data: &mut PriceData,
+    apis: &[Api],
+    base: &str,
+  ) -> Result<Transaction, String> {
+    let cost;
+    if let Some((amount, asset)) = self.manual_worth() {
+      if asset == base {
+        cost = amount.clone()
+      } else {
+        cost = price_data
+          .get_value(amount.clone(), &asset, self.date(), apis, base)
+          .await?
+      }
+    } else {
+      cost = self.calculate_cost(price_data, apis, base).await?
+    }
+
+    match &mut self {
+      UncostedTransaction::Trade(tx) => tx.cost = cost,
+      UncostedTransaction::Transfer(tx) => tx.cost = cost,
+      UncostedTransaction::Deposit(tx) => tx.cost = cost,
+      UncostedTransaction::Withdrawal(tx) => tx.cost = cost,
+    }
+    let final_tx = match self {
+      UncostedTransaction::Trade(tx) => Transaction::Trade(tx),
+      UncostedTransaction::Transfer(tx) => Transaction::Transfer(tx),
+      UncostedTransaction::Deposit(tx) => Transaction::Deposit(tx),
+      UncostedTransaction::Withdrawal(tx) => Transaction::Withdrawal(tx),
+    };
+    Ok(final_tx)
+  }
+  /// Gets the manual worth of a transaction.
+  /// For deposits, this is the from_amount and from_asset.
+  /// For withdrawals, this is the to_amount and to_asset.
+  pub fn manual_worth(&self) -> Option<(Decimal, &String)> {
+    match self {
+      UncostedTransaction::Trade(tx) => {
+        if let Some(manual_worth_amount) = tx.manual_worth_amount {
+          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
+            return Some((manual_worth_amount, manual_worth_asset));
+          }
+        }
+      }
+      UncostedTransaction::Transfer(tx) => {
+        if let Some(manual_worth_amount) = tx.manual_worth_amount {
+          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
+            return Some((manual_worth_amount, manual_worth_asset));
+          }
+        }
+      }
+      UncostedTransaction::Deposit(tx) => {
+        if let Some(from_amount) = tx.from_amount {
+          if let Some(from_asset) = &tx.from_asset {
+            return Some((from_amount, from_asset));
+          }
+        }
+      }
+      UncostedTransaction::Withdrawal(tx) => {
+        if let Some(to_amount) = tx.to_amount {
+          if let Some(to_asset) = &tx.to_asset {
+            return Some((to_amount, to_asset));
+          }
+        }
+      }
+    }
+    return None;
+  }
+  /// Calculates and returns the cost of the transaction
+  async fn calculate_cost(
+    &mut self,
+    price_data: &mut PriceData,
+    apis: &[Api],
+    base: &str,
+  ) -> Result<Decimal, String> {
+    let mut cost;
+    match self {
+      UncostedTransaction::Trade(tx) => {
+        let sent_kind = symbol_kind(&tx.sent_asset);
+        let recv_kind = symbol_kind(&tx.recv_asset);
+        // fiat -> fiat: fee+sent
+        // fiat -> cryp: fee+sent
+        // cryp -> cryp: fee+sent
+        // cryp -> fiat: fee+recv
+        if let (AssetKind::Crypto, AssetKind::Fiat) = (sent_kind, recv_kind) {
+          cost = price_data
+            .get_value(tx.recv_amount, &tx.recv_asset, tx.date, apis, base)
+            .await?;
+        } else {
+          cost = price_data
+            .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
+            .await?;
+        }
+        if tx.fee_asset != "" {
+          cost += price_data
+            .get_value(tx.fee_amount, &tx.fee_asset, tx.date, apis, base)
+            .await?;
+        }
+      }
+      UncostedTransaction::Transfer(tx) => {
+        cost = price_data
+          .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
+          .await?;
+      }
+      UncostedTransaction::Deposit(tx) => {
+        cost = price_data
+          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
+          .await?;
+      }
+      UncostedTransaction::Withdrawal(tx) => {
+        cost = price_data
+          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
+          .await?;
+      }
+    }
+    Ok(round_8(cost))
+  }
+}
+
+/// A transaction with a final cost set. This should not be directly created
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Transaction {
@@ -182,20 +329,6 @@ impl Transaction {
       Transaction::Deposit(tx) => tx.date,
       Transaction::Withdrawal(tx) => tx.date,
     }
-  }
-  pub async fn from_json(
-    json: &str,
-    price_data: &mut PriceData,
-    apis: &[Api],
-    base: &str,
-  ) -> Result<Self, String> {
-    let tx_result: Result<Self, _> = serde_json::from_str(&json);
-    let mut tx = match tx_result {
-      Err(e) => return Err(e.to_string()),
-      Ok(tx) => tx,
-    };
-    tx.refresh_cost(price_data, apis, base).await?;
-    Ok(tx)
   }
   pub fn to_csv_record<'a>(&'a self) -> Vec<String> {
     match self {
@@ -283,118 +416,5 @@ impl Transaction {
         ]
       }
     }
-  }
-  /// Gets the manual worth of a transaction.
-  /// For deposits, this is the from_amount and from_asset.
-  /// For withdrawals, this is the to_amount and to_asset.
-  pub fn manual_worth(&self) -> Option<(Decimal, &String)> {
-    match self {
-      Transaction::Trade(tx) => {
-        if let Some(manual_worth_amount) = tx.manual_worth_amount {
-          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
-            return Some((manual_worth_amount, manual_worth_asset));
-          }
-        }
-      }
-      Transaction::Transfer(tx) => {
-        if let Some(manual_worth_amount) = tx.manual_worth_amount {
-          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
-            return Some((manual_worth_amount, manual_worth_asset));
-          }
-        }
-      }
-      Transaction::Deposit(tx) => {
-        if let Some(from_amount) = tx.from_amount {
-          if let Some(from_asset) = &tx.from_asset {
-            return Some((from_amount, from_asset));
-          }
-        }
-      }
-      Transaction::Withdrawal(tx) => {
-        if let Some(to_amount) = tx.to_amount {
-          if let Some(to_asset) = &tx.to_asset {
-            return Some((to_amount, to_asset));
-          }
-        }
-      }
-    }
-    return None;
-  }
-  /// Set the cost. If a manual cost is set, that will be used.
-  pub async fn refresh_cost(
-    &mut self,
-    price_data: &mut PriceData,
-    apis: &[Api],
-    base: &str,
-  ) -> Result<(), String> {
-    let cost;
-    if let Some((amount, asset)) = self.manual_worth() {
-      if asset == base {
-        cost = amount.clone()
-      } else {
-        cost = price_data
-          .get_value(amount.clone(), &asset, self.date(), apis, base)
-          .await?
-      }
-    } else {
-      cost = self.calculate_cost(price_data, apis, base).await?
-    }
-
-    match self {
-      Transaction::Trade(tx) => tx.cost = cost,
-      Transaction::Transfer(tx) => tx.cost = cost,
-      Transaction::Deposit(tx) => tx.cost = cost,
-      Transaction::Withdrawal(tx) => tx.cost = cost,
-    }
-    Ok(())
-  }
-  /// Calculates and returns the cost of the transaction
-  async fn calculate_cost(
-    &mut self,
-    price_data: &mut PriceData,
-    apis: &[Api],
-    base: &str,
-  ) -> Result<Decimal, String> {
-    let mut cost;
-    match self {
-      Transaction::Trade(tx) => {
-        let sent_kind = symbol_kind(&tx.sent_asset);
-        let recv_kind = symbol_kind(&tx.recv_asset);
-        // fiat -> fiat: fee+sent
-        // fiat -> cryp: fee+sent
-        // cryp -> cryp: fee+sent
-        // cryp -> fiat: fee+recv
-        if let (AssetKind::Crypto, AssetKind::Fiat) = (sent_kind, recv_kind) {
-          cost = price_data
-            .get_value(tx.recv_amount, &tx.recv_asset, tx.date, apis, base)
-            .await?;
-        } else {
-          cost = price_data
-            .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
-            .await?;
-        }
-        if tx.fee_asset != "" {
-          cost += price_data
-            .get_value(tx.fee_amount, &tx.fee_asset, tx.date, apis, base)
-            .await?;
-        }
-      }
-      Transaction::Transfer(tx) => {
-        cost = price_data
-          .get_value(tx.sent_amount, &tx.sent_asset, tx.date, apis, base)
-          .await?;
-      }
-      Transaction::Deposit(tx) => {
-        cost = price_data
-          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
-          .await?;
-      }
-      Transaction::Withdrawal(tx) => {
-        cost = price_data
-          .get_value(tx.amount, &tx.asset, tx.date, apis, base)
-          .await?;
-      }
-    }
-    Ok(round_8(cost))
   }
 }

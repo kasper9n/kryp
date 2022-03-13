@@ -1,7 +1,7 @@
 use crate::data::Data;
 use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{Deposit, Trade, Transaction, Transfer, Withdrawal};
+use crate::transaction::{Deposit, Trade, Transaction, Transfer, UncostedTransaction, Withdrawal};
 use chrono::NaiveDateTime;
 use csv::StringRecord;
 use rust_decimal::Decimal;
@@ -239,8 +239,8 @@ async fn from_csv_record(
     Err(e) => throw!("Invalid date: {}", e),
   };
   let kind = row.get(type_i).unwrap();
-  let mut transaction = match kind {
-    "Trade" => Transaction::Trade(Trade {
+  let uncosted_transaction = match kind {
+    "Trade" => UncostedTransaction::Trade(Trade {
       tag: kind.to_string(),
       date: date.timestamp_millis(),
       note: row.get(note_i).unwrap().into(),
@@ -261,7 +261,7 @@ async fn from_csv_record(
       manual_worth_asset: None,
       cost: dec!(0),
     }),
-    "Transfer" => Transaction::Transfer(Transfer {
+    "Transfer" => UncostedTransaction::Transfer(Transfer {
       tag: kind.to_string(),
       date: date.timestamp_millis(),
       note: row.get(note_i).unwrap().into(),
@@ -294,7 +294,7 @@ async fn from_csv_record(
         throw!("The \"Sent\" columns are only partially filled in");
       }
 
-      Transaction::Deposit(Deposit {
+      UncostedTransaction::Deposit(Deposit {
         tag: kind.to_string(),
         date: date.timestamp_millis(),
         note: row.get(note_i).unwrap().into(),
@@ -323,7 +323,7 @@ async fn from_csv_record(
       {
         throw!("The \"Sent\" columns are only partially filled in");
       }
-      Transaction::Withdrawal(Withdrawal {
+      UncostedTransaction::Withdrawal(Withdrawal {
         tag: kind.to_string(),
         date: date.timestamp_millis(),
         note: row.get(note_i).unwrap().into(),
@@ -341,10 +341,10 @@ async fn from_csv_record(
     }
     _ => throw!("Invalid type \"{}\"", kind),
   };
-  println!("{:#?}", transaction);
+  println!("{:#?}", uncosted_transaction);
   let base = &tax.settings.base_currency;
-  transaction
-    .refresh_cost(&mut tax.price_data, &tax.settings.apis, base)
+  let transaction = uncosted_transaction
+    .auto_cost_and_finalize(&mut tax.price_data, &tax.settings.apis, base)
     .await?;
   Ok(transaction)
 }

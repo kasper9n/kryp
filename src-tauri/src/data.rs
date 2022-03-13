@@ -1,5 +1,5 @@
 use crate::tax::Tax;
-use crate::transaction::Transaction;
+use crate::transaction::UncostedTransaction;
 use crate::{confirm_async, throw};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -181,7 +181,9 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
   let base = &tax.settings.base_currency;
-  let tx = Transaction::from_json(&json, &mut tax.price_data, &tax.settings.apis, base).await?;
+  let tx = UncostedTransaction::from_json(&json)?
+    .auto_cost_and_finalize(&mut tax.price_data, &tax.settings.apis, base)
+    .await?;
   kryp.tax.add_transaction(tx);
   kryp.tax.calculate()?;
   Ok(())

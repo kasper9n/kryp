@@ -13,7 +13,7 @@ type Tax = {
 
 export type TaxSettings = {
   base_currency: string
-  apis: { name: string; key?: string }[]
+  apis: { name: string; key?: string; disabled: boolean }[]
 }
 
 const defaultTax: Tax = {

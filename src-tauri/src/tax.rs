@@ -11,6 +11,8 @@ use std::path::Path;
 use std::time::Instant;
 
 #[cfg(test)]
+use crate::transaction::UncostedTransaction;
+#[cfg(test)]
 use crate::transaction::{Deposit, Trade, Transfer, Withdrawal};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -109,9 +111,10 @@ impl Tax {
     trade.recv_amount = recv.0;
     trade.recv_asset = recv.1.to_string();
     trade.recv_wallet = recv.2.to_string();
-    let mut tx = Transaction::Trade(trade);
+    let uncosted_tx = UncostedTransaction::Trade(trade);
     let base = &self.settings.base_currency;
-    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
+    let tx = uncosted_tx
+      .auto_cost_and_finalize(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -131,9 +134,10 @@ impl Tax {
     transfer.recv_amount = recv.0;
     transfer.recv_asset = recv.1.to_string();
     transfer.recv_wallet = recv.2.to_string();
-    let mut tx = Transaction::Transfer(transfer);
+    let uncosted_tx = UncostedTransaction::Transfer(transfer);
     let base = &self.settings.base_currency;
-    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
+    let tx = uncosted_tx
+      .auto_cost_and_finalize(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -149,9 +153,10 @@ impl Tax {
     deposit.amount = recv.0;
     deposit.asset = recv.1.to_string();
     deposit.wallet = recv.2.to_string();
-    let mut tx = Transaction::Deposit(deposit);
+    let uncosted_tx = UncostedTransaction::Deposit(deposit);
     let base = &self.settings.base_currency;
-    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
+    let tx = uncosted_tx
+      .auto_cost_and_finalize(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -167,9 +172,10 @@ impl Tax {
     withdrawal.amount = recv.0;
     withdrawal.asset = recv.1.to_string();
     withdrawal.wallet = recv.2.to_string();
-    let mut tx = Transaction::Withdrawal(withdrawal);
+    let uncosted_tx = UncostedTransaction::Withdrawal(withdrawal);
     let base = &self.settings.base_currency;
-    tx.refresh_cost(&mut self.price_data, &self.settings.apis, base)
+    let tx = uncosted_tx
+      .auto_cost_and_finalize(&mut self.price_data, &self.settings.apis, base)
       .await?;
     Ok(tx)
   }
@@ -184,6 +190,7 @@ pub struct TaxSettings {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Api {
   pub name: ApiName,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub key: Option<String>,
   pub disabled: bool,
 }
@@ -403,136 +410,142 @@ pub struct Realized {
   pub wallet: String,
 }
 
-#[test]
-pub fn trades() {
-  let mut tax = Tax::load("./tests/kryp.json").unwrap();
-  tax.transactions = vec![
-    tax
-      .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
-      .unwrap(),
-    tax
-      .new_trade(
-        1500100000000,
-        (dec!(800), "NOK", "Binance"),
-        (dec!(0.5), "BTC", "Binance"),
-      )
-      .unwrap(),
-    tax
-      .new_transfer(
-        1500200000000,
-        (dec!(0.5), "BTC", "Binance"),
-        (dec!(0.5), "BTC", "Coinbase"),
-      )
-      .unwrap(),
-    tax
-      .new_trade(
-        1500300000000,
-        (dec!(0.5), "BTC", "Coinbase"),
-        (dec!(3), "ETH", "Coinbase"),
-      )
-      .unwrap(),
-  ];
-  tax.calculate().unwrap();
-  assert_eq!(
-    tax.balances,
-    [
-      Balance {
-        acquire_date: 1500000000000,
-        amount: dec!(200),
-        currency: "NOK".to_string(),
-        wallet: "Binance".to_string(),
-        cost: dec!(200),
-      },
-      Balance {
-        acquire_date: 1500100000000,
-        amount: dec!(0),
-        currency: "BTC".to_string(),
+#[cfg(test)]
+mod tests {
+  use crate::tax::{Balance, Realized, Tax};
+  use rust_decimal_macros::dec;
+
+  #[test]
+  pub fn trades() {
+    let mut tax = Tax::load("./tests/kryp.json").unwrap();
+    tax.transactions = vec![
+      tax
+        .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
+        .unwrap(),
+      tax
+        .new_trade(
+          1500100000000,
+          (dec!(800), "NOK", "Binance"),
+          (dec!(0.5), "BTC", "Binance"),
+        )
+        .unwrap(),
+      tax
+        .new_transfer(
+          1500200000000,
+          (dec!(0.5), "BTC", "Binance"),
+          (dec!(0.5), "BTC", "Coinbase"),
+        )
+        .unwrap(),
+      tax
+        .new_trade(
+          1500300000000,
+          (dec!(0.5), "BTC", "Coinbase"),
+          (dec!(3), "ETH", "Coinbase"),
+        )
+        .unwrap(),
+    ];
+    tax.calculate().unwrap();
+    assert_eq!(
+      tax.balances,
+      [
+        Balance {
+          acquire_date: 1500000000000,
+          amount: dec!(200),
+          currency: "NOK".to_string(),
+          wallet: "Binance".to_string(),
+          cost: dec!(200),
+        },
+        Balance {
+          acquire_date: 1500100000000,
+          amount: dec!(0),
+          currency: "BTC".to_string(),
+          wallet: "Coinbase".to_string(),
+          cost: dec!(0),
+        },
+        Balance {
+          acquire_date: 1500300000000,
+          amount: dec!(3),
+          currency: "ETH".to_string(),
+          wallet: "Coinbase".to_string(),
+          cost: dec!(9398.57934082), // = 0.5 BTC
+        }
+      ]
+    );
+    assert_eq!(
+      tax.realized_gains,
+      [Realized {
+        date: 1500300000000,
+        input: dec!(800),
+        output: dec!(9398.57934082),
         wallet: "Coinbase".to_string(),
-        cost: dec!(0),
-      },
-      Balance {
-        acquire_date: 1500300000000,
-        amount: dec!(3),
+      }]
+    );
+  }
+
+  #[test]
+  pub fn transfer_fee() {
+    let mut tax = Tax::load("./tests/kryp.json").unwrap();
+    tax.transactions = vec![
+      tax
+        .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
+        .unwrap(),
+      tax
+        .new_transfer(
+          1500100000000,
+          (dec!(1000), "NOK", "Binance"),
+          (dec!(750), "NOK", "Coinbase"),
+        )
+        .unwrap(),
+    ];
+    tax.calculate().unwrap();
+    assert_eq!(
+      tax.balances,
+      [Balance {
+        acquire_date: 1500000000000,
+        amount: dec!(750),
+        currency: "NOK".to_string(),
+        wallet: "Coinbase".to_string(),
+        cost: dec!(750),
+      }]
+    );
+    assert_eq!(tax.realized_gains, []);
+  }
+
+  #[test]
+  pub fn deposit_withdraw_crypto() {
+    let mut tax = Tax::load("./tests/kryp.json").unwrap();
+    tax.transactions = vec![
+      tax
+        .new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase"))
+        .unwrap(),
+      tax
+        .new_withdrawal(
+          1500100000000, //
+          (dec!(1), "ETH", "Coinbase"),
+        )
+        .unwrap(),
+    ];
+    tax.calculate().unwrap();
+    println!("{:?}", tax.balances);
+    println!("{:?}", tax.realized_gains);
+    assert_eq!(
+      tax.balances,
+      [Balance {
+        acquire_date: 1500000000000,
+        amount: dec!(1),
         currency: "ETH".to_string(),
         wallet: "Coinbase".to_string(),
-        cost: dec!(9398.57934082), // = 0.5 BTC
-      }
-    ]
-  );
-  assert_eq!(
-    tax.realized_gains,
-    [Realized {
-      date: 1500300000000,
-      input: dec!(800),
-      output: dec!(9398.57934082),
-      wallet: "Coinbase".to_string(),
-    }]
-  );
-}
-
-#[test]
-pub fn transfer_fee() {
-  let mut tax = Tax::load("./tests/kryp.json").unwrap();
-  tax.transactions = vec![
-    tax
-      .new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
-      .unwrap(),
-    tax
-      .new_transfer(
-        1500100000000,
-        (dec!(1000), "NOK", "Binance"),
-        (dec!(750), "NOK", "Coinbase"),
-      )
-      .unwrap(),
-  ];
-  tax.calculate().unwrap();
-  assert_eq!(
-    tax.balances,
-    [Balance {
-      acquire_date: 1500000000000,
-      amount: dec!(750),
-      currency: "NOK".to_string(),
-      wallet: "Coinbase".to_string(),
-      cost: dec!(750),
-    }]
-  );
-  assert_eq!(tax.realized_gains, []);
-}
-
-#[test]
-pub fn deposit_withdraw_crypto() {
-  let mut tax = Tax::load("./tests/kryp.json").unwrap();
-  tax.transactions = vec![
-    tax
-      .new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase"))
-      .unwrap(),
-    tax
-      .new_withdrawal(
-        1500100000000, //
-        (dec!(1), "ETH", "Coinbase"),
-      )
-      .unwrap(),
-  ];
-  tax.calculate().unwrap();
-  println!("{:?}", tax.balances);
-  println!("{:?}", tax.realized_gains);
-  assert_eq!(
-    tax.balances,
-    [Balance {
-      acquire_date: 1500000000000,
-      amount: dec!(1),
-      currency: "ETH".to_string(),
-      wallet: "Coinbase".to_string(),
-      cost: dec!(1633.83825099),
-    }]
-  );
-  assert_eq!(
-    tax.realized_gains,
-    [Realized {
-      date: 1500100000000,
-      input: dec!(1633.83825099),
-      output: dec!(1417.67606226),
-      wallet: "Coinbase".to_string(),
-    }]
-  );
+        cost: dec!(1633.83825099),
+      }]
+    );
+    assert_eq!(
+      tax.realized_gains,
+      [Realized {
+        date: 1500100000000,
+        input: dec!(1633.83825099),
+        output: dec!(1417.67606226),
+        wallet: "Coinbase".to_string(),
+      }]
+    );
+  }
 }
