@@ -227,16 +227,11 @@ impl PriceDataAsset {
   pub fn local_price(&self, target_date: i64, extra_tolerance: bool) -> Option<(i64, f64)> {
     let minute = 1000 * 60;
     let hour = minute * 60;
+    // TODO separate price data for different intervals
     let max_offset = if extra_tolerance {
-      match self.interval {
-        Interval::Daily => hour * 25,
-        Interval::HourlyOrDaily => hour * 25,
-      }
+      hour * 25
     } else {
-      match self.interval {
-        Interval::Daily => hour * 12,
-        Interval::HourlyOrDaily => minute * 50,
-      }
+      hour * 12
     };
     let number_range = target_date - max_offset..=target_date + max_offset;
     let range = self.prices.range(number_range);

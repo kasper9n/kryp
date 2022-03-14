@@ -107,7 +107,7 @@ async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
 async fn coin_gecko(pda: &PriceDataAsset, date: i64, api: &Api) -> Result<Prices, Box<dyn Error>> {
   thread::sleep(time::Duration::from_millis(600));
 
-  let start_timestamp = date / 1000 - 60 * 60 * 24 * 1; // 1 day before
+  let start_timestamp = date / 1000 - 60 * 60 * 24 * 3; // 3 day before
   let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
   let end_dt = start_dt + Duration::days(30);
 
