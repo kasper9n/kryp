@@ -13,7 +13,7 @@
     return (
       date.getFullYear() +
       '-' +
-      twoDigit(date.getMonth()) +
+      twoDigit(date.getMonth() + 1) +
       '-' +
       twoDigit(date.getDate()) +
       ' ' +
