@@ -61,6 +61,7 @@ fn main() {
     })
     .unwrap()
     .manage(data::Data(Default::default()))
+    .manage(import_export::ImportData::default())
     .invoke_handler(tauri::generate_handler![
       error_popup,
       data::new_file,
@@ -73,6 +74,7 @@ fn main() {
       data::get_transactions,
       data::add_transaction,
       data::get_holdings,
+      data::list_assets,
       data::get_prices,
       import_export::import,
       import_export::export,

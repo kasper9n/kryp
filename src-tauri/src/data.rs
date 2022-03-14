@@ -1,3 +1,4 @@
+use crate::import_export::ImportData;
 use crate::tax::Tax;
 use crate::transaction::UncostedTransaction;
 use crate::{confirm_async, throw};
@@ -18,6 +19,7 @@ pub struct Kryp {
   pub tax: Tax,
   pub opened: bool,
   pub file_path: Option<PathBuf>,
+  pub import_data: ImportData,
 }
 
 impl Kryp {
@@ -40,6 +42,7 @@ impl Default for Kryp {
       tax: Tax::new("USD"),
       opened: false,
       file_path: None,
+      import_data: ImportData::default(),
     }
   }
 }

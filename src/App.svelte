@@ -11,9 +11,9 @@
   import TransactionsPage from '$routes/transactions.svelte'
   import PricesPage from '$routes/prices.svelte'
   import HelpPage from '$routes/help.svelte'
+  import ImportPage from '$routes/import.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
-  import ImportModal from '$lib/modals/Import.svelte'
 
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
@@ -30,7 +30,6 @@
 
   let newFileModalVisible = false
   let settingsModalVisible = false
-  let showImport = false
 
   async function open(path?: string) {
     await runCmd('open', { path })
@@ -62,7 +61,7 @@
     } else if (payload === 'Save As...') {
       saveAs()
     } else if (payload === 'Import...' && $opened) {
-      showImport = true
+      router.goto('/import', true)
     } else if (payload === 'Export...') {
       await runCmd('export')
     } else if (payload === 'Close') {
@@ -86,9 +85,10 @@
   </div>
 
   <Route path="/"><DashboardPage /></Route>
-  <Route path="/transactions"><TransactionsPage on:import={() => (showImport = true)} /></Route>
+  <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route>
   <Route path="/prices"><PricesPage /></Route>
   <Route path="/help"><HelpPage /></Route>
+  <Route path="/import"><ImportPage /></Route>
 {:else}
   <div class="start-page">
     <h1>Kryp</h1>
@@ -108,9 +108,6 @@
 
 {#if newFileModalVisible}
   <NewFileModal on:close={() => (newFileModalVisible = false)} />
-{/if}
-{#if showImport}
-  <ImportModal on:close={() => (showImport = false)} />
 {/if}
 {#if settingsModalVisible}
   {#await runCmd('get_tax_settings') then settings}

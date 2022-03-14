@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use rust_decimal_macros::dec;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Trade {
   pub tag: String,
@@ -54,7 +54,7 @@ impl Trade {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Transfer {
   pub tag: String,
@@ -93,7 +93,7 @@ impl Transfer {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Deposit {
   pub tag: String,
@@ -129,7 +129,7 @@ impl Deposit {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Withdrawal {
   pub tag: String,
@@ -166,7 +166,8 @@ impl Withdrawal {
 }
 
 /// A transaction without a final cost set
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
 pub enum UncostedTransaction {
   Trade(Trade),
   Transfer(Transfer),
@@ -190,26 +191,37 @@ impl UncostedTransaction {
     };
     Ok(tx)
   }
-  /// Set the cost. If a manual cost is set, that will be used.
+  /// Figure out the cost. If a manual cost is set, that will be used.
   pub async fn auto_cost_and_finalize(
-    mut self,
+    self,
     price_data: &mut PriceData,
     apis: &[Api],
     base: &str,
   ) -> Result<Transaction, String> {
-    let cost;
+    let cost = self.get_or_calculate_cost(price_data, apis, base).await?;
+    Ok(self.finalize(cost))
+  }
+  /// Get the manual cost, or calculate it if it's not set
+  pub async fn get_or_calculate_cost(
+    &self,
+    price_data: &mut PriceData,
+    apis: &[Api],
+    base: &str,
+  ) -> Result<Decimal, String> {
     if let Some((amount, asset)) = self.manual_worth() {
       if asset == base {
-        cost = amount.clone()
+        Ok(amount.clone())
       } else {
-        cost = price_data
+        let cost = price_data
           .get_value(amount.clone(), &asset, self.date(), apis, base)
-          .await?
+          .await?;
+        Ok(cost)
       }
     } else {
-      cost = self.calculate_cost(price_data, apis, base).await?
+      Ok(self.calculate_cost(price_data, apis, base).await?)
     }
-
+  }
+  pub fn finalize(mut self, cost: Decimal) -> Transaction {
     match &mut self {
       UncostedTransaction::Trade(tx) => tx.cost = cost,
       UncostedTransaction::Transfer(tx) => tx.cost = cost,
@@ -222,7 +234,7 @@ impl UncostedTransaction {
       UncostedTransaction::Deposit(tx) => Transaction::Deposit(tx),
       UncostedTransaction::Withdrawal(tx) => Transaction::Withdrawal(tx),
     };
-    Ok(final_tx)
+    final_tx
   }
   /// Gets the manual worth of a transaction.
   /// For deposits, this is the from_amount and from_asset.
@@ -260,9 +272,9 @@ impl UncostedTransaction {
     }
     return None;
   }
-  /// Calculates and returns the cost of the transaction
+  /// Calculates and returns the cost of the transaction, regardless of whether a manual worth is set
   async fn calculate_cost(
-    &mut self,
+    &self,
     price_data: &mut PriceData,
     apis: &[Api],
     base: &str,

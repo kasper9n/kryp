@@ -1,11 +1,12 @@
 use crate::data::Data;
-use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{Deposit, Trade, Transaction, Transfer, UncostedTransaction, Withdrawal};
+use crate::transaction::{Deposit, Trade, Transfer, UncostedTransaction, Withdrawal};
 use chrono::NaiveDateTime;
 use csv::StringRecord;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
+use serde::{Deserialize, Serialize};
+use std::fs::File;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::mpsc;
@@ -37,22 +38,42 @@ fn save_file(_win: &Window) -> Option<PathBuf> {
   receiver.recv().unwrap_or_default()
 }
 
-#[command]
-pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
-  let file_path = match pick_file(&win) {
-    Some(p) => p,
-    None => return Ok(()),
-  };
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct ImportData {
+  transactions: Vec<ImportTransaction>,
+}
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ImportTransaction {
+  pub transaction: UncostedTransaction,
+  pub cost: Option<Decimal>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ImportStatus {
+  index: u64,
+}
+
+fn read_csv(file_path: PathBuf) -> Result<csv::Reader<File>, String> {
   let delimiter = match file_path.extension().unwrap_or_default().to_str() {
     Some("csv") => b',',
     Some("tsv") => b'\t',
     _ => throw!("Unknown file extension"),
   };
-  let mut reader = csv::ReaderBuilder::new()
+  let reader = csv::ReaderBuilder::new()
     .delimiter(delimiter)
     .from_path(file_path)
     .map_err(|_| "Error opening file".to_string())?;
+  Ok(reader)
+}
+
+#[command]
+pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<Option<ImportData>, String> {
+  let file_path = match pick_file(&win) {
+    Some(p) => p,
+    None => return Ok(None),
+  };
+  let mut reader = read_csv(file_path)?;
 
   let header = match reader.headers() {
     Ok(h) => h,
@@ -62,21 +83,46 @@ pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
   println!("{:?}", cols);
 
   let mut kryp = kryp.0.lock().await;
-  let mut n = 2; // 2 to account for header
-  let mut transactions = Vec::new();
+  let tax = &mut kryp.tax;
+
+  let header_length = 1;
+  let mut i = 1;
+  let mut uncosted_transactions = Vec::new();
   for record in reader.records() {
-    let row = record.map_err(|e| format!("Unable to read row {}: {}", n, e))?;
-    let transaction = from_csv_record(row, &cols, &mut kryp.tax)
+    let row = record.map_err(|e| format!("Unable to read row {}: {}", i + header_length, e))?;
+
+    let uncosted_transaction = from_csv_record(row, &cols)
       .await
-      .map_err(|e| format!("Error in row {}: {}", n, e))?;
-    transactions.push(transaction);
-    n += 1;
+      .map_err(|e| format!("Error in row {}: {}", i + header_length, e))?;
+
+    let cost = uncosted_transaction.get_or_calculate_cost(
+      &mut tax.price_data,
+      &tax.settings.apis,
+      &tax.settings.base_currency,
+    );
+    let import_transaction = match cost.await {
+      Ok(cost) => ImportTransaction {
+        transaction: uncosted_transaction,
+        cost: Some(cost),
+      },
+      Err(_) => ImportTransaction {
+        transaction: uncosted_transaction,
+        cost: None,
+      },
+    };
+    win.emit("importStatus", ImportStatus { index: i }).ok();
+    uncosted_transactions.push(import_transaction);
+    i += 1;
   }
-  for transaction in transactions {
-    kryp.tax.add_transaction(transaction);
-  }
-  kryp.tax.calculate()?;
-  Ok(())
+  // let tax = &mut kryp.tax;
+  // for uncosted_transaction in uncosted_transactions {
+  //   tax.add_transaction(transaction);
+  // }
+  // kryp.tax.calculate()?;
+  kryp.import_data = ImportData {
+    transactions: uncosted_transactions.clone(),
+  };
+  Ok(Some(kryp.import_data.clone()))
 }
 
 #[command]
@@ -210,11 +256,14 @@ impl CsvCols {
   }
 }
 
-async fn from_csv_record(
-  row: StringRecord,
-  cols: &CsvCols,
-  tax: &mut Tax,
-) -> Result<Transaction, String> {
+fn parse_kind(kind: &str) -> &str {
+  match kind {
+    "Withdraw" => "Withdrawal",
+    other => other,
+  }
+}
+
+async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTransaction, String> {
   let type_i = cols.kind.ok_or("Missing \"Type\" column")?;
   let date_i = cols.date.ok_or("Missing \"Date\" column")?;
   let note_i = cols.note.ok_or("Missing \"Note\" column")?;
@@ -238,7 +287,7 @@ async fn from_csv_record(
     Ok(d) => d,
     Err(e) => throw!("Invalid date: {}", e),
   };
-  let kind = row.get(type_i).unwrap();
+  let kind = parse_kind(row.get(type_i).unwrap());
   let uncosted_transaction = match kind {
     "Trade" => UncostedTransaction::Trade(Trade {
       tag: kind.to_string(),
@@ -279,7 +328,7 @@ async fn from_csv_record(
       manual_worth_asset: None,
       cost: dec!(0),
     }),
-    "Deposit" | "Buy" | "Income" | "Gift" => {
+    "Deposit" | "Buy" | "Income" | "Gift" | "Interest" => {
       let from_amount = match row.get(sent_amount_i).unwrap() {
         "" => None,
         _ => Some(decimal_str(&row, sent_amount_i)?),
@@ -310,7 +359,7 @@ async fn from_csv_record(
         cost: dec!(0),
       })
     }
-    "Withdrawal" | "Sell" | "Spent" | "Lost" => {
+    "Withdrawal" | "Sell" | "Spend" | "Lost" => {
       let to_amount = match row.get(recv_amount_i).unwrap() {
         "" => None,
         _ => Some(decimal_str(&row, recv_amount_i)?),
@@ -342,9 +391,5 @@ async fn from_csv_record(
     _ => throw!("Invalid type \"{}\"", kind),
   };
   println!("{:#?}", uncosted_transaction);
-  let base = &tax.settings.base_currency;
-  let transaction = uncosted_transaction
-    .auto_cost_and_finalize(&mut tax.price_data, &tax.settings.apis, base)
-    .await?;
-  Ok(transaction)
+  Ok(uncosted_transaction)
 }
