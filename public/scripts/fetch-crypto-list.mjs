@@ -80,12 +80,13 @@ async function main() {
   const fiatFullListStr = fs.readFileSync(path.join(__dirname, '../assets/fiat-list-full.json'))
   const fiatFullList = JSON.parse(fiatFullListStr)
 
-  const fetchedCoinObjects = await getTopCoins(250)
+  const fetchedCoinObjects = await getTopCoins(500)
   const list = {}
   const cryptoIconDir = path.join(__dirname, 'crypto-icons')
   if (!fs.existsSync(cryptoIconDir)) {
     fs.mkdirSync(cryptoIconDir)
   }
+  let addedCount = 0
   for (const coin of fetchedCoinObjects) {
     if (!coin.symbol || !coin.id || !coin.name || !coin.image) {
       console.error('Missing data', coin, '\n')
@@ -93,18 +94,23 @@ async function main() {
     const symbol = coin.symbol.toUpperCase()
     if (fiatFullList[symbol]) {
       console.error(`${symbol} is already in fiat list. Skipping...`)
-    } else if (list[list]) {
+    } else if (list[symbol]) {
       console.error(`${symbol} already exists as ${list[symbol][0]}. Skipping...`)
     } else {
-      list[symbol] = [coin.id, coin.name]
-
       const imageExt = path.extname(new URL(coin.image).pathname)
       const smallImage = imageToSmall(coin.image)
       await download(smallImage, path.join(cryptoIconDir, coin.id + imageExt))
+
+      list[symbol] = [coin.id, coin.name]
+      addedCount++
     }
   }
+  console.log(`Added ${addedCount} coins`)
+  if (addedCount !== Object.values(list).length) {
+    throw `Error: Only ${Object.values(list).length} in list`
+  }
 
-  fs.writeFileSync(path.join(__dirname, 'output-list.json'), JSON.stringify(list))
+  fs.writeFileSync(path.join(__dirname, 'crypto-list.json'), JSON.stringify(list, null, '  '))
 }
 
 try {
