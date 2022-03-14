@@ -1,11 +1,24 @@
 <script lang="ts">
   import { runCmd } from '$lib/general'
-  import type { PriceData, PriceDataAsset } from '$lib/data'
-  let assets: PriceDataAsset[] = []
-  runCmd('get_prices').then((price_data: PriceData) => {
-    assets = Object.values(price_data.assets)
-    if (assets[0]) currentI = 0
+  import type { PriceDataAsset } from '$lib/data'
+
+  let assets: string[] = []
+  let symbol: string | null = null
+  let asset: PriceDataAsset | null = null
+
+  runCmd('list_assets').then((result: string[]) => {
+    assets = result
+    if (assets[0]) {
+      symbol = assets[0]
+    }
   })
+
+  $: if (symbol) {
+    runCmd('get_prices', { symbol }).then((result: PriceDataAsset) => {
+      asset = result
+    })
+  }
+
   function twoDigit(value: number) {
     return ('0' + value.toString()).slice(-2)
   }
@@ -27,8 +40,6 @@
   function formatTimestamp(ts: string) {
     return formatDate(new Date(Number(ts)))
   }
-  let currentI: number | null = null
-  $: current = currentI === null ? null : assets[currentI]
 </script>
 
 <div class="page">
@@ -44,19 +55,23 @@
   <div class="card flex">
     {#if assets}
       <div>
-        {#each assets as asset, i}
-          <div class="asset-item" class:current={currentI === i} on:click={() => (currentI = i)}>
-            {asset.symbol}
+        {#each assets as asset}
+          <div
+            class="asset-item"
+            class:current={symbol === asset}
+            on:click={() => (symbol = asset)}
+          >
+            {asset}
           </div>
         {/each}
       </div>
-      {#if current}
+      {#if asset}
         <div>
-          <h2>{current.symbol}</h2>
+          <h2>{asset.symbol}</h2>
           <p>
-            Type: {current.kind}
+            Type: {asset.kind}
             <br />
-            Data interval: {current.interval}
+            Data interval: {asset.interval}
           </p>
           <table>
             <thead>
@@ -66,7 +81,7 @@
               </tr>
             </thead>
             <tbody>
-              {#each Object.entries(current.prices) as [timestamp, price]}
+              {#each Object.entries(asset.prices) as [timestamp, price]}
                 <tr>
                   <td>{formatTimestamp(timestamp)}</td>
                   <td>{price}</td>

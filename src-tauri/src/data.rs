@@ -238,7 +238,16 @@ pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub async fn get_prices(kryp: State<'_, Data>) -> Result<Value, String> {
+pub async fn list_assets(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
-  to_json(&kryp.tax.price_data)
+  let assets = &kryp.tax.price_data.list_assets();
+  to_json(assets)
+}
+
+#[command]
+pub async fn get_prices(symbol: String, kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().await;
+  let pd = &kryp.tax.price_data;
+  let asset = pd.get_asset(&symbol).ok_or("Asset not found".to_string())?;
+  to_json(&asset)
 }

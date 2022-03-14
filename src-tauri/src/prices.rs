@@ -57,6 +57,13 @@ impl PriceData {
       assets: HashMap::new(),
     };
   }
+  pub fn list_assets(&self) -> Vec<&String> {
+    self.assets.keys().collect()
+  }
+  pub fn get_asset(&self, symbol: &str) -> Option<&PriceDataAsset> {
+    let symbol = symbol.to_uppercase();
+    self.assets.get(&symbol)
+  }
   pub fn asset(&mut self, symbol: &str) -> Result<&mut PriceDataAsset, String> {
     let symbol = symbol.to_uppercase();
     let kind = symbol_kind(&symbol);
