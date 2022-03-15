@@ -25,11 +25,13 @@ lazy_static! {
   static ref CRYPTO_LIST: CryptoList = serde_json::from_str(&CRYPTO_LIST_JSON).unwrap();
 }
 
-pub fn symbol_kind(symbol: &str) -> AssetKind {
+pub fn symbol_kind(symbol: &str) -> Option<AssetKind> {
   if FIAT_LIST.contains_key(symbol) {
-    AssetKind::Fiat
+    Some(AssetKind::Fiat)
+  } else if CRYPTO_LIST.contains_key(symbol) {
+    Some(AssetKind::Crypto)
   } else {
-    AssetKind::Crypto
+    None
   }
 }
 fn get_id(symbol: &str) -> Option<String> {
@@ -66,7 +68,7 @@ impl PriceData {
   }
   pub fn asset(&mut self, symbol: &str) -> Result<&mut PriceDataAsset, String> {
     let symbol = symbol.to_uppercase();
-    let kind = symbol_kind(&symbol);
+    let kind = symbol_kind(&symbol).ok_or(format!("Unsupported asset {}", symbol))?;
     let entry = self.assets.entry(symbol.clone());
     let interval = match kind {
       AssetKind::Fiat => Interval::Daily,

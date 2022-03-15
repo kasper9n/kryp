@@ -284,11 +284,15 @@ impl UncostedTransaction {
       UncostedTransaction::Trade(tx) => {
         let sent_kind = symbol_kind(&tx.sent_asset);
         let recv_kind = symbol_kind(&tx.recv_asset);
+        // cryp -> fiat: fee+recv
+        // cryp -> cryp: fee+sent (or fallback to fee+recv)
         // fiat -> fiat: fee+sent
         // fiat -> cryp: fee+sent
-        // cryp -> cryp: fee+sent
-        // cryp -> fiat: fee+recv
-        if let (AssetKind::Crypto, AssetKind::Fiat) = (sent_kind, recv_kind) {
+        if sent_kind == Some(AssetKind::Crypto) && recv_kind == Some(AssetKind::Fiat) {
+          cost = price_data
+            .get_value(tx.recv_amount, &tx.recv_asset, tx.date, apis, base)
+            .await?;
+        } else if sent_kind == None && recv_kind == Some(AssetKind::Crypto) {
           cost = price_data
             .get_value(tx.recv_amount, &tx.recv_asset, tx.date, apis, base)
             .await?;
