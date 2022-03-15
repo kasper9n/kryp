@@ -1,17 +1,15 @@
 <script lang="ts">
   import Button from '$lib/Button.svelte'
   import { runCmd } from '$lib/general'
-  import Modal from '$lib/Modal.svelte'
   import type { Transaction } from '$lib/transactions'
   import { formatDateTime } from '$lib/transactions'
   import { event } from '@tauri-apps/api'
-  import { createEventDispatcher, onDestroy } from 'svelte'
-
-  const dispatch = createEventDispatcher()
+  import { onDestroy } from 'svelte'
 
   type ImportTransaction = {
     transaction: Transaction
     cost: string | null
+    error: string | null
   }
   type ImportData = {
     transactions: ImportTransaction[]
@@ -22,16 +20,6 @@
   async function importFile() {
     const newImportData = await runCmd('import')
     importData = newImportData
-  }
-
-  function keydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      dispatch('close')
-    }
-  }
-  function close() {
-    dispatch('close')
   }
 
   type ImportStatus = {
@@ -82,7 +70,11 @@
               <td class="recv amount">{tx.transaction.recv_amount}</td>
               <td class="recv asset">{tx.transaction.recv_asset}</td>
               <td class="recv wallet">{tx.transaction.recv_wallet}</td>
-              <td class="fee amount">{tx.transaction.fee_amount}</td>
+              <td class="fee amount">
+                {#if tx.transaction.fee_asset !== '' && tx.transaction.fee_amount !== '0'}
+                  {tx.transaction.fee_amount}
+                {/if}
+              </td>
               <td class="fee asset">{tx.transaction.fee_asset}</td>
             {:else if tx.transaction.type === 'Transfer'}
               <td class="sent amount">{tx.transaction.sent_amount}</td>
@@ -115,6 +107,11 @@
             <td>{tx.transaction.note}</td>
             <td>{tx.transaction.hash}</td>
             <td>{formatDateTime(new Date(tx.transaction.date))}</td>
+            <td>
+              {#if tx.error}
+                {tx.error}
+              {/if}
+            </td>
           </tr>
         {/if}
       {/each}
@@ -139,9 +136,9 @@
     border-spacing: 0px
     border-collapse: collapse
     cursor: default
-    font-size: 14px
+    font-size: 13px
   td
-    padding: 6px 10px
+    padding: 5px
     border: 1px solid #e7e8e8
     &.amount
       text-align: right
@@ -155,6 +152,4 @@
     background-color: #ffffff
   .red
     color: #f92f72
-  .green
-    color: #25b670
 </style>

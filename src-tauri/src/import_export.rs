@@ -1,7 +1,7 @@
 use crate::data::Data;
 use crate::throw;
 use crate::transaction::{Deposit, Trade, Transfer, UncostedTransaction, Withdrawal};
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use csv::StringRecord;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -47,6 +47,7 @@ pub struct ImportData {
 pub struct ImportTransaction {
   pub transaction: UncostedTransaction,
   pub cost: Option<Decimal>,
+  pub error: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -104,10 +105,12 @@ pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<Option<ImportD
       Ok(cost) => ImportTransaction {
         transaction: uncosted_transaction,
         cost: Some(cost),
+        error: None,
       },
-      Err(_) => ImportTransaction {
+      Err(e) => ImportTransaction {
         transaction: uncosted_transaction,
         cost: None,
+        error: Some(e),
       },
     };
     win.emit("importStatus", ImportStatus { index: i }).ok();
@@ -173,7 +176,7 @@ fn decimal_str(value: &StringRecord, i: usize) -> Result<Decimal, String> {
 }
 
 fn optional_decimal_str(value: &StringRecord, i: usize) -> Result<Decimal, String> {
-  let s = value.get(i).unwrap();
+  let s = value.get(i).ok_or(format!("Missing cell {}", i))?;
   if s.trim() == "" {
     Ok(dec!(0))
   } else {
@@ -195,6 +198,7 @@ pub struct CsvCols {
   recv_wallet: Option<usize>,
   fee_amount: Option<usize>,
   fee_asset: Option<usize>,
+  cost: Option<usize>,
 }
 impl CsvCols {
   pub fn from_header(header: &StringRecord) -> Result<Self, String> {
@@ -211,7 +215,6 @@ impl CsvCols {
     let mut sent_wallet = pos(&row, &["sent wallet", "r wallet"]);
     if let Some(i) = sent_amount {
       if sent_asset.is_none() && row.get(i + 1) == Some(&"asset".to_string()) {
-        println!("3");
         sent_asset = Some(i + 1);
       }
       if sent_wallet.is_none() && row.get(i + 2) == Some(&"wallet".to_string()) {
@@ -239,6 +242,8 @@ impl CsvCols {
       }
     }
 
+    let cost = row.iter().position(|s| s == "cost");
+
     Ok(CsvCols {
       kind,
       date,
@@ -252,7 +257,19 @@ impl CsvCols {
       recv_wallet,
       fee_amount,
       fee_asset,
+      cost,
     })
+  }
+}
+
+fn parse_local_datetime(text: &str, format: &str) -> Result<DateTime<Local>, String> {
+  let naive_dt = match NaiveDateTime::parse_from_str(text, format) {
+    Ok(d) => d,
+    Err(e) => throw!("Invalid date: {}", e),
+  };
+  match Local.from_local_datetime(&naive_dt) {
+    chrono::LocalResult::Single(d) => Ok(d),
+    _ => throw!("Unable to add timezone to date {}", naive_dt),
   }
 }
 
@@ -261,6 +278,29 @@ fn parse_kind(kind: &str) -> &str {
     "Withdraw" => "Withdrawal",
     other => other,
   }
+}
+
+fn parse_cost(value: &str) -> Option<(Decimal, String)> {
+  let mut chars = value.chars();
+  let mut num_str = "".to_string();
+  let mut period = false;
+  loop {
+    let c = chars.next()?;
+    if c.is_ascii_digit() {
+      num_str.push(c);
+    } else if c == '.' && !period {
+      num_str.push(c);
+      period = true;
+    } else {
+      break;
+    }
+  }
+  let num = Decimal::from_str(&num_str).ok()?;
+
+  let asset_str: String = chars.collect();
+  let asset = asset_str.trim().to_string();
+
+  Some((num, asset))
 }
 
 async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTransaction, String> {
@@ -282,12 +322,23 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
   let fee_amount_i = cols.fee_amount.ok_or("Missing \"Fee Amount\" column")?;
   let fee_asset_i = cols.fee_asset.ok_or("Missing \"Fee Asset\" column")?;
 
-  let format = "%Y-%m-%d %H:%M:%S";
-  let date = match NaiveDateTime::parse_from_str(row.get(date_i).unwrap(), format) {
-    Ok(d) => d,
-    Err(e) => throw!("Invalid date: {}", e),
-  };
+  let date = parse_local_datetime(row.get(date_i).unwrap(), "%Y-%m-%d %H:%M:%S")?;
+
   let kind = parse_kind(row.get(type_i).unwrap());
+
+  let (cost_amount, cost_asset) = match cols.cost {
+    Some(cost_i) => {
+      let cell = row.get(cost_i).unwrap();
+      if cell.trim() == "" {
+        (None, None)
+      } else {
+        let cost = parse_cost(cell).ok_or(format!("Invalid cost cell: {}", cell))?;
+        (Some(cost.0), Some(cost.1))
+      }
+    }
+    None => (None, None),
+  };
+
   let uncosted_transaction = match kind {
     "Trade" => UncostedTransaction::Trade(Trade {
       tag: kind.to_string(),
@@ -306,8 +357,8 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
       fee_amount: optional_decimal_str(&row, fee_amount_i)?,
       fee_asset: row.get(fee_asset_i).unwrap().into(),
 
-      manual_worth_amount: None,
-      manual_worth_asset: None,
+      manual_worth_amount: cost_amount,
+      manual_worth_asset: cost_asset,
       cost: dec!(0),
     }),
     "Transfer" => UncostedTransaction::Transfer(Transfer {
@@ -324,8 +375,8 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
       recv_asset: row.get(recv_asset_i).unwrap().into(),
       recv_wallet: row.get(recv_wallet_i).unwrap().into(),
 
-      manual_worth_amount: None,
-      manual_worth_asset: None,
+      manual_worth_amount: cost_amount,
+      manual_worth_asset: cost_asset,
       cost: dec!(0),
     }),
     "Deposit" | "Buy" | "Income" | "Gift" | "Interest" => {
@@ -349,8 +400,8 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
         note: row.get(note_i).unwrap().into(),
         hash: row.get(hash_i).unwrap().into(),
 
-        from_amount,
-        from_asset,
+        from_amount: cost_amount,
+        from_asset: cost_asset,
 
         amount: decimal_str(&row, recv_amount_i)?,
         asset: row.get(recv_asset_i).unwrap().into(),
@@ -382,8 +433,8 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
         asset: row.get(sent_asset_i).unwrap().into(),
         wallet: row.get(sent_wallet_i).unwrap().into(),
 
-        to_amount,
-        to_asset,
+        to_amount: cost_amount,
+        to_asset: cost_asset,
 
         cost: dec!(0),
       })
