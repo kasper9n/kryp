@@ -1,7 +1,32 @@
 <script lang="ts">
   import { runCmd } from '$lib/general'
-  import { Chart, registerables } from 'chart.js'
-  Chart.register(...registerables)
+  import { Pie } from 'svelte-chartjs'
+
+  type ChartItem = {
+    label: string
+    value: number
+  }
+  type Holding = {
+    asset: string
+    amount: string
+    cost: string
+    value: string | null
+    error: string | null
+  }
+  let holdings = [] as Holding[]
+  let chartHoldings = [] as ChartItem[]
+  async function getHoldings() {
+    holdings = await runCmd('get_holdings')
+    holdings = await runCmd('get_holdings_valued')
+
+    chartHoldings = holdings
+      .filter((holding) => holding.value !== null)
+      .map((holding) => ({
+        label: holding.asset,
+        value: Number(holding.value),
+      }))
+  }
+  getHoldings()
 
   const colors = [
     '#296ec2',
@@ -20,63 +45,46 @@
     return colors[index % colors.length]
   }
 
-  let chart: Chart<'pie', string[], string> | null = null
-  function createChart(el: HTMLCanvasElement, holdings: Holding[]) {
-    let ctx = el.getContext('2d')
-    if (!ctx) {
-      return
-    }
-    if (chart !== null) {
-      chart.destroy()
-    }
-    chart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: holdings.map((item) => item.key),
-        datasets: [
-          {
-            label: 'Value',
-            backgroundColor: holdings.map((_, index) => getColor(index) + 'cc'),
-            hoverBackgroundColor: holdings.map((_, index) => getColor(index)),
-            borderColor: '#ffffff',
-            hoverBorderColor: '#ffffff',
-            data: holdings.map((item) => item.value),
-            borderWidth: 2,
-            hoverBorderWidth: 0,
-          },
-        ],
+  $: data = {
+    labels: chartHoldings.map((item) => item.label),
+    datasets: [
+      {
+        label: 'Value',
+        backgroundColor: chartHoldings.map((_, index) => getColor(index) + 'cc'),
+        hoverBackgroundColor: chartHoldings.map((_, index) => getColor(index)),
+        borderColor: '#ffffff',
+        hoverBorderColor: '#ffffff',
+        data: chartHoldings.map((item) => Number(item.value)),
+        borderWidth: 2,
+        hoverBorderWidth: 0,
       },
-      options: {
-        cutout: '65%',
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            animation: {
-              duration: 240,
-            },
-          },
+    ],
+  }
+  const options = {
+    cutout: '65%',
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        animation: {
+          duration: 240,
         },
       },
-    })
+    },
   }
-
-  type Holding = {
-    key: string
-    amount: string
-    cost: string
-    value: string
-  }
-  const holdings: Promise<Holding[]> = runCmd('get_holdings')
 </script>
 
 <div class="page">
   <div class="card">
     <h3>Balance by Asset</h3>
-    {#await holdings then holdings}
+    {#await holdings}
+      Loading...
+    {:then holdings}
       <div class="canvas-container">
-        <canvas use:createChart={holdings} />
+        {#if chartHoldings.length >= 1}
+          <Pie {data} {options} />
+        {/if}
       </div>
       <table>
         <tr class="header">
@@ -87,10 +95,10 @@
         </tr>
         {#each holdings as holding}
           <tr>
-            <td>{holding.key}</td>
+            <td>{holding.asset}</td>
             <td class="align-right">{holding.amount}</td>
             <td class="align-right">{holding.cost}</td>
-            <td class="align-right">{holding.value}</td>
+            <td class="align-right">{holding.value || ''}</td>
           </tr>
         {/each}
       </table>

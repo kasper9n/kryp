@@ -15,6 +15,7 @@ use tauri::{
 mod calc;
 mod data;
 mod fetch;
+mod fetch_current;
 mod import_export;
 mod prices;
 mod tax;
@@ -75,6 +76,7 @@ fn main() {
       data::get_transactions,
       data::add_transaction,
       data::get_holdings,
+      data::get_holdings_valued,
       data::list_assets,
       data::get_prices,
       import_export::start_import,

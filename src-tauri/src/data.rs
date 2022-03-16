@@ -1,3 +1,4 @@
+use crate::fetch_current::fetch_current;
 use crate::import_export::ImportData;
 use crate::tax::Tax;
 use crate::transaction::UncostedTransaction;
@@ -9,7 +10,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::SystemTime;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
 use tokio::sync::Mutex;
@@ -194,49 +194,61 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Holding {
-  key: String,
+  asset: String,
   amount: Decimal,
   cost: Decimal,
-  value: Decimal,
+  value: Option<Decimal>,
+  error: Option<String>,
+}
+impl Holding {
+  fn new(key: String) -> Self {
+    Self {
+      asset: key,
+      amount: dec!(0),
+      cost: dec!(0),
+      value: None,
+      error: None,
+    }
+  }
+}
+
+fn get_holdings_unsorted(tax: &mut Tax) -> Vec<Holding> {
+  let mut holdings_map: HashMap<String, Holding> = HashMap::new();
+  for balance in &tax.balances {
+    let key = balance.currency.clone();
+    if balance.amount > dec!(0) {
+      let holding = holdings_map.entry(key.clone()).or_insert(Holding::new(key));
+      holding.amount += balance.amount;
+      holding.cost += balance.cost;
+    }
+  }
+  holdings_map.into_iter().map(|(_k, v)| v).collect()
 }
 
 #[command]
 pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
   let mut kryp = kryp.0.lock().await;
-  let mut holdings_map: HashMap<String, Holding> = HashMap::new();
-  let tax = &mut kryp.tax;
-  for balance in &tax.balances {
-    let key = balance.currency.clone();
-    let holding = holdings_map.entry(key.clone()).or_insert(Holding {
-      key,
-      amount: dec!(0),
-      cost: dec!(0),
-      value: dec!(0),
-    });
-    holding.amount += balance.amount;
-    holding.cost += balance.cost;
-  }
-  let timestamp = SystemTime::now()
-    .duration_since(SystemTime::UNIX_EPOCH)
-    .expect("System time error, maybe before UNIX epoch")
-    .as_millis() as i64;
-
-  let mut holdings = Vec::new();
-  for (_key, mut holding) in holdings_map.into_iter() {
-    holding.value = tax
-      .price_data
-      .get_value(
-        holding.amount,
-        &holding.key,
-        timestamp,
-        &tax.settings.apis,
-        &tax.settings.base_currency,
-      )
-      .await?;
-    holdings.push(holding);
-  }
+  let mut holdings = get_holdings_unsorted(&mut kryp.tax);
   holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
+  to_json(&holdings)
+}
 
+#[command]
+pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String> {
+  let mut kryp = kryp.0.lock().await;
+  let mut holdings = get_holdings_unsorted(&mut kryp.tax);
+
+  let assets: Vec<_> = holdings.iter().map(|h| &h.asset).collect();
+  let prices = fetch_current(assets, &kryp.tax.settings.base_currency).await?;
+
+  for holding in &mut holdings {
+    if let Some(price) = prices.get(&holding.asset) {
+      holding.value = Some(holding.amount * price);
+    } else {
+      holding.error = Some("No price".to_string());
+    }
+  }
+  holdings.sort_by(|a, b| b.value.cmp(&a.value));
   to_json(&holdings)
 }
 

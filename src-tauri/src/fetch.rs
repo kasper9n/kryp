@@ -16,12 +16,12 @@ pub async fn fetch_prices(pda: &PriceDataAsset, api: &Api, date: i64) -> Result<
 
   let result = match pda.kind {
     AssetKind::Fiat => match api.name {
-      ApiName::ExchangerateHost => exchangerate_host(pda, date, api).await,
+      ApiName::ExchangerateHost => exchangerate_host(pda, date).await,
       _ => throw!("Asset type not supported for this API"),
     },
     AssetKind::Crypto => match api.name {
-      ApiName::CoinGecko => coin_gecko(pda, date, api).await,
-      ApiName::CryptoCompare => crypto_compare(pda, date, api).await,
+      ApiName::CoinGecko => coin_gecko(pda, date).await,
+      ApiName::CryptoCompare => crypto_compare(pda, date).await,
       _ => throw!("Asset type not supported for this API"),
     },
   };
@@ -32,11 +32,12 @@ pub async fn fetch_prices(pda: &PriceDataAsset, api: &Api, date: i64) -> Result<
   }
 }
 
-async fn exchangerate_host(
-  pda: &PriceDataAsset,
-  date: i64,
-  api: &Api,
-) -> Result<Prices, Box<dyn Error>> {
+pub async fn http_get(url: &str) -> Result<reqwest::Response, reqwest::Error> {
+  println!("Fetch {}", url);
+  reqwest::get(url).await
+}
+
+async fn exchangerate_host(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn Error>> {
   thread::sleep(time::Duration::from_millis(500));
 
   let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
@@ -58,9 +59,8 @@ async fn exchangerate_host(
     from = start_dt_str,
     to = end_dt.format("%Y-%m-%d").to_string(),
   );
-  println!("Fetch {:?} url {}", api.name, request_url);
 
-  let timeseries_res = reqwest::get(request_url).await?;
+  let timeseries_res = http_get(&request_url).await?;
   if !timeseries_res.status().is_success() {
     return err!("Error fetching price of {}", pda.id);
   }
@@ -86,7 +86,10 @@ struct MarketChart {
   prices: Vec<(i64, f64)>,
 }
 
-async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
+pub async fn parse_coin_gecko_error(response: reqwest::Response, fallback: &str) -> String {
+  if response.status() == 429 {
+    return "Rate limit, please try again".to_string();
+  }
   let json: Value = match response.json().await {
     Ok(value) => value,
     Err(_) => return fallback.to_string(),
@@ -104,7 +107,7 @@ async fn parse_error(response: reqwest::Response, fallback: &str) -> String {
   fallback.to_string()
 }
 
-async fn coin_gecko(pda: &PriceDataAsset, date: i64, api: &Api) -> Result<Prices, Box<dyn Error>> {
+async fn coin_gecko(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn Error>> {
   thread::sleep(time::Duration::from_millis(600));
 
   let start_timestamp = date / 1000 - 60 * 60 * 24 * 3; // 3 day before
@@ -118,17 +121,12 @@ async fn coin_gecko(pda: &PriceDataAsset, date: i64, api: &Api) -> Result<Prices
     from = start_dt.timestamp(),
     to = end_dt.timestamp(),
   );
-  println!("Fetch {:?} url {}", api.name, request_url);
 
-  let market_chart_res = reqwest::get(request_url).await?;
+  let market_chart_res = http_get(&request_url).await?;
   if !market_chart_res.status().is_success() {
-    if market_chart_res.status() == 429 {
-      return err!("Rate limit, please try again");
-    } else {
-      let default_err_msg = format!("Error fetching {} prices", pda.id);
-      let err_msg = parse_error(market_chart_res, &default_err_msg).await;
-      return err!("{}", err_msg);
-    }
+    let default_err_msg = format!("Error fetching {} prices", pda.id);
+    let err_msg = parse_coin_gecko_error(market_chart_res, &default_err_msg).await;
+    return err!("{}", err_msg);
   }
   let market_chart: MarketChart = market_chart_res.json().await?;
 
@@ -140,11 +138,7 @@ async fn coin_gecko(pda: &PriceDataAsset, date: i64, api: &Api) -> Result<Prices
   Ok(prices)
 }
 
-async fn crypto_compare(
-  pda: &PriceDataAsset,
-  date: i64,
-  api: &Api,
-) -> Result<Prices, Box<dyn Error>> {
+async fn crypto_compare(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn Error>> {
   thread::sleep(time::Duration::from_millis(100));
 
   let to_timestamp = date / 1000 + 60 * 60 * 24 * 15; // 15 day after
@@ -157,7 +151,6 @@ async fn crypto_compare(
     limit = limit,
     to = to_timestamp,
   );
-  println!("Fetch {:?} url {}", api.name, request_url);
 
   #[derive(Deserialize, Debug)]
   struct Ohlcv {
@@ -181,7 +174,7 @@ async fn crypto_compare(
     data: Option<Data>,
   }
 
-  let res: Res = reqwest::get(request_url).await?.json().await?;
+  let res: Res = http_get(&request_url).await?.json().await?;
   if res.kind != 100 {
     return err!("{}", res.message);
   }

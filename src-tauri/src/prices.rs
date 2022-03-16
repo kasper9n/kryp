@@ -34,7 +34,7 @@ pub fn symbol_kind(symbol: &str) -> Option<AssetKind> {
     None
   }
 }
-fn get_id(symbol: &str) -> Option<String> {
+pub fn get_id(symbol: &str) -> Option<String> {
   if let Some(_) = FIAT_LIST.get(symbol) {
     Some(symbol.to_string())
   } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
