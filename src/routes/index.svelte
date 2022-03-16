@@ -13,8 +13,15 @@
     value: string | null
     error: string | null
   }
+  type WalletHoldings = {
+    name: string
+    holdings: { [asset: string]: Holding }
+  }
+
   let holdings = [] as Holding[]
   let chartHoldings = [] as ChartItem[]
+  let walletHoldings = {} as { [wallet: string]: WalletHoldings }
+
   async function getHoldings() {
     holdings = await runCmd('get_holdings')
     holdings = await runCmd('get_holdings_valued')
@@ -25,8 +32,19 @@
         label: holding.asset,
         value: Number(holding.value),
       }))
+
+    walletHoldings = await runCmd('get_holdings_by_wallet')
+    console.log('by-w', walletHoldings)
   }
   getHoldings()
+
+  function getValue(value: string | null) {
+    if (value) {
+      return (Number(value) + Number.EPSILON).toFixed(2)
+    } else {
+      return ''
+    }
+  }
 
   const colors = [
     '#296ec2',
@@ -61,7 +79,7 @@
     ],
   }
   const options = {
-    cutout: '65%',
+    cutout: '75%',
     plugins: {
       legend: {
         display: false,
@@ -76,33 +94,64 @@
 </script>
 
 <div class="page">
-  <div class="card">
-    <h3>Balance by Asset</h3>
-    {#await holdings}
-      Loading...
-    {:then holdings}
-      <div class="canvas-container">
-        {#if chartHoldings.length >= 1}
+  <div class="row">
+    <div class="big-card max-card">
+      <h3>Balance by Asset</h3>
+      {#await holdings}
+        Loading...
+      {:then holdings}
+        <div>
+          <div class="tr header">
+            <div class="asset">Asset</div>
+            <div class="amount">Amount</div>
+            <div class="cost">Cost</div>
+            <div class="value">Value</div>
+          </div>
+          {#each holdings as holding}
+            <div class="tr">
+              <div class="asset">{holding.asset}</div>
+              <div class="align-right amount">{holding.amount}</div>
+              <div class="align-right cost">{holding.cost}</div>
+              <div class="align-right value">{getValue(holding.value)}</div>
+            </div>
+          {/each}
+        </div>
+      {/await}
+    </div>
+    <div class="sidebar">
+      {#if chartHoldings.length >= 1}
+        <div class="center">
           <Pie {data} {options} />
-        {/if}
-      </div>
-      <table>
-        <tr class="header">
-          <td>Asset</td>
-          <td>Amount</td>
-          <td>Cost</td>
-          <td>Value</td>
-        </tr>
-        {#each holdings as holding}
-          <tr>
-            <td>{holding.asset}</td>
-            <td class="align-right">{holding.amount}</td>
-            <td class="align-right">{holding.cost}</td>
-            <td class="align-right">{holding.value || ''}</td>
-          </tr>
+        </div>
+      {/if}
+    </div>
+  </div>
+  <div class="row">
+    <div class="big-card">
+      <h3>Balance by Wallet</h3>
+      {#await walletHoldings}
+        Loading...
+      {:then walletHoldings}
+        {#each Object.values(walletHoldings) as wallet}
+          <div>{wallet.name}</div>
+          <div class="wallet">
+            <div class="header tr">
+              <div class="asset">Asset</div>
+              <div class="amount">Amount</div>
+              <div class="cost">Cost</div>
+            </div>
+            {#each Object.values(wallet.holdings) as holding}
+              <div class="tr">
+                <td class="asset">{holding.asset}</td>
+                <td class="align-right amount">{holding.amount}</td>
+                <td class="align-right cost">{holding.cost}</td>
+              </div>
+            {/each}
+          </div>
         {/each}
-      </table>
-    {/await}
+      {/await}
+    </div>
+    <div class="sidebar" />
   </div>
 </div>
 
@@ -112,17 +161,50 @@
     display: block
     margin-bottom: 10px
   .page
-    padding: 20px
-    margin: auto
-  .card
+    margin: 20px auto
+    max-width: 950px
+  .row
+    display: flex
+    flex-wrap: wrap
+    margin: 20px
+  .big-card
     font-size: 14px
-    width: 70%
     padding: 15px
     border: 1px solid #e5e5e5
     border-radius: 3px
     background-color: #ffffff
-  .canvas-container
-    max-width: 150px
+    width: 550px
+    flex-grow: 1
+    max-width: 650px
+    margin: 0px auto
+  .sidebar
+    height: 100%
+    display: flex
+    align-items: center
+    width: 180px
+    margin: 20px
+    margin-right: 0px
+    flex-grow: 1
+  .tr
+    display: flex
+  .center
+    width: 100%
+    max-width: 300px
+    margin: auto
   .header
     font-weight: 600
+  .asset
+    width: 0px
+    flex-grow: 6
+  .amount
+    width: 0px
+    flex-grow: 10
+  .cost
+    width: 0px
+    flex-grow: 10
+  .value
+    width: 0px
+    flex-grow: 10
+  .wallet
+    padding: 10px
 </style>

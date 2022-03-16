@@ -192,7 +192,7 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
   Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 struct Holding {
   asset: String,
   amount: Decimal,
@@ -212,7 +212,7 @@ impl Holding {
   }
 }
 
-fn get_holdings_unsorted(tax: &mut Tax) -> Vec<Holding> {
+fn get_holdings_unsorted(tax: &Tax) -> Vec<Holding> {
   let mut holdings_map: HashMap<String, Holding> = HashMap::new();
   for balance in &tax.balances {
     let key = balance.currency.clone();
@@ -227,16 +227,16 @@ fn get_holdings_unsorted(tax: &mut Tax) -> Vec<Holding> {
 
 #[command]
 pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
-  let mut kryp = kryp.0.lock().await;
-  let mut holdings = get_holdings_unsorted(&mut kryp.tax);
+  let kryp = kryp.0.lock().await;
+  let mut holdings = get_holdings_unsorted(&kryp.tax);
   holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
   to_json(&holdings)
 }
 
 #[command]
 pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String> {
-  let mut kryp = kryp.0.lock().await;
-  let mut holdings = get_holdings_unsorted(&mut kryp.tax);
+  let kryp = kryp.0.lock().await;
+  let mut holdings = get_holdings_unsorted(&kryp.tax);
 
   let assets: Vec<_> = holdings.iter().map(|h| &h.asset).collect();
   let prices = fetch_current(assets, &kryp.tax.settings.base_currency).await?;
@@ -250,6 +250,36 @@ pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String>
   }
   holdings.sort_by(|a, b| b.value.cmp(&a.value));
   to_json(&holdings)
+}
+
+#[derive(Serialize, Debug)]
+struct WalletHoldings {
+  name: String,
+  holdings: HashMap<String, Holding>,
+}
+
+#[command]
+pub async fn get_holdings_by_wallet(kryp: State<'_, Data>) -> Result<Value, String> {
+  let kryp = kryp.0.lock().await;
+  let mut wallets_map: HashMap<String, WalletHoldings> = HashMap::new();
+  for balance in &kryp.tax.balances {
+    let asset = balance.currency.clone();
+    if balance.amount > dec!(0) {
+      let wallet = wallets_map
+        .entry(balance.wallet.clone())
+        .or_insert(WalletHoldings {
+          name: balance.wallet.clone(),
+          holdings: HashMap::new(),
+        });
+      let holding = wallet
+        .holdings
+        .entry(asset.clone())
+        .or_insert(Holding::new(asset));
+      holding.amount += balance.amount;
+      holding.cost += balance.cost;
+    }
+  }
+  to_json(&wallets_map)
 }
 
 #[command]

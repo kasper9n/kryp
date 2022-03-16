@@ -77,6 +77,7 @@ fn main() {
       data::add_transaction,
       data::get_holdings,
       data::get_holdings_valued,
+      data::get_holdings_by_wallet,
       data::list_assets,
       data::get_prices,
       import_export::start_import,
