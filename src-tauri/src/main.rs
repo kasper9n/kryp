@@ -12,6 +12,7 @@ use tauri::{
   WindowUrl,
 };
 
+mod calc;
 mod data;
 mod fetch;
 mod import_export;
@@ -76,7 +77,9 @@ fn main() {
       data::get_holdings,
       data::list_assets,
       data::get_prices,
-      import_export::import,
+      import_export::start_import,
+      import_export::continue_import,
+      import_export::cancel_import,
       import_export::export,
     ])
     .menu(Menu::with_items([

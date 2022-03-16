@@ -5,6 +5,7 @@
   import { formatDateTime } from '$lib/transactions'
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
+  import { router } from 'tinro'
 
   type ImportTransaction = {
     transaction: Transaction
@@ -13,12 +14,12 @@
   }
   type ImportData = {
     transactions: ImportTransaction[]
+    has_errors: boolean
   }
   let importData: ImportData | null = null
-  $: console.log('importData', importData)
 
   async function importFile() {
-    const newImportData = await runCmd('import')
+    const newImportData = await runCmd('start_import')
     importData = newImportData
   }
 
@@ -31,16 +32,38 @@
       status = e.payload as ImportStatus
     }
   })
+
+  async function continueImport() {
+    await runCmd('continue_import')
+    router.goto('/transactions')
+  }
+  async function cancel() {
+    await runCmd('cancel_import')
+    importData = null
+    status = null
+  }
+
   onDestroy(async () => {
-    ;(await statusUnlisten)()
+    const unlisten = await statusUnlisten
+    unlisten()
+    cancel()
   })
 </script>
 
 <h1 class="center">Import</h1>
 {#if importData}
-  <p class="center red">
-    Could not calculate the cost of the following transactions. Please enter them manually
-  </p>
+  {#if importData.has_errors}
+    <p class="center red">
+      Could not calculate the cost of the following transactions. Please enter them manually
+    </p>
+  {:else}
+    <p class="center">Successful scan. Continue to import?</p>
+    <div class="button-row">
+      <Button secondary on:click={cancel}>Cancel</Button>
+      <div class="space" />
+      <Button disabled={importData.has_errors} on:click={continueImport}>Continue</Button>
+    </div>
+  {/if}
   <table>
     <thead>
       <tr>
@@ -56,13 +79,23 @@
         <th>Note</th>
         <th>Hash</th>
         <th>Date</th>
+        {#if importData.has_errors}
+          <th>Error</th>
+        {/if}
       </tr>
     </thead>
     <tbody>
       {#each importData.transactions as tx, i}
-        {#if !tx.cost}
+        {#if !tx.cost || !importData.has_errors}
           <tr class:odd={i % 2 === 0}>
-            <td>{tx.transaction.tag}</td>
+            <td
+              class:blue={tx.transaction.type === 'Trade'}
+              class:purple={tx.transaction.type === 'Transfer'}
+              class:green={tx.transaction.type === 'Deposit'}
+              class:red={tx.transaction.type === 'Withdrawal'}
+            >
+              {tx.transaction.tag}
+            </td>
             {#if tx.transaction.type === 'Trade'}
               <td class="sent amount">{tx.transaction.sent_amount}</td>
               <td class="sent asset">{tx.transaction.sent_asset}</td>
@@ -104,21 +137,23 @@
               <td class="fee amount" />
               <td class="fee asset" />
             {/if}
-            <td>{tx.transaction.note}</td>
-            <td>{tx.transaction.hash}</td>
+            <td class="note">{tx.transaction.note}</td>
+            <td class="hash">{tx.transaction.hash}</td>
             <td>{formatDateTime(new Date(tx.transaction.date))}</td>
-            <td>
-              {#if tx.error}
-                {tx.error}
-              {/if}
-            </td>
+            {#if importData.has_errors}
+              <td class="red">
+                {#if tx.error}
+                  {tx.error}
+                {/if}
+              </td>
+            {/if}
           </tr>
         {/if}
       {/each}
     </tbody>
   </table>
 {:else if status}
-  <p>Scanned {status.index} transactions</p>
+  <p class="center">Scanned {status.index} transactions</p>
 {:else}
   <p class="center">Import a custom CSV or TSV file</p>
   <div class="center">
@@ -133,6 +168,7 @@
     justify-content: center
   table
     margin: auto
+    margin-bottom: 36px
     border-spacing: 0px
     border-collapse: collapse
     cursor: default
@@ -140,6 +176,8 @@
   td
     padding: 5px
     border: 1px solid #e7e8e8
+    overflow: hidden
+    text-overflow: ellipsis
     &.amount
       text-align: right
   thead
@@ -150,6 +188,22 @@
     background-color: #f6f6f9
   .odd
     background-color: #ffffff
+  .note
+    max-width: 180px
+  .hash
+    max-width: 100px
   .red
     color: #f92f72
+  .green
+    color: #25b670
+  .blue
+    color: #2ea8fa
+  .purple
+    color: #b853ee
+  .button-row
+    display: flex
+    margin: 18px auto
+    justify-content: center
+  .space
+    padding: 6px
 </style>

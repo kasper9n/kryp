@@ -1,0 +1,221 @@
+use crate::transaction::{format_date, Transaction};
+use crate::{round_8, throw};
+use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
+use serde::{Deserialize, Serialize};
+use std::slice::IterMut;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Balance {
+  pub acquire_date: i64,
+  pub amount: Decimal,
+  pub currency: String,
+  pub wallet: String,
+  pub cost: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+pub struct Balances(Vec<Balance>);
+impl Balances {
+  fn add(&mut self, balance: Balance) {
+    let pos = self
+      .0
+      .binary_search_by(|current_b| current_b.acquire_date.cmp(&balance.acquire_date))
+      .unwrap_or_else(|pos| pos);
+    self.0.insert(pos, balance);
+  }
+  pub fn to_inner(self) -> Vec<Balance> {
+    self.0
+  }
+  fn iter_fifo(&mut self) -> IterMut<Balance> {
+    self.0.iter_mut()
+  }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Realized {
+  pub date: i64,
+  pub input: Decimal,
+  pub output: Decimal,
+  pub wallet: String,
+}
+
+pub struct Calculation {
+  pub balances: Balances,
+  pub realized_gains: Vec<Realized>,
+}
+
+enum DeductError {
+  InsufficientBalance {
+    actual_balance: Decimal,
+    amount_to_deduct: Decimal,
+    asset_to_deduct: String,
+    wallet_to_deduct: String,
+  },
+}
+
+impl Calculation {
+  /// Adds transactions to the calculation
+  pub fn calculate(transactions: &Vec<Transaction>) -> Result<Self, String> {
+    let mut calc = Calculation {
+      balances: Balances::default(),
+      realized_gains: Vec::new(),
+    };
+    let mut transactions: Vec<&Transaction> = transactions.iter().collect();
+
+    // sort by date
+    transactions.sort_by_key(|tx| tx.date());
+
+    for transaction in transactions {
+      match calc.apply_transaction(transaction) {
+        Ok(()) => {}
+        Err(DeductError::InsufficientBalance {
+          actual_balance,
+          amount_to_deduct,
+          asset_to_deduct,
+          wallet_to_deduct,
+        }) => {
+          throw!(
+            "Tried to deduct deduct {} {} from \"{}\" wallet, but the balance is only {} {}. The deduction is from a {} transaction at {}",
+            amount_to_deduct,
+            asset_to_deduct,
+            wallet_to_deduct,
+            actual_balance,
+            asset_to_deduct,
+            transaction.tag(),
+            format_date(transaction.date()),
+          );
+        }
+      };
+    }
+    Ok(calc)
+  }
+
+  fn apply_transaction(&mut self, transaction: &Transaction) -> Result<(), DeductError> {
+    match transaction {
+      Transaction::Trade(trade) => {
+        self.balances.add(Balance {
+          acquire_date: trade.date,
+          amount: trade.recv_amount,
+          currency: trade.recv_asset.clone(),
+          wallet: trade.recv_wallet.clone(),
+          cost: trade.cost(),
+        });
+
+        let deducted = self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
+        let fee_deducted = if trade.fee_asset == "" {
+          Vec::new()
+        } else {
+          self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?
+        };
+
+        self.realized_gains.push(Realized {
+          date: trade.date,
+          input: sum_balance_costs(&deducted) + sum_balance_costs(&fee_deducted),
+          output: trade.cost(),
+          wallet: trade.sent_wallet.clone(),
+        });
+      }
+      Transaction::Transfer(transfer) => {
+        if transfer.sent_amount > transfer.recv_amount {
+          let fee_amount = transfer.sent_amount - transfer.recv_amount;
+          let fee_deducted =
+            self.deduct(&transfer.sent_wallet, &transfer.sent_asset, fee_amount)?;
+          self.realized_gains.push(Realized {
+            date: transfer.date,
+            input: sum_balance_costs(&fee_deducted),
+            output: fee_amount,
+            wallet: transfer.sent_wallet.clone(),
+          });
+        }
+
+        let deducted = self.deduct(
+          &transfer.sent_wallet,
+          &transfer.sent_asset,
+          transfer.recv_amount,
+        )?;
+        for mut balance in deducted {
+          balance.wallet = transfer.recv_wallet.clone();
+          self.balances.add(balance);
+        }
+      }
+      Transaction::Deposit(deposit) => {
+        self.balances.add(Balance {
+          acquire_date: deposit.date,
+          amount: deposit.amount,
+          currency: deposit.asset.clone(),
+          wallet: deposit.wallet.clone(),
+          cost: deposit.cost(),
+        });
+      }
+      Transaction::Withdrawal(withdrawal) => {
+        let deducted = self.deduct(&withdrawal.wallet, &withdrawal.asset, withdrawal.amount)?;
+        self.realized_gains.push(Realized {
+          date: withdrawal.date,
+          input: sum_balance_costs(&deducted),
+          output: withdrawal.cost(),
+          wallet: withdrawal.wallet.clone(),
+        });
+      }
+    }
+    Ok(())
+  }
+
+  // Deduct from a balance. Returns the deducted amounts
+  fn deduct(
+    &mut self,
+    wallet: &str,
+    asset: &str,
+    amount: Decimal,
+  ) -> Result<Vec<Balance>, DeductError> {
+    let mut amount_left = amount;
+    let mut deducted_balances = Vec::new();
+
+    for balance in self.balances.iter_fifo() {
+      if balance.wallet != wallet || balance.currency != asset {
+        continue;
+      }
+
+      if amount_left >= balance.amount {
+        // more stuff to deduct
+        amount_left = amount_left - balance.amount;
+        deducted_balances.push(balance.clone());
+        balance.cost = dec!(0);
+        balance.amount = dec!(0);
+        if amount_left <= dec!(0) {
+          break;
+        }
+      } else {
+        // last thing to deduct
+        let deduct_percent = amount_left / balance.amount;
+        let cost_to_deduct = round_8(balance.cost * deduct_percent);
+        deducted_balances.push(Balance {
+          acquire_date: balance.acquire_date,
+          amount: amount_left,
+          currency: balance.currency.clone(),
+          wallet: balance.wallet.clone(),
+          cost: cost_to_deduct,
+        });
+        balance.amount -= amount_left;
+        balance.cost -= cost_to_deduct;
+        amount_left = dec!(0);
+        break;
+      }
+    }
+
+    if amount_left <= dec!(0) {
+      Ok(deducted_balances)
+    } else {
+      Err(DeductError::InsufficientBalance {
+        actual_balance: amount - amount_left,
+        amount_to_deduct: amount,
+        asset_to_deduct: asset.to_string(),
+        wallet_to_deduct: wallet.to_string(),
+      })
+    }
+  }
+}
+
+fn sum_balance_costs(balances: &Vec<Balance>) -> Decimal {
+  balances.iter().map(|b| b.cost).sum()
+}

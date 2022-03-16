@@ -1,11 +1,16 @@
+use crate::calc::Calculation;
 use crate::data::Data;
+use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{Deposit, Trade, Transfer, UncostedTransaction, Withdrawal};
+use crate::transaction::{
+  format_date, CoreTransaction, Deposit, Trade, Transfer, UncostedTransaction, Withdrawal,
+};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use csv::StringRecord;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -41,6 +46,7 @@ fn save_file(_win: &Window) -> Option<PathBuf> {
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct ImportData {
   transactions: Vec<ImportTransaction>,
+  has_errors: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -69,7 +75,17 @@ fn read_csv(file_path: PathBuf) -> Result<csv::Reader<File>, String> {
 }
 
 #[command]
-pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<Option<ImportData>, String> {
+pub async fn cancel_import(kryp: State<'_, Data>) -> Result<(), ()> {
+  let mut kryp = kryp.0.lock().await;
+  kryp.import_data = ImportData::default();
+  Ok(())
+}
+
+#[command]
+pub async fn start_import(
+  win: Window,
+  kryp: State<'_, Data>,
+) -> Result<Option<ImportData>, String> {
   let file_path = match pick_file(&win) {
     Some(p) => p,
     None => return Ok(None),
@@ -86,6 +102,7 @@ pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<Option<ImportD
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
 
+  let mut has_errors = false;
   let header_length = 1;
   let mut i = 1;
   let mut uncosted_transactions = Vec::new();
@@ -113,19 +130,106 @@ pub async fn import(win: Window, kryp: State<'_, Data>) -> Result<Option<ImportD
         error: Some(e),
       },
     };
+    if import_transaction.error.is_some() {
+      has_errors = true;
+    }
     win.emit("importStatus", ImportStatus { index: i }).ok();
     uncosted_transactions.push(import_transaction);
     i += 1;
   }
-  // let tax = &mut kryp.tax;
-  // for uncosted_transaction in uncosted_transactions {
-  //   tax.add_transaction(transaction);
-  // }
-  // kryp.tax.calculate()?;
   kryp.import_data = ImportData {
     transactions: uncosted_transactions.clone(),
+    has_errors,
   };
   Ok(Some(kryp.import_data.clone()))
+}
+
+#[command]
+pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
+  let mut kryp = kryp.0.lock().await;
+
+  let mut transactions = Vec::new();
+  for (i, uncosted_transaction) in kryp.import_data.transactions.iter().enumerate() {
+    let cost = uncosted_transaction.cost.ok_or_else(|| {
+      let date = uncosted_transaction.transaction.date();
+      format!("Unable to get cost for transaction {} at {}", i, date)
+    })?;
+    let tx = uncosted_transaction.transaction.clone().finalize(cost);
+    transactions.push(tx);
+  }
+
+  let mut new_transactions = kryp.tax.transactions.clone();
+  for transaction in transactions {
+    Tax::add_transaction_to_vec(&mut new_transactions, transaction);
+  }
+
+  let mut balances: HashMap<(String, String), Decimal> = HashMap::new();
+  for tx in &new_transactions {
+    let core_tx = CoreTransaction::from_transaction(tx.clone());
+    let sent_amount = core_tx.sent_amount.unwrap_or(dec!(0));
+    let sent_asset = core_tx.sent_asset.unwrap_or("".into());
+    let sent_wallet = core_tx.sent_wallet.unwrap_or("".into());
+
+    let recv_amount = core_tx.recv_amount.unwrap_or(dec!(0));
+    let recv_asset = core_tx.recv_asset.unwrap_or("".into());
+    let recv_wallet = core_tx.recv_wallet.unwrap_or("".into());
+
+    let fee_amount = core_tx.fee_amount.unwrap_or(dec!(0));
+    let fee_asset = core_tx.fee_asset.unwrap_or("".into());
+
+    let recv_balance = balances.entry((recv_asset, recv_wallet)).or_insert(dec!(0));
+    *recv_balance += recv_amount;
+
+    {
+      let sent_balance = balances
+        .entry((sent_asset.clone(), sent_wallet.clone()))
+        .or_insert(dec!(0));
+      *sent_balance -= sent_amount;
+      if sent_balance < &mut dec!(0) {
+        let negative_balance = sent_balance.clone();
+        println!("{:#?}", balances);
+        throw!(
+          "Negative balance {} {} in \"{}\" due to {} transaction at {}",
+          negative_balance,
+          sent_asset,
+          sent_wallet,
+          tx.tag(),
+          format_date(tx.date()),
+        );
+      }
+    }
+
+    let mut fee_balance = balances
+      .entry((fee_asset.clone(), sent_wallet.clone()))
+      .or_insert(dec!(0));
+    fee_balance -= fee_amount;
+    if fee_balance < &mut dec!(0) {
+      let negative_balance = fee_balance.clone();
+      println!("{:?}", balances);
+      throw!(
+        "Negative balance {} {} in \"{}\" due to {} transaction at {}",
+        negative_balance,
+        fee_asset,
+        sent_wallet,
+        tx.tag(),
+        format_date(tx.date()),
+      );
+    }
+  }
+  println!("SUCCESSx");
+  for ((asset, wallet), amount) in balances {
+    if amount != dec!(0) {
+      println!("{} {} {}", wallet, asset, amount);
+    }
+  }
+
+  let calculation = Calculation::calculate(&new_transactions)?;
+
+  kryp.tax.transactions = new_transactions;
+  kryp.tax.apply_calc_output(calculation);
+  kryp.import_data = ImportData::default();
+
+  Ok(())
 }
 
 #[command]

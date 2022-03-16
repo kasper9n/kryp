@@ -11,13 +11,13 @@
   <div class="view">
     {#each group as value, i}
       <div class="wrapper" class:secondary on:click={() => (selected = i)}>
-        <button class:selected={selected === i}>{value}</button>
+        <button {disabled} class:selected={selected === i}>{value}</button>
       </div>
     {/each}
   </div>
 {:else}
   <div class="wrapper" class:neutral class:secondary class:disabled on:click>
-    <button {type} {...$$restProps}><slot /></button>
+    <button {type} {disabled} {...$$restProps}><slot /></button>
   </div>
 {/if}
 
@@ -32,7 +32,7 @@
     cursor: pointer
     user-select: none
     margin: 0px
-    height: 34px
+    height: 32px
     padding: 0px 18px
     border: none
     font-size: 13px
@@ -65,7 +65,7 @@
     background-color: #ffffff
     border-radius: 7px
     box-shadow: 0px 0px 2px 0px $border
-    height: 32px
+    height: 28px
     padding: 2px 2px
     border: 1px solid $border
     button

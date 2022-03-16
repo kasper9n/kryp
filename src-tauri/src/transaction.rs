@@ -1,12 +1,17 @@
 use crate::prices::{symbol_kind, AssetKind, PriceData};
 use crate::round_8;
 use crate::tax::Api;
-use chrono::TimeZone;
+use chrono::{Local, TimeZone};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
 use rust_decimal_macros::dec;
+
+pub fn format_date(ts: i64) -> String {
+  let dt = Local.timestamp_millis(ts);
+  dt.format("%Y-%m-%d %H:%M:%S").to_string()
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
@@ -328,7 +333,7 @@ impl UncostedTransaction {
 }
 
 /// A transaction with a final cost set. This should not be directly created
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum Transaction {
   Trade(Trade),
@@ -338,6 +343,14 @@ pub enum Transaction {
 }
 
 impl Transaction {
+  pub fn tag(&self) -> &str {
+    match self {
+      Transaction::Trade(tx) => &tx.tag,
+      Transaction::Transfer(tx) => &tx.tag,
+      Transaction::Deposit(tx) => &tx.tag,
+      Transaction::Withdrawal(tx) => &tx.tag,
+    }
+  }
   pub fn date(&self) -> i64 {
     match self {
       Transaction::Trade(tx) => tx.date,
@@ -431,6 +444,86 @@ impl Transaction {
           // cost: Decimal,
         ]
       }
+    }
+  }
+}
+
+pub struct CoreTransaction {
+  pub tag: String,
+  pub date: i64,
+  pub note: String,
+  pub hash: String,
+  pub sent_amount: Option<Decimal>,
+  pub sent_asset: Option<String>,
+  pub sent_wallet: Option<String>,
+  pub recv_amount: Option<Decimal>,
+  pub recv_asset: Option<String>,
+  pub recv_wallet: Option<String>,
+  pub fee_amount: Option<Decimal>,
+  pub fee_asset: Option<String>,
+  // pub manual_worth_amount: Option<Decimal>,
+  // pub manual_worth_asset: Option<String>,
+  // pub cost: Decimal,
+}
+impl CoreTransaction {
+  pub fn from_transaction(tx: Transaction) -> Self {
+    match tx {
+      Transaction::Trade(tx) => CoreTransaction {
+        tag: tx.tag,
+        date: tx.date,
+        note: tx.note,
+        hash: tx.hash,
+        sent_amount: Some(tx.sent_amount),
+        sent_asset: Some(tx.sent_asset),
+        sent_wallet: Some(tx.sent_wallet),
+        recv_amount: Some(tx.recv_amount),
+        recv_asset: Some(tx.recv_asset),
+        recv_wallet: Some(tx.recv_wallet),
+        fee_amount: Some(tx.fee_amount),
+        fee_asset: Some(tx.fee_asset),
+      },
+      Transaction::Transfer(tx) => CoreTransaction {
+        tag: tx.tag,
+        date: tx.date,
+        note: tx.note,
+        hash: tx.hash,
+        sent_amount: Some(tx.sent_amount),
+        sent_asset: Some(tx.sent_asset),
+        sent_wallet: Some(tx.sent_wallet),
+        recv_amount: Some(tx.recv_amount),
+        recv_asset: Some(tx.recv_asset),
+        recv_wallet: Some(tx.recv_wallet),
+        fee_amount: None,
+        fee_asset: None,
+      },
+      Transaction::Deposit(tx) => CoreTransaction {
+        tag: tx.tag,
+        date: tx.date,
+        note: tx.note,
+        hash: tx.hash,
+        sent_amount: None,
+        sent_asset: None,
+        sent_wallet: None,
+        recv_amount: Some(tx.amount),
+        recv_asset: Some(tx.asset),
+        recv_wallet: Some(tx.wallet),
+        fee_amount: None,
+        fee_asset: None,
+      },
+      Transaction::Withdrawal(tx) => CoreTransaction {
+        tag: tx.tag,
+        date: tx.date,
+        note: tx.note,
+        hash: tx.hash,
+        sent_amount: Some(tx.amount),
+        sent_asset: Some(tx.asset),
+        sent_wallet: Some(tx.wallet),
+        recv_amount: None,
+        recv_asset: None,
+        recv_wallet: None,
+        fee_amount: None,
+        fee_asset: None,
+      },
     }
   }
 }
