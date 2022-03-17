@@ -151,10 +151,10 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
       return Ok(());
     }
   }
-  kryp.set_opened(false);
   if !kryp.opened {
     win.close().unwrap();
   }
+  kryp.set_opened(false);
   Ok(())
 }
 
