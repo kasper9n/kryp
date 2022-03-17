@@ -3,7 +3,7 @@
   import Button from '$lib/Button.svelte'
   import Modal from '$lib/Modal.svelte'
   import type { Transaction } from '$lib/transactions'
-  import { refresh, popup, runCmd } from '$lib/general'
+  import { popup, runCmd } from '$lib/general'
   import NumericInput from '$lib/NumericInput.svelte'
   import Dropdown from '$lib/Dropdown.svelte'
   import { createEventDispatcher, onMount } from 'svelte'
@@ -95,7 +95,6 @@
     }
     await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
     close()
-    refresh()
   }
   const tags = [
     { type: 'Trade', value: 'Trade', name: 'Trade' },

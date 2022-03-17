@@ -4,10 +4,22 @@
   import TransactionModal from '$lib/modals/Transaction.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
+  import type { Transaction } from '$lib/transactions'
+  import { runCmd } from '$lib/general'
+
   let view = 0
 
   let showAdd = false
   const dispatch = createEventDispatcher()
+  function closeModal() {
+    showAdd = false
+    reload()
+  }
+
+  let transactions: Promise<Transaction[]> = runCmd('get_transactions')
+  function reload() {
+    transactions = runCmd('get_transactions')
+  }
 </script>
 
 <div class="page">
@@ -18,15 +30,17 @@
     <div style="padding: 6px;" />
     <Button secondary on:click={() => dispatch('import')}>Import</Button>
   </div>
-  {#if view === 0}
-    <TxList />
-  {:else if view === 1}
-    <TxTable />
-  {/if}
+  {#await transactions then transactions}
+    {#if view === 0}
+      <TxList {transactions} />
+    {:else if view === 1}
+      <TxTable {transactions} />
+    {/if}
+  {/await}
 </div>
 
 {#if showAdd}
-  <TransactionModal on:close={() => (showAdd = false)} />
+  <TransactionModal on:close={closeModal} />
 {/if}
 
 <style lang="sass">

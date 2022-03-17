@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { transactions, formatDate, formatTime } from '$lib/transactions'
+  import { formatDate, formatTime, Transaction } from '$lib/transactions'
   import { newSelection } from './selection'
   import { checkMouseShortcut, checkShortcut } from './general'
+
+  export let transactions: Transaction[]
 
   const selection = newSelection()
 
@@ -36,7 +38,7 @@
     if (checkShortcut(e, 'Escape')) {
       selection.clear()
     } else if (checkShortcut(e, 'ArrowUp')) {
-      selection.goBackward($transactions.length - 1)
+      selection.goBackward(transactions.length - 1)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
       selection.shiftSelectBackward()
     } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
@@ -45,16 +47,16 @@
     } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
       selection.shiftSelectTo(0)
     } else if (checkShortcut(e, 'ArrowDown')) {
-      selection.goForward($transactions.length - 1)
+      selection.goForward(transactions.length - 1)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
-      selection.shiftSelectForward($transactions.length - 1)
+      selection.shiftSelectForward(transactions.length - 1)
     } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
       selection.clear()
-      selection.add($transactions.length - 1)
+      selection.add(transactions.length - 1)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
-      selection.shiftSelectTo($transactions.length - 1)
+      selection.shiftSelectTo(transactions.length - 1)
     } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
-      selection.add(0, $transactions.length - 1)
+      selection.add(0, transactions.length - 1)
     } else {
       return
     }
@@ -64,7 +66,7 @@
 
 <svelte:body on:keydown|self={rowKeydown} />
 <button class="list" on:keydown={rowKeydown}>
-  {#each $transactions as tx, i}
+  {#each transactions as tx, i}
     <div
       class="item"
       class:selected={$selection.list[i] === true}

@@ -1,35 +1,6 @@
 import { writable } from 'svelte/store'
-import { refresher, runCmd } from '$lib/general'
-import type { Transaction } from '$lib/transactions'
-
-type Tax = {
-  transactions: Transaction[]
-  settings: TaxSettings
-  price_data: PriceData
-  realized_gains: Realized[]
-  deposits: Deposit[]
-  balances: Balance[]
-}
-
-export type TaxSettings = {
-  base_currency: string
-  apis: { name: string; key?: string; disabled: boolean }[]
-}
-
-const defaultTax: Tax = {
-  transactions: [],
-  settings: {
-    base_currency: 'USD',
-    apis: [],
-  },
-  price_data: {
-    assets: {},
-  },
-  realized_gains: [],
-  deposits: [],
-  balances: [],
-}
-export const tax = writable(defaultTax)
+import { runCmd } from '$lib/general'
+import { event } from '@tauri-apps/api'
 
 export type PriceData = {
   assets: { [key: string]: PriceDataAsset }
@@ -64,17 +35,31 @@ export type Deposit = {
   wallet: string
 }
 
-type Data = {
-  opened: boolean
+export type TaxSettings = {
+  base_currency: string
+  apis: { name: string; key?: string; disabled: boolean }[]
 }
 
 export const opened = writable(false)
 
-refresher.subscribe(async () => {
-  const newTax: Tax = await runCmd('get_tax')
-  console.log(newTax)
-  tax.set(newTax)
+export const settings = writable({
+  base_currency: 'USD',
+  apis: [],
+} as TaxSettings)
 
-  const data: Data = await runCmd('get_data')
-  opened.set(data.opened)
+runCmd('is_open').then((isOpen) => {
+  opened.set(isOpen)
+})
+runCmd('get_tax_settings').then((taxSettings) => {
+  settings.set(taxSettings)
+})
+
+event.listen('opened', async (e) => {
+  console.log('OPENED event')
+  if (e.payload === true) {
+    opened.set(true)
+  } else if (e.payload === false) {
+    opened.set(false)
+  }
+  settings.set(await runCmd('get_tax_settings'))
 })

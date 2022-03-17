@@ -235,7 +235,7 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
 #[command]
 pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
   let kryp = kryp.0.lock().await;
-  if !kryp.opened {
+  if !kryp.is_open() {
     return Ok(());
   }
   let file_path = match save_file(&win) {

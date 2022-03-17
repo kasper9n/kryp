@@ -2,8 +2,8 @@
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
   import { Route, active, router } from 'tinro'
-  import { refresh, runCmd } from '$lib/general'
-  import { opened, tax } from '$lib/data'
+  import { runCmd } from '$lib/general'
+  import { opened, settings } from '$lib/data'
   import NewFileModal from '$lib/modals/NewFile.svelte'
   import SettingsModal from '$lib/modals/Settings.svelte'
   import Button from '$lib/Button.svelte'
@@ -33,7 +33,6 @@
 
   async function open(path?: string) {
     await runCmd('open', { path })
-    refresh()
   }
   async function save() {
     await runCmd('save', { saveAs: false })
@@ -43,9 +42,8 @@
   }
   async function close() {
     await runCmd('close')
-    refresh()
   }
-  const unlistenFuture = event.listen('menu', async ({ payload }) => {
+  const unlistenFuture = event.listen('tauri://menu', async ({ payload }) => {
     if (payload === 'Dashboard') {
       router.goto('/', true)
     } else if (payload === 'Transactions') {
@@ -79,7 +77,7 @@
     <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
     <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
     <div class="nav-mid" />
-    <span class="base">{$tax.settings.base_currency}</span>
+    <span class="base">{$settings.base_currency}</span>
     <a on:click={go} use:active href="/prices"><button>Prices</button></a>
     <a on:click={go} use:active href="/help"><button>Help</button></a>
   </div>
@@ -110,9 +108,7 @@
   <NewFileModal on:close={() => (newFileModalVisible = false)} />
 {/if}
 {#if settingsModalVisible}
-  {#await runCmd('get_tax_settings') then settings}
-    <SettingsModal {settings} on:close={() => (settingsModalVisible = false)} />
-  {/await}
+  <SettingsModal on:close={() => (settingsModalVisible = false)} />
 {/if}
 
 <style lang="sass">

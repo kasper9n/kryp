@@ -1,13 +1,9 @@
 <script lang="ts">
   import Button from '$lib/Button.svelte'
-  import { tax, TaxSettings } from '$lib/data'
+  import { settings } from '$lib/data'
   import Modal from '$lib/Modal.svelte'
   import ReorderableList from '$lib/ReorderableList.svelte'
   import { createEventDispatcher } from 'svelte'
-
-  export let settings: TaxSettings
-
-  $: console.log(settings.apis)
 
   const dispatch = createEventDispatcher()
 
@@ -25,10 +21,10 @@
 <Modal width="520px" title="Settings" on:keydown={keydown} on:close>
   <form on:submit|preventDefault={save} class="container">
     <h4>Base currency</h4>
-    <input type="text" value={$tax.settings.base_currency} disabled />
+    <input type="text" value={$settings.base_currency} disabled />
     <h4>Price sources</h4>
     <p class="sub">Where prices are fetched from, sorted by priority</p>
-    <ReorderableList items={settings.apis} let:item let:index>
+    <ReorderableList items={$settings.apis} let:item let:index>
       <div class="list-item">
         <p class="title">
           {#if item.name === 'ExchangeRateHost'}
@@ -42,7 +38,7 @@
             <span class="label">API key</span>
             <input
               type="text"
-              bind:value={settings.apis[index].key}
+              bind:value={$settings.apis[index].key}
               placeholder="f17fe84fca08..."
             />
           </div>

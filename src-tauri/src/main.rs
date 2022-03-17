@@ -3,13 +3,13 @@
   windows_subsystem = "windows"
 )]
 
-use data::Data;
+use data::{Data, Kryp};
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
+use tauri::async_runtime::Mutex;
 use tauri::{
-  command, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window, WindowBuilder,
-  WindowUrl,
+  command, window, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window, WindowUrl,
 };
 
 mod calc;
@@ -50,19 +50,6 @@ pub fn round_8(num: Decimal) -> Decimal {
 fn main() {
   let ctx = tauri::generate_context!();
   let tauri_app = tauri::Builder::default()
-    .create_window("main", WindowUrl::default(), |win, webview| {
-      let win = win
-        .title("Kryp")
-        .resizable(true)
-        .decorations(true)
-        .always_on_top(false)
-        .inner_size(1050.0, 800.0)
-        .min_inner_size(300.0, 200.0)
-        .fullscreen(false);
-      return (win, webview);
-    })
-    .unwrap()
-    .manage(data::Data(Default::default()))
     .manage(import_export::ImportData::default())
     .invoke_handler(tauri::generate_handler![
       error_popup,
@@ -70,7 +57,7 @@ fn main() {
       data::open,
       data::save,
       data::close,
-      data::get_data,
+      data::is_open,
       data::get_tax,
       data::get_tax_settings,
       data::get_transactions,
@@ -174,19 +161,28 @@ fn main() {
         Menu::with_items([CustomMenuItem::new("Learn More", "Learn More").into()]),
       )),
     ]))
-    .on_menu_event(|event| {
-      let event_name = event.menu_item_id();
-      let _ = event.window().emit("menu", event_name);
-      match event_name {
-        "Learn More" => {
-          let url = "https://github.com/probablykasper/kryp".to_string();
-          shell::open(&event.window().shell_scope(), url, None).unwrap();
-        }
-        _ => {}
+    .on_menu_event(|event| match event.menu_item_id() {
+      "Learn More" => {
+        let url = "https://github.com/probablykasper/kryp".to_string();
+        shell::open(&event.window().shell_scope(), url, None).unwrap();
       }
+      _ => {}
     })
     .build(ctx)
     .expect("error while running tauri app");
+
+  tauri_app.manage(data::Data(Mutex::new(Kryp::new(tauri_app.app_handle()))));
+
+  let _ = window::WindowBuilder::new(&tauri_app.app_handle(), "main", WindowUrl::default())
+    .title("Kryp")
+    .resizable(true)
+    .decorations(true)
+    .always_on_top(false)
+    .inner_size(1050.0, 800.0)
+    .min_inner_size(300.0, 200.0)
+    .fullscreen(false)
+    .build();
+
   tauri_app.run(|app_handle, e| match e {
     tauri::RunEvent::CloseRequested { label, api, .. } => {
       if label == "main" {

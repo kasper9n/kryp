@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { transactions, formatDateTime } from '$lib/transactions'
+  import { formatDateTime, Transaction } from '$lib/transactions'
+
+  export let transactions: Transaction[]
+
   let hideEditBox = true
   let editText = ''
   let editCell: HTMLInputElement
@@ -53,7 +56,7 @@
     </tr>
   </thead>
   <tbody on:click={tbodyClick}>
-    {#each $transactions as tx, i}
+    {#each transactions as tx, i}
       <tr class:odd={i % 2 === 0}>
         <td class="type" class:green={tx.type === 'Deposit'} class:red={tx.type === 'Withdrawal'}
           >{tx.tag}</td

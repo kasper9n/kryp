@@ -185,13 +185,13 @@ impl Tax {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TaxSettings {
   pub base_currency: String,
   pub apis: Vec<Api>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Api {
   pub name: ApiName,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -216,7 +216,7 @@ impl Api {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ApiName {
   ExchangerateHost,
   CoinGecko,

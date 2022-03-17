@@ -5,24 +5,45 @@ use crate::transaction::UncostedTransaction;
 use crate::{confirm_async, throw};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Arc;
 use tauri::api::dialog;
-use tauri::{command, State, Window};
+use tauri::{command, AppHandle, Manager, State, Window};
 use tokio::sync::Mutex;
 
-#[derive(Serialize, Deserialize, Debug)]
 pub struct Kryp {
   pub tax: Tax,
-  pub opened: bool,
+  opened: bool,
+  app: AppHandle,
   pub file_path: Option<PathBuf>,
   pub import_data: ImportData,
 }
 
 impl Kryp {
+  pub fn new(app: AppHandle) -> Self {
+    Kryp {
+      tax: Tax::new("USD"),
+      opened: false,
+      app,
+      file_path: None,
+      import_data: ImportData::default(),
+    }
+  }
+  pub fn is_open(&self) -> bool {
+    self.opened
+  }
+  pub fn set_opened(&mut self, opened: bool) {
+    if self.opened != opened {
+      self.opened = opened;
+      if !opened {
+        *self = Kryp::new(self.app.clone());
+      }
+      println!("EMIT opened");
+      self.app.emit_all("opened", opened).unwrap();
+    }
+  }
   pub fn has_unsaved_changes(&self) -> bool {
     self.opened && self.tax.dirty
   }
@@ -36,17 +57,6 @@ impl Kryp {
   // }
 }
 
-impl Default for Kryp {
-  fn default() -> Self {
-    Kryp {
-      tax: Tax::new("USD"),
-      opened: false,
-      file_path: None,
-      import_data: ImportData::default(),
-    }
-  }
-}
-
 pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
   match serde_json::to_value(data) {
     Ok(v) => Ok(v),
@@ -54,15 +64,14 @@ pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
   }
 }
 
-#[derive(Default)]
-pub struct Data(pub Arc<Mutex<Kryp>>);
+pub struct Data(pub Mutex<Kryp>);
 
 #[command]
 pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
-  if kryp.opened == false {
+  if !kryp.is_open() {
     kryp.tax = Tax::new(&base_currency);
-    kryp.opened = true;
+    kryp.set_opened(true);
     kryp.file_path = None;
   }
   Ok(())
@@ -71,7 +80,7 @@ pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<()
 #[command]
 pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
-  if kryp.opened == false {
+  if !kryp.is_open() {
     let file_path = match path {
       Some(path) => path,
       None => {
@@ -91,7 +100,7 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
     };
     println!("open file {:?}", file_path);
     kryp.tax = Tax::load(&file_path)?;
-    kryp.opened = true;
+    kryp.set_opened(true);
     kryp.file_path = Some(file_path);
   }
   Ok(())
@@ -133,32 +142,26 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 
 #[command]
 /// Returns a hideApp bool
-pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<bool, String> {
+pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
   if kryp.has_unsaved_changes() {
     let title = "You have unsaved changes or newly fetched prices. Close without saving?";
     let res = confirm_async(win.clone(), title, "");
     if res.await == false {
-      return Ok(false);
+      return Ok(());
     }
   }
+  kryp.set_opened(false);
   if !kryp.opened {
     win.close().unwrap();
-    *kryp = Kryp::default();
-    return Ok(true);
-  } else {
-    *kryp = Kryp::default();
-    return Ok(false);
   }
+  Ok(())
 }
 
 #[command]
-pub async fn get_data(kryp: State<'_, Data>) -> Result<Value, String> {
+pub async fn is_open(kryp: State<'_, Data>) -> Result<bool, String> {
   let kryp = kryp.0.lock().await;
-  let v = serde_json::json!({
-    "opened": kryp.opened,
-  });
-  return Ok(v);
+  Ok(kryp.opened)
 }
 
 #[command]

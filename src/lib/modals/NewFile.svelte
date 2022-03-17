@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { refresh, focus, runCmd } from '$lib/general'
+  import { focus, runCmd } from '$lib/general'
   import Modal from '$lib/Modal.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
@@ -17,7 +17,6 @@
     await runCmd('new_file', {
       baseCurrency: baseCurrency,
     })
-    refresh()
     dispatch('close')
   }
 </script>

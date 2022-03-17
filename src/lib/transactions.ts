@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store'
-import { refresher, runCmd } from '$lib/general'
+import { runCmd } from '$lib/general'
 
 export type Trade = {
   type: 'Trade'
@@ -66,17 +66,6 @@ export type Withdrawal = {
 }
 
 export type Transaction = Trade | Transfer | Deposit | Withdrawal
-
-export const transactions = (() => {
-  const store = writable([] as Transaction[])
-  refresher.subscribe(async () => {
-    const txs: Transaction[] = await runCmd('get_transactions')
-    store.set(txs)
-  })
-  return {
-    subscribe: store.subscribe,
-  }
-})()
 
 function twoDigit(value: number) {
   return ('0' + value.toString()).slice(-2)
