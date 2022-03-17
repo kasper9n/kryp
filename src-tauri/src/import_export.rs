@@ -3,9 +3,10 @@ use crate::data::Data;
 use crate::tax::Tax;
 use crate::throw;
 use crate::transaction::{
-  format_date, CoreTransaction, Deposit, Trade, Transfer, UncostedTransaction, Withdrawal,
+  format_date, CoreTransaction, Deposit, Quantity, Trade, Transfer, UncostedTransaction, Value,
+  Withdrawal,
 };
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use chrono::{Local, NaiveDateTime, TimeZone};
 use csv::StringRecord;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -13,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::mpsc;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
@@ -271,20 +271,131 @@ fn pos(row: &Vec<String>, values: &[&str]) -> Option<usize> {
   row.iter().position(|s| values.contains(&s.as_str()))
 }
 
-fn decimal_str(value: &StringRecord, i: usize) -> Result<Decimal, String> {
-  let s = value.get(i).unwrap();
-  match Decimal::from_str(s) {
-    Ok(d) => Ok(d),
-    Err(_) => throw!("Invalid number \"{}\" at column {}", s, i),
-  }
+struct BaseTransaction {
+  tag: String,
+  date: i64,
+  note: String,
+  hash: String,
+  sent: Option<Value>,
+  recv: Option<Value>,
+  fee: Option<Quantity>,
+  manual_worth: Option<Quantity>,
 }
+impl BaseTransaction {
+  fn into_uncosted_transaction(self) -> Result<UncostedTransaction, String> {
+    let manual_worth_str = self.manual_worth.map(|q| q.to_string());
+    let uncosted_transaction = match self.tag.as_str() {
+      "Trade" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        let fee = self.fee.unwrap_or(Quantity {
+          amount: dec!(0),
+          asset: "".into(),
+        });
+        UncostedTransaction::Trade(Trade {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
 
-fn optional_decimal_str(value: &StringRecord, i: usize) -> Result<Decimal, String> {
-  let s = value.get(i).ok_or(format!("Missing cell {}", i))?;
-  if s.trim() == "" {
-    Ok(dec!(0))
-  } else {
-    decimal_str(value, i)
+          sent_amount: sent.amount,
+          sent_asset: sent.asset,
+          sent_wallet: sent.wallet,
+
+          recv_amount: recv.amount,
+          recv_asset: recv.asset,
+          recv_wallet: recv.wallet,
+
+          fee_amount: fee.amount,
+          fee_asset: fee.asset,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Transfer" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Transfer(Transfer {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          sent_amount: sent.amount,
+          sent_asset: sent.asset,
+          sent_wallet: sent.wallet,
+
+          recv_amount: recv.amount,
+          recv_asset: recv.asset,
+          recv_wallet: recv.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Deposit" | "Buy" | "Income" | "Gift" | "Interest" => {
+        if self.sent.is_some() {
+          throw!("Sent amount is not allowed for {}", self.tag);
+        }
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Deposit(Deposit {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          amount: recv.amount,
+          asset: recv.asset,
+          wallet: recv.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Withdrawal" | "Sell" | "Spend" | "Lost" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        if self.recv.is_some() {
+          throw!("Received amount is not allowed for {}", self.tag);
+        }
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Withdrawal(Withdrawal {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          amount: sent.amount,
+          asset: sent.asset,
+          wallet: sent.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      _ => throw!("Invalid type \"{}\"", self.tag),
+    };
+    Ok(uncosted_transaction)
   }
 }
 
@@ -364,15 +475,72 @@ impl CsvCols {
       cost,
     })
   }
+  fn get_or_empty<'a>(
+    &self,
+    row: &'a StringRecord,
+    col: Option<usize>,
+    name: &str,
+  ) -> Result<&'a str, String> {
+    match col {
+      Some(i) => row.get(i).ok_or(format!("Missing \"{}\" cell", name)),
+      None => Ok(""),
+    }
+  }
+  fn get<'a>(
+    &self,
+    row: &'a StringRecord,
+    col: Option<usize>,
+    name: &str,
+  ) -> Result<&'a str, String> {
+    let i = col.ok_or(format!("Missing \"{}\" column", name))?;
+    let cell = row.get(i).ok_or(format!("Missing \"{}\" cell", name))?;
+    Ok(cell)
+  }
+  // pub fn kind<'a>(&self, row: &'a StringRecord) -> Result<&'a str, String> {
+  //   self.get(row, self.kind, "Type")
+  // }
+  // pub fn date<'a>(&self, row: &'a StringRecord) -> Result<&'a str, String> {
+  //   self.get(row, self.date, "Date")
+  // }
+  // pub fn sent(&self, row: &StringRecord) -> Result<AmountCells, String> {
+  //   Ok(AmountCells {
+  //     amount: self.get(&row, self.sent_amount, "Sent Amount")?.into(),
+  //     asset: self.get(&row, self.sent_asset, "Sent Asset")?.into(),
+  //     wallet: self.get(&row, self.sent_wallet, "Sent Wallet")?.into(),
+  //   })
+  // }
+  // pub fn recv(&self, row: &StringRecord) -> Result<AmountCells, String> {
+  //   Ok(AmountCells {
+  //     amount: self.get(&row, self.recv_amount, "Received Amount")?.into(),
+  //     asset: self.get(&row, self.recv_asset, "Received Asset")?.into(),
+  //     wallet: self.get(&row, self.recv_wallet, "Received Wallet")?.into(),
+  //   })
+  // }
+  // pub fn fee(&self, row: &StringRecord) -> Result<NumberCells, String> {
+  //   Ok(NumberCells {
+  //     amount: self.get(&row, self.fee_amount, "Fee Amount")?.into(),
+  //     asset: self.get(&row, self.fee_asset, "Fee Asset")?.into(),
+  //   })
+  // }
+  // pub fn cost(&self, row: &StringRecord) -> Result<(), String> {
+  //   let cost_cell = self.get_or_empty(row, self.date, "Date")?;
+  //   let (cost_amount, cost_asset) = match cost_cell.trim() {
+  //     "" => (None, None),
+  //     cell => {
+  //       let cost = parse_quantity(cell).ok_or(format!("Invalid cost cell: {}", cell))?;
+  //       (Some(cost.0), Some(cost.1))
+  //     }
+  //   };
+  // }
 }
 
-fn parse_local_datetime(text: &str, format: &str) -> Result<DateTime<Local>, String> {
+fn parse_local_datetime(text: &str, format: &str) -> Result<i64, String> {
   let naive_dt = match NaiveDateTime::parse_from_str(text, format) {
     Ok(d) => d,
     Err(e) => throw!("Invalid date: {}", e),
   };
   match Local.from_local_datetime(&naive_dt) {
-    chrono::LocalResult::Single(d) => Ok(d),
+    chrono::LocalResult::Single(d) => Ok(d.timestamp_millis()),
     _ => throw!("Unable to add timezone to date {}", naive_dt),
   }
 }
@@ -384,167 +552,36 @@ fn parse_kind(kind: &str) -> &str {
   }
 }
 
-fn parse_cost(value: &str) -> Option<(Decimal, String)> {
-  let mut chars = value.chars();
-  let mut num_str = "".to_string();
-  let mut period = false;
-  loop {
-    let c = chars.next()?;
-    if c.is_ascii_digit() {
-      num_str.push(c);
-    } else if c == '.' && !period {
-      num_str.push(c);
-      period = true;
-    } else {
-      break;
-    }
-  }
-  let num = Decimal::from_str(&num_str).ok()?;
-
-  let asset_str: String = chars.collect();
-  let asset = asset_str.trim().to_string();
-
-  Some((num, asset))
-}
-
 async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTransaction, String> {
-  let type_i = cols.kind.ok_or("Missing \"Type\" column")?;
-  let date_i = cols.date.ok_or("Missing \"Date\" column")?;
-  let note_i = cols.note.ok_or("Missing \"Note\" column")?;
-  let hash_i = cols.hash.ok_or("Missing \"Tx Hash\" column")?;
+  let kind = cols.get(&row, cols.kind, "Kind")?;
+  let date = cols.get(&row, cols.date, "Date")?;
+  let note = cols.get(&row, cols.note, "Note")?;
+  let hash = cols.get(&row, cols.hash, "Hash")?;
+  let cost = cols.get_or_empty(&row, cols.cost, "Cost")?;
 
-  let sent_amount_i = cols.sent_amount.ok_or("Missing \"Sent Amount\" column")?;
-  let sent_asset_i = cols.sent_asset.ok_or("Missing \"Sent Asset\" column")?;
-  let sent_wallet_i = cols.sent_wallet.ok_or("Missing \"Sent Wallet\" column")?;
+  let sent_amount = cols.get(&row, cols.sent_amount, "Sent Amount")?.into();
+  let sent_asset = cols.get(&row, cols.sent_asset, "Sent Asset")?.into();
+  let sent_wallet = cols.get(&row, cols.sent_wallet, "Sent Wallet")?.into();
 
-  let recv_amount_i = cols.recv_amount.ok_or("Missing \"Received\" column")?;
-  let recv_asset_i = cols.recv_asset.ok_or("Missing \"Received Asset\" column")?;
-  let recv_wallet_i = cols
-    .recv_wallet
-    .ok_or("Missing \"Received Wallet\" column")?;
+  let recv_amount = cols.get(&row, cols.recv_amount, "Received Amount")?.into();
+  let recv_asset = cols.get(&row, cols.recv_asset, "Received Asset")?.into();
+  let recv_wallet = cols.get(&row, cols.recv_wallet, "Received Wallet")?.into();
 
-  let fee_amount_i = cols.fee_amount.ok_or("Missing \"Fee Amount\" column")?;
-  let fee_asset_i = cols.fee_asset.ok_or("Missing \"Fee Asset\" column")?;
+  let fee_amount = cols.get(&row, cols.fee_amount, "Fee Amount")?.into();
+  let fee_asset = cols.get(&row, cols.fee_asset, "Fee Asset")?.into();
 
-  let date = parse_local_datetime(row.get(date_i).unwrap(), "%Y-%m-%d %H:%M:%S")?;
-
-  let kind = parse_kind(row.get(type_i).unwrap());
-
-  let (cost_amount, cost_asset) = match cols.cost {
-    Some(cost_i) => {
-      let cell = row.get(cost_i).unwrap();
-      if cell.trim() == "" {
-        (None, None)
-      } else {
-        let cost = parse_cost(cell).ok_or(format!("Invalid cost cell: {}", cell))?;
-        (Some(cost.0), Some(cost.1))
-      }
-    }
-    None => (None, None),
+  let base_transaction = BaseTransaction {
+    tag: parse_kind(kind).into(),
+    date: parse_local_datetime(date, "%Y-%m-%d %H:%M:%S")?,
+    note: note.into(),
+    hash: hash.into(),
+    sent: Value::new(sent_amount, sent_asset, sent_wallet)?,
+    recv: Value::new(recv_amount, recv_asset, recv_wallet)?,
+    fee: Quantity::new(fee_amount, fee_asset)?,
+    manual_worth: Quantity::parse(cost)?,
   };
+  let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
 
-  let uncosted_transaction = match kind {
-    "Trade" => UncostedTransaction::Trade(Trade {
-      tag: kind.to_string(),
-      date: date.timestamp_millis(),
-      note: row.get(note_i).unwrap().into(),
-      hash: row.get(hash_i).unwrap().into(),
-
-      sent_amount: decimal_str(&row, sent_amount_i)?,
-      sent_asset: row.get(sent_asset_i).unwrap().into(),
-      sent_wallet: row.get(sent_wallet_i).unwrap().into(),
-
-      recv_amount: decimal_str(&row, recv_amount_i)?,
-      recv_asset: row.get(recv_asset_i).unwrap().into(),
-      recv_wallet: row.get(recv_wallet_i).unwrap().into(),
-
-      fee_amount: optional_decimal_str(&row, fee_amount_i)?,
-      fee_asset: row.get(fee_asset_i).unwrap().into(),
-
-      manual_worth_amount: cost_amount,
-      manual_worth_asset: cost_asset,
-      cost: dec!(0),
-    }),
-    "Transfer" => UncostedTransaction::Transfer(Transfer {
-      tag: kind.to_string(),
-      date: date.timestamp_millis(),
-      note: row.get(note_i).unwrap().into(),
-      hash: row.get(hash_i).unwrap().into(),
-
-      sent_amount: decimal_str(&row, sent_amount_i)?,
-      sent_asset: row.get(sent_asset_i).unwrap().into(),
-      sent_wallet: row.get(sent_wallet_i).unwrap().into(),
-
-      recv_amount: decimal_str(&row, recv_amount_i)?,
-      recv_asset: row.get(recv_asset_i).unwrap().into(),
-      recv_wallet: row.get(recv_wallet_i).unwrap().into(),
-
-      manual_worth_amount: cost_amount,
-      manual_worth_asset: cost_asset,
-      cost: dec!(0),
-    }),
-    "Deposit" | "Buy" | "Income" | "Gift" | "Interest" => {
-      let from_amount = match row.get(sent_amount_i).unwrap() {
-        "" => None,
-        _ => Some(decimal_str(&row, sent_amount_i)?),
-      };
-      let from_asset = match row.get(sent_asset_i).unwrap() {
-        "" => None,
-        s => Some(s.to_string()),
-      };
-      if (from_amount.is_some() || from_asset.is_some())
-        && (from_amount.is_none() || from_asset.is_none())
-      {
-        throw!("The \"Sent\" columns are only partially filled in");
-      }
-
-      UncostedTransaction::Deposit(Deposit {
-        tag: kind.to_string(),
-        date: date.timestamp_millis(),
-        note: row.get(note_i).unwrap().into(),
-        hash: row.get(hash_i).unwrap().into(),
-
-        from_amount: cost_amount,
-        from_asset: cost_asset,
-
-        amount: decimal_str(&row, recv_amount_i)?,
-        asset: row.get(recv_asset_i).unwrap().into(),
-        wallet: row.get(recv_wallet_i).unwrap().into(),
-
-        cost: dec!(0),
-      })
-    }
-    "Withdrawal" | "Sell" | "Spend" | "Lost" => {
-      let to_amount = match row.get(recv_amount_i).unwrap() {
-        "" => None,
-        _ => Some(decimal_str(&row, recv_amount_i)?),
-      };
-      let to_asset = match row.get(recv_asset_i).unwrap() {
-        "" => None,
-        s => Some(s.to_string()),
-      };
-      if (to_amount.is_some() || to_asset.is_some()) && (to_amount.is_none() || to_asset.is_none())
-      {
-        throw!("The \"Sent\" columns are only partially filled in");
-      }
-      UncostedTransaction::Withdrawal(Withdrawal {
-        tag: kind.to_string(),
-        date: date.timestamp_millis(),
-        note: row.get(note_i).unwrap().into(),
-        hash: row.get(hash_i).unwrap().into(),
-
-        amount: decimal_str(&row, sent_amount_i)?,
-        asset: row.get(sent_asset_i).unwrap().into(),
-        wallet: row.get(sent_wallet_i).unwrap().into(),
-
-        to_amount: cost_amount,
-        to_asset: cost_asset,
-
-        cost: dec!(0),
-      })
-    }
-    _ => throw!("Invalid type \"{}\"", kind),
-  };
   println!("{:#?}", uncosted_transaction);
   Ok(uncosted_transaction)
 }

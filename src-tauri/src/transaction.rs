@@ -1,6 +1,8 @@
+use std::str::{Chars, FromStr};
+
 use crate::prices::{symbol_kind, AssetKind, PriceData};
-use crate::round_8;
 use crate::tax::Api;
+use crate::{round_8, throw};
 use chrono::{Local, TimeZone};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -28,8 +30,7 @@ pub struct Trade {
   pub recv_wallet: String,
   pub fee_amount: Decimal,
   pub fee_asset: String,
-  pub manual_worth_amount: Option<Decimal>,
-  pub manual_worth_asset: Option<String>,
+  pub manual_worth: Option<String>,
   /// Includes fee
   pub cost: Decimal,
 }
@@ -52,8 +53,7 @@ impl Trade {
       sent_wallet: "".to_string(),
       fee_amount: dec!(0),
       fee_asset: "".to_string(),
-      manual_worth_amount: None,
-      manual_worth_asset: None,
+      manual_worth: None,
       cost: dec!(0),
     }
   }
@@ -72,8 +72,7 @@ pub struct Transfer {
   pub recv_amount: Decimal,
   pub recv_asset: String,
   pub recv_wallet: String,
-  pub manual_worth_amount: Option<Decimal>,
-  pub manual_worth_asset: Option<String>,
+  pub manual_worth: Option<String>,
   /// Includes fee
   pub cost: Decimal,
 }
@@ -91,8 +90,7 @@ impl Transfer {
       sent_amount: dec!(0),
       sent_asset: "".to_string(),
       sent_wallet: "".to_string(),
-      manual_worth_amount: None,
-      manual_worth_asset: None,
+      manual_worth: None,
       cost: dec!(0),
     }
   }
@@ -108,8 +106,7 @@ pub struct Deposit {
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,
-  pub from_amount: Option<Decimal>,
-  pub from_asset: Option<String>,
+  pub manual_worth: Option<String>,
   /// Includes fee
   pub cost: Decimal,
 }
@@ -124,8 +121,7 @@ impl Deposit {
       amount: dec!(0),
       asset: "".to_string(),
       wallet: "".to_string(),
-      from_amount: None,
-      from_asset: None,
+      manual_worth: None,
       cost: dec!(0),
     }
   }
@@ -144,8 +140,7 @@ pub struct Withdrawal {
   pub amount: Decimal,
   pub asset: String,
   pub wallet: String,
-  pub to_amount: Option<Decimal>,
-  pub to_asset: Option<String>,
+  pub manual_worth: Option<String>,
   /// Includes fee
   pub cost: Decimal,
 }
@@ -163,8 +158,7 @@ impl Withdrawal {
       amount: dec!(0),
       asset: "".to_string(),
       wallet: "".to_string(),
-      to_amount: None,
-      to_asset: None,
+      manual_worth: None,
       cost: dec!(0),
     }
   }
@@ -213,12 +207,12 @@ impl UncostedTransaction {
     apis: &[Api],
     base: &str,
   ) -> Result<Decimal, String> {
-    if let Some((amount, asset)) = self.manual_worth() {
-      if asset == base {
-        Ok(amount.clone())
+    if let Some(mw) = self.manual_worth_qty()? {
+      if mw.asset == base {
+        Ok(mw.amount.clone())
       } else {
         let cost = price_data
-          .get_value(amount.clone(), &asset, self.date(), apis, base)
+          .get_value(mw.amount.clone(), &mw.asset, self.date(), apis, base)
           .await?;
         Ok(cost)
       }
@@ -242,40 +236,20 @@ impl UncostedTransaction {
     final_tx
   }
   /// Gets the manual worth of a transaction.
-  /// For deposits, this is the from_amount and from_asset.
-  /// For withdrawals, this is the to_amount and to_asset.
-  pub fn manual_worth(&self) -> Option<(Decimal, &String)> {
+  pub fn manual_worth(&self) -> &Option<String> {
     match self {
-      UncostedTransaction::Trade(tx) => {
-        if let Some(manual_worth_amount) = tx.manual_worth_amount {
-          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
-            return Some((manual_worth_amount, manual_worth_asset));
-          }
-        }
-      }
-      UncostedTransaction::Transfer(tx) => {
-        if let Some(manual_worth_amount) = tx.manual_worth_amount {
-          if let Some(manual_worth_asset) = &tx.manual_worth_asset {
-            return Some((manual_worth_amount, manual_worth_asset));
-          }
-        }
-      }
-      UncostedTransaction::Deposit(tx) => {
-        if let Some(from_amount) = tx.from_amount {
-          if let Some(from_asset) = &tx.from_asset {
-            return Some((from_amount, from_asset));
-          }
-        }
-      }
-      UncostedTransaction::Withdrawal(tx) => {
-        if let Some(to_amount) = tx.to_amount {
-          if let Some(to_asset) = &tx.to_asset {
-            return Some((to_amount, to_asset));
-          }
-        }
-      }
+      UncostedTransaction::Trade(tx) => &tx.manual_worth,
+      UncostedTransaction::Transfer(tx) => &tx.manual_worth,
+      UncostedTransaction::Deposit(tx) => &tx.manual_worth,
+      UncostedTransaction::Withdrawal(tx) => &tx.manual_worth,
     }
-    return None;
+  }
+  /// Gets the manual worth of a transaction as a Quantity
+  pub fn manual_worth_qty(&self) -> Result<Option<Quantity>, String> {
+    match self.manual_worth() {
+      Some(manual_worth) => Quantity::parse(&manual_worth),
+      None => Ok(None),
+    }
   }
   /// Calculates and returns the cost of the transaction, regardless of whether a manual worth is set
   async fn calculate_cost(
@@ -359,10 +333,19 @@ impl Transaction {
       Transaction::Withdrawal(tx) => tx.date,
     }
   }
+  pub fn manual_worth<'a>(&'a self) -> &'a Option<String> {
+    match self {
+      Transaction::Trade(tx) => &tx.manual_worth,
+      Transaction::Transfer(tx) => &tx.manual_worth,
+      Transaction::Deposit(tx) => &tx.manual_worth,
+      Transaction::Withdrawal(tx) => &tx.manual_worth,
+    }
+  }
   pub fn to_csv_record<'a>(&'a self) -> Vec<String> {
+    let empty = "".to_string();
+    let manual_worth = self.manual_worth().as_ref().unwrap_or(&empty);
     match self {
       Transaction::Trade(trade) => {
-        // let date = chrono::Utc.timestamp_millis(trade.date);
         vec![
           trade.tag.clone(),
           trade.sent_amount.to_string(),
@@ -376,8 +359,7 @@ impl Transaction {
           trade.note.clone(),
           trade.hash.clone(),
           chrono::Utc.timestamp_millis(trade.date).to_string(),
-          // manual_worth_amount: Option<Decimal>,
-          // manual_worth_asset: Option<String>,
+          manual_worth.to_string(),
           // cost: Decimal,
         ]
       }
@@ -395,19 +377,13 @@ impl Transaction {
           transfer.note.clone(),
           transfer.hash.clone(),
           chrono::Utc.timestamp_millis(transfer.date).to_string(),
-          // manual_worth_amount: Option<Decimal>,
-          // manual_worth_asset: Option<String>,
+          manual_worth.to_string(),
           // cost: Decimal,
         ]
       }
       Transaction::Deposit(deposit) => {
         vec![
           deposit.tag.clone(),
-          match deposit.from_amount {
-            Some(amount) => amount.to_string(),
-            None => "".to_string(),
-          },
-          deposit.from_asset.clone().unwrap_or("".to_string()),
           "".to_string(),
           deposit.amount.to_string(),
           deposit.asset.clone(),
@@ -417,8 +393,7 @@ impl Transaction {
           deposit.note.clone(),
           deposit.hash.clone(),
           chrono::Utc.timestamp_millis(deposit.date).to_string(),
-          // manual_worth_amount: Option<Decimal>,
-          // manual_worth_asset: Option<String>,
+          manual_worth.to_string(),
           // cost: Decimal,
         ]
       }
@@ -428,19 +403,13 @@ impl Transaction {
           withdrawal.amount.to_string(),
           withdrawal.asset.clone(),
           withdrawal.wallet.clone(),
-          match withdrawal.to_amount {
-            Some(amount) => amount.to_string(),
-            None => "".to_string(),
-          },
-          withdrawal.to_asset.clone().unwrap_or("".to_string()),
           "".to_string(),
           "".to_string(),
           "".to_string(),
           withdrawal.note.clone(),
           withdrawal.hash.clone(),
           chrono::Utc.timestamp_millis(withdrawal.date).to_string(),
-          // manual_worth_amount: Option<Decimal>,
-          // manual_worth_asset: Option<String>,
+          manual_worth.to_string(),
           // cost: Decimal,
         ]
       }
@@ -524,6 +493,90 @@ impl CoreTransaction {
         fee_amount: None,
         fee_asset: None,
       },
+    }
+  }
+}
+
+fn take_decimal_from_chars(chars: &mut Chars) -> Option<Decimal> {
+  let mut num_str = "".to_string();
+  let mut found_period = false;
+  loop {
+    let c = chars.next()?;
+    if c.is_ascii_digit() {
+      num_str.push(c);
+    } else if c == '.' && !found_period {
+      num_str.push(c);
+      found_period = true;
+    } else {
+      break;
+    }
+  }
+  let amount = Decimal::from_str(&num_str).ok()?;
+  Some(amount)
+}
+
+pub struct Quantity {
+  pub amount: Decimal,
+  pub asset: String,
+}
+impl Quantity {
+  pub fn new(amount: String, asset: String) -> Result<Option<Self>, String> {
+    if amount == "" && asset == "" {
+      Ok(None)
+    } else if amount == "" || asset == "" {
+      throw!("Invalid amount/asset: {} {}", amount, asset);
+    } else {
+      let num = match Decimal::from_str(&amount) {
+        Ok(d) => d,
+        Err(_) => throw!("Invalid number \"{}\"", amount),
+      };
+      Ok(Some(Self {
+        amount: num,
+        asset: asset,
+      }))
+    }
+  }
+  pub fn parse(value: &str) -> Result<Option<Self>, String> {
+    if value.trim() == "" {
+      return Ok(None);
+    }
+    let mut chars = value.chars();
+    let amount = match take_decimal_from_chars(&mut chars) {
+      Some(amount) => amount,
+      None => throw!("Invalid manual worth \"{}\"", value),
+    };
+
+    let asset_str: String = chars.collect();
+    let asset = asset_str.trim().to_string();
+
+    Ok(Some(Self { amount, asset }))
+  }
+  pub fn to_string(&self) -> String {
+    self.amount.to_string() + " " + &self.asset
+  }
+}
+pub struct Value {
+  pub amount: Decimal,
+  pub asset: String,
+  pub wallet: String,
+}
+impl Value {
+  pub fn new(amount: String, asset: String, wallet: String) -> Result<Option<Value>, String> {
+    let quantity = Quantity::new(amount, asset)?;
+    if let Some(quantity) = quantity {
+      if wallet == "" {
+        throw!("The amount {} {} has no wallet", quantity.amount, quantity.asset);
+      } else {
+        Ok(Some(Self {
+          amount: quantity.amount,
+          asset: quantity.asset,
+          wallet: wallet,
+        }))
+      }
+    } else if wallet == "" {
+      Ok(None)
+    } else {
+      throw!("Wallet \"{}\" specified without any amount/asset", wallet);
     }
   }
 }
