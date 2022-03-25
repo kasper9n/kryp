@@ -42,9 +42,8 @@
     {#if closeIcon}
       <svg
         on:click={close}
+        class="absolute right-3 top-3 h-6 p-1.5"
         xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
         viewBox="0 0 24 24"
         ><path
           d="M23.954 21.03l-9.184-9.095 9.092-9.174-2.832-2.807-9.09 9.179-9.176-9.088-2.81 2.81 9.186 9.105-9.095 9.184 2.81 2.81 9.112-9.192 9.18 9.1z"
@@ -80,18 +79,17 @@
     max-width: 100%
     max-height: 100%
     padding: 22px
-    box-sizing: border-box
     border-radius: 7px
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
     overflow: auto
   svg
-    position: absolute
-    cursor: pointer
-    right: 12px
-    top: 12px
-    padding: 6px
-    width: 12px
-    height: 12px
+    // position: absolute
+    // cursor: pointer
+    // right: 12px
+    // top: 12px
+    // padding: 6px
+    // width: 12px
+    // height: 12px
     fill: #58586f
     transition: all 0.2s var(--ease)
     &:hover

@@ -53,4 +53,6 @@
   .page
     padding: 20px
     margin: auto
+  h3
+    font-size: 16px
 </style>

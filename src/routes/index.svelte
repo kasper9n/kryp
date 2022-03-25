@@ -160,6 +160,7 @@
     margin: 0px
     display: block
     margin-bottom: 10px
+    font-size: 16px
   .page
     margin: 20px auto
     max-width: 950px

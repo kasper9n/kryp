@@ -9,11 +9,13 @@
   import Button from '$lib/Button.svelte'
   import DashboardPage from '$routes/index.svelte'
   import TransactionsPage from '$routes/transactions.svelte'
+  import ReportsPage from './routes/reports.svelte'
   import PricesPage from '$routes/prices.svelte'
   import HelpPage from '$routes/help.svelte'
   import ImportPage from '$routes/import.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
+  import './app.css'
 
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
@@ -76,6 +78,7 @@
   <div class="nav">
     <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
     <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
+    <a on:click={go} use:active href="/reports"><button>Reports</button></a>
     <div class="nav-mid" />
     <span class="base">{$settings.base_currency}</span>
     <a on:click={go} use:active href="/prices"><button>Prices</button></a>
@@ -87,6 +90,8 @@
   <Route path="/prices"><PricesPage /></Route>
   <Route path="/help"><HelpPage /></Route>
   <Route path="/import"><ImportPage /></Route>
+  <Route path="/reports"><ReportsPage /></Route>
+  <Route fallback>404</Route>
 {:else}
   <div class="start-page">
     <h1>Kryp</h1>

@@ -313,7 +313,7 @@
       <p>Note</p>
       <textarea class="note" bind:value={info.note} />
     </div>
-    <div class="bottom">
+    <div class="mt-4 grid grid-flow-col justify-end gap-2">
       <Button secondary on:click={close}>Cancel</Button>
       <Button type="submit">Add</Button>
     </div>
@@ -427,11 +427,4 @@
       padding: 2px 4px
   .amount-container
     max-width: 130px
-  .bottom
-    display: grid
-    grid-auto-flow: column
-    grid-gap: 10px
-    margin-top: 18px
-    width: min-content
-    margin-left: auto
 </style>

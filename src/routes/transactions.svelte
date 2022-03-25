@@ -6,6 +6,7 @@
   import { createEventDispatcher } from 'svelte'
   import type { Transaction } from '$lib/transactions'
   import { runCmd } from '$lib/general'
+  import ButtonGroup from '$lib/ButtonGroup.svelte'
 
   let view = 0
 
@@ -24,7 +25,7 @@
 
 <div class="page">
   <div class="toolbar">
-    <Button group={['List', 'Table']} bind:selected={view} />
+    <ButtonGroup values={['List', 'Table']} bind:selected={view} />
     <div style="padding: 6px;" />
     <Button on:click={() => (showAdd = true)}>Add</Button>
     <div style="padding: 6px;" />

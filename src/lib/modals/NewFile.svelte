@@ -26,8 +26,8 @@
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
     <p>Base currency</p>
-    <input type="text" bind:value={baseCurrency} />
-    <div class="bottom">
+    <TextInput bind:value={baseCurrency} />
+    <div class="mt-4 grid grid-flow-col justify-end gap-2">
       <Button secondary on:click={() => dispatch('close')}>Cancel</Button>
       <Button type="submit">Create</Button>
     </div>
@@ -38,11 +38,4 @@
   p
     font-size: 13px
     margin-bottom: 5px
-  .bottom
-    display: grid
-    grid-auto-flow: column
-    grid-gap: 10px
-    margin-top: 18px
-    width: min-content
-    margin-left: auto
 </style>

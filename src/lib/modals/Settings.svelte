@@ -47,7 +47,7 @@
         {/if}
       </div>
     </ReorderableList>
-    <div class="bottom">
+    <div class="mt-4 grid grid-flow-col justify-end gap-2">
       <Button secondary on:click={() => dispatch('close')}>Cancel</Button>
       <Button type="submit">Save</Button>
     </div>
@@ -104,12 +104,4 @@
     margin-top: 4px
     display: flex
     align-items: center
-    
-  .bottom
-    display: grid
-    grid-auto-flow: column
-    grid-gap: 10px
-    margin-top: 18px
-    width: min-content
-    margin-left: auto
 </style>
