@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { focus, runCmd } from '$lib/general'
+  import { runCmd } from '$lib/general'
   import Modal from '$lib/Modal.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
+  import TextInput from '$lib/TextInput.svelte'
 
   const dispatch = createEventDispatcher()
   let baseCurrency = 'USD'
@@ -25,7 +26,7 @@
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
     <p>Base currency</p>
-    <input type="text" bind:value={baseCurrency} use:focus />
+    <input type="text" bind:value={baseCurrency} />
     <div class="bottom">
       <Button secondary on:click={() => dispatch('close')}>Cancel</Button>
       <Button type="submit">Create</Button>
@@ -37,16 +38,6 @@
   p
     font-size: 13px
     margin-bottom: 5px
-  input
-    min-width: 0px
-    padding: 4px 8px
-    width: 100%
-    box-sizing: border-box
-    margin: 0px
-    font-family: inherit
-    font-size: 13px
-    border: 1px solid #c6cddd
-    border-radius: 3px
   .bottom
     display: grid
     grid-auto-flow: column

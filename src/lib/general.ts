@@ -12,25 +12,6 @@ export async function runCmd<T = any>(cmd: string, options: { [key: string]: any
   })) as T
 }
 
-export function focus(el: HTMLElement) {
-  let lastActiveElement = document.body
-
-  if (document.activeElement instanceof HTMLElement) {
-    // console.log('focus', el)
-    lastActiveElement = document.activeElement
-    setTimeout(() => {
-      el.focus()
-    })
-  }
-  return {
-    destroy() {
-      if (lastActiveElement) {
-        lastActiveElement.focus()
-      }
-    },
-  }
-}
-
 type ShortcutOptions = {
   shift?: boolean
   alt?: boolean

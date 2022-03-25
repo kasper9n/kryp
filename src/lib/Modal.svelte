@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, tick } from 'svelte'
 
   let modalBg: HTMLDivElement
   $: if (modalBg) {
@@ -14,9 +14,29 @@
   function close() {
     dispatch('close')
   }
+
+  function focus(el: HTMLElement) {
+    let lastActiveElement = document.body
+    if (document.activeElement instanceof HTMLElement) {
+      lastActiveElement = document.activeElement
+    }
+    tick().then(() => {
+      const tabbableEl = el.querySelector('a[href], area, button, input, object, select, textarea')
+      if (tabbableEl instanceof HTMLElement) {
+        tabbableEl.focus()
+      } else {
+        el.focus()
+      }
+    })
+    return {
+      destroy() {
+        lastActiveElement.focus()
+      },
+    }
+  }
 </script>
 
-<div class="modal cover" on:keydown tabindex="-1">
+<div class="modal cover" on:keydown tabindex="-1" use:focus>
   <div class="bg cover" on:click={close} tabindex="-1" bind:this={modalBg} />
   <div class="box" style="width: {width};">
     {#if closeIcon}
