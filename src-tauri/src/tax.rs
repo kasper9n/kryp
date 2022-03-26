@@ -56,7 +56,7 @@ impl Tax {
     transactions.insert(pos, tx);
   }
   pub fn calculate(&mut self) -> Result<(), String> {
-    let output = Calculation::calculate(&self.transactions)?;
+    let output = Calculation::calculate(self.transactions.iter().collect())?;
     self.apply_calc_output(output);
     Ok(())
   }
@@ -269,13 +269,6 @@ mod tests {
           cost: dec!(200),
         },
         Balance {
-          acquire_date: 1500100000000,
-          amount: dec!(0),
-          currency: "BTC".to_string(),
-          wallet: "Coinbase".to_string(),
-          cost: dec!(0),
-        },
-        Balance {
           acquire_date: 1500300000000,
           amount: dec!(3),
           currency: "ETH".to_string(),
@@ -286,12 +279,24 @@ mod tests {
     );
     assert_eq!(
       tax.realized_gains,
-      [Realized {
-        date: 1500300000000,
-        input: dec!(800),
-        output: dec!(9398.57934082),
-        wallet: "Coinbase".to_string(),
-      }]
+      [
+        Realized {
+          date: 1500100000000,
+          input: dec!(800),
+          asset: "NOK".to_string(),
+          is_fee: false,
+          output: dec!(800),
+          wallet: "Binance".to_string()
+        },
+        Realized {
+          date: 1500300000000,
+          input: dec!(800),
+          asset: "BTC".to_string(),
+          is_fee: false,
+          output: dec!(9398.57934082),
+          wallet: "Coinbase".to_string(),
+        }
+      ]
     );
   }
 
@@ -321,7 +326,17 @@ mod tests {
         cost: dec!(750),
       }]
     );
-    assert_eq!(tax.realized_gains, []);
+    assert_eq!(
+      tax.realized_gains,
+      [Realized {
+        date: 1500100000000,
+        input: dec!(250),
+        asset: "NOK".to_string(),
+        is_fee: true,
+        output: dec!(250),
+        wallet: "Binance".to_string()
+      }]
+    );
   }
 
   #[test]
@@ -356,6 +371,8 @@ mod tests {
       [Realized {
         date: 1500100000000,
         input: dec!(1633.83825099),
+        asset: "ETH".to_string(),
+        is_fee: false,
         output: dec!(1417.67606226),
         wallet: "Coinbase".to_string(),
       }]

@@ -223,7 +223,7 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
     }
   }
 
-  let calculation = Calculation::calculate(&new_transactions)?;
+  let calculation = Calculation::calculate(new_transactions.iter().collect())?;
 
   kryp.tax.transactions = new_transactions;
   kryp.tax.apply_calc_output(calculation);

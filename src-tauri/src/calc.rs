@@ -17,12 +17,14 @@ pub struct Balance {
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Balances(Vec<Balance>);
 impl Balances {
-  fn add(&mut self, balance: Balance) {
-    let pos = self
-      .0
-      .binary_search_by(|current_b| current_b.acquire_date.cmp(&balance.acquire_date))
-      .unwrap_or_else(|pos| pos);
-    self.0.insert(pos, balance);
+  fn add_if_positive(&mut self, balance: Balance) {
+    if balance.amount > dec!(0) || balance.cost > dec!(0) {
+      let pos = self
+        .0
+        .binary_search_by(|current_b| current_b.acquire_date.cmp(&balance.acquire_date))
+        .unwrap_or_else(|pos| pos);
+      self.0.insert(pos, balance);
+    }
   }
   pub fn to_inner(self) -> Vec<Balance> {
     self.0
@@ -36,6 +38,8 @@ impl Balances {
 pub struct Realized {
   pub date: i64,
   pub input: Decimal,
+  pub asset: String,
+  pub is_fee: bool,
   pub output: Decimal,
   pub wallet: String,
 }
@@ -56,12 +60,11 @@ enum DeductError {
 
 impl Calculation {
   /// Adds transactions to the calculation
-  pub fn calculate(transactions: &Vec<Transaction>) -> Result<Self, String> {
+  pub fn calculate(mut transactions: Vec<&Transaction>) -> Result<Self, String> {
     let mut calc = Calculation {
       balances: Balances::default(),
       realized_gains: Vec::new(),
     };
-    let mut transactions: Vec<&Transaction> = transactions.iter().collect();
 
     // sort by date
     transactions.sort_by_key(|tx| tx.date());
@@ -88,13 +91,18 @@ impl Calculation {
         }
       };
     }
+    calc.clean_empty_balances();
     Ok(calc)
+  }
+
+  fn clean_empty_balances(&mut self) {
+    self.balances.0.retain(|b| b.amount != dec!(0));
   }
 
   fn apply_transaction(&mut self, transaction: &Transaction) -> Result<(), DeductError> {
     match transaction {
       Transaction::Trade(trade) => {
-        self.balances.add(Balance {
+        self.balances.add_if_positive(Balance {
           acquire_date: trade.date,
           amount: trade.recv_amount,
           currency: trade.recv_asset.clone(),
@@ -103,18 +111,26 @@ impl Calculation {
         });
 
         let deducted = self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
-        let fee_deducted = if trade.fee_asset == "" {
-          Vec::new()
-        } else {
-          self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?
-        };
-
         self.realized_gains.push(Realized {
           date: trade.date,
-          input: sum_balance_costs(&deducted) + sum_balance_costs(&fee_deducted),
+          input: sum_balance_costs(&deducted),
+          asset: trade.sent_asset.clone(),
+          is_fee: false,
           output: trade.cost(),
           wallet: trade.sent_wallet.clone(),
         });
+
+        if trade.fee_asset != "" {
+          let fee_deducted = self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
+          self.realized_gains.push(Realized {
+            date: trade.date,
+            input: sum_balance_costs(&fee_deducted),
+            asset: trade.fee_asset.clone(),
+            is_fee: true,
+            output: trade.cost(),
+            wallet: trade.sent_wallet.clone(),
+          });
+        };
       }
       Transaction::Transfer(transfer) => {
         if transfer.sent_amount > transfer.recv_amount {
@@ -124,6 +140,8 @@ impl Calculation {
           self.realized_gains.push(Realized {
             date: transfer.date,
             input: sum_balance_costs(&fee_deducted),
+            asset: transfer.sent_asset.clone(),
+            is_fee: true,
             output: fee_amount,
             wallet: transfer.sent_wallet.clone(),
           });
@@ -136,11 +154,11 @@ impl Calculation {
         )?;
         for mut balance in deducted {
           balance.wallet = transfer.recv_wallet.clone();
-          self.balances.add(balance);
+          self.balances.add_if_positive(balance);
         }
       }
       Transaction::Deposit(deposit) => {
-        self.balances.add(Balance {
+        self.balances.add_if_positive(Balance {
           acquire_date: deposit.date,
           amount: deposit.amount,
           currency: deposit.asset.clone(),
@@ -153,6 +171,8 @@ impl Calculation {
         self.realized_gains.push(Realized {
           date: withdrawal.date,
           input: sum_balance_costs(&deducted),
+          asset: withdrawal.asset.clone(),
+          is_fee: false,
           output: withdrawal.cost(),
           wallet: withdrawal.wallet.clone(),
         });
