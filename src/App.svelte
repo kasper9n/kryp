@@ -50,6 +50,8 @@
       router.goto('/', true)
     } else if (payload === 'Transactions') {
       router.goto('/transactions', true)
+    } else if (payload === 'Reports') {
+      router.goto('/reports', true)
     } else if (payload === 'New' && !$opened) {
       newFileModalVisible = true
     } else if (payload === 'Preferences...' && $opened) {

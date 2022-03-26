@@ -16,8 +16,10 @@ mod calc;
 mod data;
 mod fetch;
 mod fetch_current;
+mod holdings;
 mod import_export;
 mod prices;
+mod reports;
 mod tax;
 mod transaction;
 
@@ -62,11 +64,12 @@ fn main() {
       data::get_tax_settings,
       data::get_transactions,
       data::add_transaction,
-      data::get_holdings,
-      data::get_holdings_valued,
-      data::get_holdings_by_wallet,
+      holdings::get_holdings,
+      holdings::get_holdings_valued,
+      holdings::get_holdings_by_wallet,
       data::list_assets,
       data::get_prices,
+      reports::get_report,
       import_export::start_import,
       import_export::continue_import,
       import_export::cancel_import,
@@ -149,6 +152,10 @@ fn main() {
           CustomMenuItem::new("Transactions", "Transactions")
             .accelerator("cmdOrControl+2")
             .into(),
+          CustomMenuItem::new("Reports", "Reports")
+            .accelerator("cmdOrControl+3")
+            .into(),
+          MenuItem::Separator.into(),
           MenuItem::EnterFullScreen.into(),
         ]),
       )),
