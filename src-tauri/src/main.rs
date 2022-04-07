@@ -9,7 +9,8 @@ use std::thread;
 use tauri::api::{dialog, shell};
 use tauri::async_runtime::Mutex;
 use tauri::{
-  command, window, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem, Submenu, Window, WindowUrl,
+  command, window, AboutMetadata, AppHandle, CustomMenuItem, Manager, Menu, MenuEntry, MenuItem,
+  RunEvent, Submenu, Window, WindowEvent, WindowUrl,
 };
 
 mod calc;
@@ -81,7 +82,7 @@ fn main() {
       MenuEntry::Submenu(Submenu::new(
         &ctx.package_info().name,
         Menu::with_items([
-          MenuItem::About(ctx.package_info().name.clone()).into(),
+          MenuItem::About(ctx.package_info().name.clone(), AboutMetadata::default()).into(),
           MenuItem::Separator.into(),
           CustomMenuItem::new("Preferences...", "Preferences...")
             .accelerator("cmdOrControl+,")
@@ -191,8 +192,21 @@ fn main() {
     .fullscreen(false)
     .build();
 
-  tauri_app.run(|app_handle, e| match e {
-    tauri::RunEvent::CloseRequested { label, api, .. } => {
+  tauri_app.run(app_run)
+}
+
+fn app_run(app_handle: &AppHandle, run_event: RunEvent) {
+  match run_event {
+    tauri::RunEvent::WindowEvent { label, event, .. } => {
+      handle_window_event(app_handle, label, event)
+    }
+    _ => {}
+  }
+}
+
+fn handle_window_event(app_handle: &AppHandle, label: String, event: WindowEvent) {
+  match event {
+    WindowEvent::CloseRequested { api, .. } => {
       if label == "main" {
         let st = app_handle.state::<Data>();
         let kryp = tauri::async_runtime::block_on(st.0.lock());
@@ -211,7 +225,7 @@ fn main() {
       }
     }
     _ => {}
-  })
+  }
 }
 
 pub async fn confirm_async<S: AsRef<str>>(w: Window, title: S, msg: S) -> bool {
