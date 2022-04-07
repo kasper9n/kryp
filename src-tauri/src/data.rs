@@ -1,4 +1,4 @@
-use crate::import_export::ImportData;
+use crate::import::ImportData;
 use crate::tax::Tax;
 use crate::transaction::UncostedTransaction;
 use crate::{confirm_async, throw};
@@ -183,7 +183,8 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
   let base = &tax.settings.base_currency;
-  let tx = UncostedTransaction::from_json(&json)?
+  let uncosted_tx = UncostedTransaction::from_json(&json)?;
+  let tx = uncosted_tx
     .auto_cost_and_finalize(&mut tax.price_data, &tax.settings.apis, base)
     .await?;
   kryp.tax.add_transaction(tx);

@@ -1,6 +1,3 @@
-import { writable } from 'svelte/store'
-import { runCmd } from '$lib/general'
-
 export type Trade = {
   type: 'Trade'
   tag: string
@@ -15,8 +12,7 @@ export type Trade = {
   recv_wallet: string
   fee_amount: string
   fee_asset: string
-  manual_worth_amount: null | string
-  manual_worth_asset: null | string
+  manual_worth: string | null
   cost: string
 }
 
@@ -32,8 +28,7 @@ export type Transfer = {
   recv_amount: string
   recv_asset: string
   recv_wallet: string
-  manual_worth_amount: null | string
-  manual_worth_asset: null | string
+  manual_worth: string | null
   cost: string
 }
 
@@ -46,8 +41,7 @@ export type Deposit = {
   amount: string
   asset: string
   wallet: string
-  from_amount: null | string
-  from_asset: null | string
+  manual_worth: string | null
   cost: string
 }
 
@@ -60,8 +54,7 @@ export type Withdrawal = {
   amount: string
   asset: string
   wallet: string
-  to_amount: null | string
-  to_asset: null | string
+  manual_worth: string | null
   cost: string
 }
 

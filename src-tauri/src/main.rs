@@ -14,10 +14,11 @@ use tauri::{
 
 mod calc;
 mod data;
+mod export;
 mod fetch;
 mod fetch_current;
 mod holdings;
-mod import_export;
+mod import;
 mod prices;
 mod reports;
 mod tax;
@@ -52,7 +53,7 @@ pub fn round_8(num: Decimal) -> Decimal {
 fn main() {
   let ctx = tauri::generate_context!();
   let tauri_app = tauri::Builder::default()
-    .manage(import_export::ImportData::default())
+    .manage(import::ImportData::default())
     .invoke_handler(tauri::generate_handler![
       error_popup,
       data::new_file,
@@ -70,10 +71,10 @@ fn main() {
       data::list_assets,
       data::get_prices,
       reports::get_report,
-      import_export::start_import,
-      import_export::continue_import,
-      import_export::cancel_import,
-      import_export::export,
+      import::scan_import_file,
+      import::continue_import,
+      import::cancel_import,
+      export::export,
     ])
     .menu(Menu::with_items([
       #[cfg(target_os = "macos")]

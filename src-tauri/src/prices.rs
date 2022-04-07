@@ -68,7 +68,7 @@ impl PriceData {
   }
   pub fn asset(&mut self, symbol: &str) -> Result<&mut PriceDataAsset, String> {
     let symbol = symbol.to_uppercase();
-    let kind = symbol_kind(&symbol).ok_or(format!("Unsupported asset {}", symbol))?;
+    let kind = symbol_kind(&symbol).ok_or(format!("Unsupported asset \"{}\"", symbol))?;
     let entry = self.assets.entry(symbol.clone());
     let interval = match kind {
       AssetKind::Fiat => Interval::Daily,
@@ -76,8 +76,8 @@ impl PriceData {
     };
     let price_data_asset = entry.or_insert(PriceDataAsset {
       symbol: symbol.clone(),
-      name: get_name(&symbol).ok_or(format!("Unsupported asset {}", symbol))?,
-      id: get_id(&symbol).ok_or(format!("Unsupported asset {}", symbol))?,
+      name: get_name(&symbol).ok_or(format!("Unsupported asset \"{}\"", symbol))?,
+      id: get_id(&symbol).ok_or(format!("Unsupported asset \"{}\"", symbol))?,
       kind,
       interval,
       prices: BTreeMap::new(),

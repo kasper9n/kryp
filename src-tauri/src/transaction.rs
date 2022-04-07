@@ -1,14 +1,11 @@
-use std::str::{Chars, FromStr};
-
 use crate::prices::{symbol_kind, AssetKind, PriceData};
 use crate::tax::Api;
 use crate::{round_8, throw};
 use chrono::{Local, TimeZone};
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
-
-#[cfg(test)]
 use rust_decimal_macros::dec;
+use serde::{Deserialize, Serialize};
+use std::str::{Chars, FromStr};
 
 pub fn format_date(ts: i64) -> String {
   let dt = Local.timestamp_millis(ts);
@@ -515,6 +512,7 @@ fn take_decimal_from_chars(chars: &mut Chars) -> Option<Decimal> {
   Some(amount)
 }
 
+#[derive(Debug)]
 pub struct Quantity {
   pub amount: Decimal,
   pub asset: String,
@@ -565,7 +563,11 @@ impl Value {
     let quantity = Quantity::new(amount, asset)?;
     if let Some(quantity) = quantity {
       if wallet == "" {
-        throw!("The amount {} {} has no wallet", quantity.amount, quantity.asset);
+        throw!(
+          "The amount {} {} has no wallet",
+          quantity.amount,
+          quantity.asset
+        );
       } else {
         Ok(Some(Self {
           amount: quantity.amount,
@@ -578,5 +580,134 @@ impl Value {
     } else {
       throw!("Wallet \"{}\" specified without any amount/asset", wallet);
     }
+  }
+}
+
+/// A general unspecific transaction
+pub struct BaseTransaction {
+  pub tag: String,
+  pub date: i64,
+  pub note: String,
+  pub hash: String,
+  pub sent: Option<Value>,
+  pub recv: Option<Value>,
+  pub fee: Option<Quantity>,
+  pub manual_worth: Option<Quantity>,
+}
+impl BaseTransaction {
+  pub fn into_uncosted_transaction(self) -> Result<UncostedTransaction, String> {
+    let manual_worth_str = self.manual_worth.map(|q| q.to_string());
+    let uncosted_transaction = match self.tag.as_str() {
+      "Trade" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        let fee = self.fee.unwrap_or(Quantity {
+          amount: dec!(0),
+          asset: "".into(),
+        });
+        UncostedTransaction::Trade(Trade {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          sent_amount: sent.amount,
+          sent_asset: sent.asset,
+          sent_wallet: sent.wallet,
+
+          recv_amount: recv.amount,
+          recv_asset: recv.asset,
+          recv_wallet: recv.wallet,
+
+          fee_amount: fee.amount,
+          fee_asset: fee.asset,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Transfer" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Transfer(Transfer {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          sent_amount: sent.amount,
+          sent_asset: sent.asset,
+          sent_wallet: sent.wallet,
+
+          recv_amount: recv.amount,
+          recv_asset: recv.asset,
+          recv_wallet: recv.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Deposit" | "Buy" | "Income" | "Gift" | "Interest" => {
+        if self.sent.is_some() {
+          throw!("Sent amount is not allowed for {}", self.tag);
+        }
+        let recv = self
+          .recv
+          .ok_or(format!("Received amount is missing from {}", self.tag))?;
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Deposit(Deposit {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          amount: recv.amount,
+          asset: recv.asset,
+          wallet: recv.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      "Withdrawal" | "Sell" | "Spend" | "Lost" => {
+        let sent = self
+          .sent
+          .ok_or(format!("Sent amount is missing from {}", self.tag))?;
+        if self.recv.is_some() {
+          throw!("Received amount is not allowed for {}", self.tag);
+        }
+        if self.fee.is_some() {
+          throw!("Fee is not allowed for {}", self.tag);
+        }
+        UncostedTransaction::Withdrawal(Withdrawal {
+          tag: self.tag,
+          date: self.date,
+          note: self.note,
+          hash: self.hash,
+
+          amount: sent.amount,
+          asset: sent.asset,
+          wallet: sent.wallet,
+
+          manual_worth: manual_worth_str,
+          cost: dec!(0),
+        })
+      }
+      _ => throw!("Invalid type \"{}\"", self.tag),
+    };
+    Ok(uncosted_transaction)
   }
 }
