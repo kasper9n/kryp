@@ -2,11 +2,9 @@ use crate::calc::Calculation;
 use crate::data::Data;
 use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{format_date, CoreTransaction, UncostedTransaction};
+use crate::transaction::UncostedTransaction;
 use rust_decimal::Decimal;
-use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::sync::mpsc;
@@ -93,66 +91,6 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
   let mut new_transactions = kryp.tax.transactions.clone();
   for transaction in transactions {
     Tax::add_transaction_to_vec(&mut new_transactions, transaction);
-  }
-
-  let mut balances: HashMap<(String, String), Decimal> = HashMap::new();
-  for tx in &new_transactions {
-    let core_tx = CoreTransaction::from_transaction(tx.clone());
-    let sent_amount = core_tx.sent_amount.unwrap_or(dec!(0));
-    let sent_asset = core_tx.sent_asset.unwrap_or("".into());
-    let sent_wallet = core_tx.sent_wallet.unwrap_or("".into());
-
-    let recv_amount = core_tx.recv_amount.unwrap_or(dec!(0));
-    let recv_asset = core_tx.recv_asset.unwrap_or("".into());
-    let recv_wallet = core_tx.recv_wallet.unwrap_or("".into());
-
-    let fee_amount = core_tx.fee_amount.unwrap_or(dec!(0));
-    let fee_asset = core_tx.fee_asset.unwrap_or("".into());
-
-    let recv_balance = balances.entry((recv_asset, recv_wallet)).or_insert(dec!(0));
-    *recv_balance += recv_amount;
-
-    {
-      let sent_balance = balances
-        .entry((sent_asset.clone(), sent_wallet.clone()))
-        .or_insert(dec!(0));
-      *sent_balance -= sent_amount;
-      if sent_balance < &mut dec!(0) {
-        let negative_balance = sent_balance.clone();
-        println!("{:#?}", balances);
-        throw!(
-          "Negative balance {} {} in \"{}\" due to {} transaction at {}",
-          negative_balance,
-          sent_asset,
-          sent_wallet,
-          tx.tag(),
-          format_date(tx.date()),
-        );
-      }
-    }
-
-    let mut fee_balance = balances
-      .entry((fee_asset.clone(), sent_wallet.clone()))
-      .or_insert(dec!(0));
-    fee_balance -= fee_amount;
-    if fee_balance < &mut dec!(0) {
-      let negative_balance = fee_balance.clone();
-      println!("{:?}", balances);
-      throw!(
-        "Negative balance {} {} in \"{}\" due to {} transaction at {}",
-        negative_balance,
-        fee_asset,
-        sent_wallet,
-        tx.tag(),
-        format_date(tx.date()),
-      );
-    }
-  }
-  println!("SUCCESSx");
-  for ((asset, wallet), amount) in balances {
-    if amount != dec!(0) {
-      println!("{} {} {}", wallet, asset, amount);
-    }
   }
 
   let calculation = Calculation::calculate(new_transactions.iter().collect())?;
