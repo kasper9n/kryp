@@ -3,7 +3,7 @@
   import Button from '$lib/Button.svelte'
   import Modal from '$lib/Modal.svelte'
   import type { Transaction } from '$lib/transactions'
-  import { popup, runCmd } from '$lib/general'
+  import { popup, runCmd, UnreachableCaseError } from '$lib/general'
   import NumericInput from '$lib/NumericInput.svelte'
   import Dropdown from '$lib/Dropdown.svelte'
   import { createEventDispatcher, onMount } from 'svelte'
@@ -16,14 +16,19 @@
     if (str === '') return '0'
     else return str
   }
-  function optionalStr(str: string) {
-    if (str === '') return null
-    else return str
+
+  function getManualWorth() {
+    if (info.manual_worth_amount === '') {
+      return null
+    } else {
+      return info.manual_worth_amount + ' ' + info.manual_worth_asset
+    }
   }
 
   async function save() {
     validate(info, false)
     if (hasErrors || !info.date) return
+
     let json: Transaction
     if (tag.type === 'Trade') {
       json = {
@@ -40,8 +45,7 @@
         recv_wallet: info.recv_wallet,
         fee_amount: numStr(info.fee_amount),
         fee_asset: info.fee_asset,
-        manual_worth_amount: optionalStr(info.manual_worth_amount),
-        manual_worth_asset: optionalStr(info.manual_worth_asset),
+        manual_worth: getManualWorth(),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Transfer') {
@@ -57,8 +61,7 @@
         recv_amount: numStr(info.recv_amount),
         recv_asset: info.recv_asset,
         recv_wallet: info.recv_wallet,
-        manual_worth_amount: optionalStr(info.manual_worth_amount),
-        manual_worth_asset: optionalStr(info.manual_worth_asset),
+        manual_worth: getManualWorth(),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Deposit') {
@@ -71,8 +74,7 @@
         amount: numStr(info.recv_amount),
         asset: info.recv_asset,
         wallet: info.recv_wallet,
-        from_amount: optionalStr(info.manual_worth_amount),
-        from_asset: optionalStr(info.manual_worth_asset),
+        manual_worth: getManualWorth(),
         cost: numStr(info.cost),
       }
     } else if (tag.type === 'Withdrawal') {
@@ -82,21 +84,26 @@
         date: info.date.getTime(),
         note: info.note,
         hash: info.hash,
-        amount: numStr(info.recv_amount),
-        asset: info.recv_asset,
-        wallet: info.recv_wallet,
-        to_amount: optionalStr(info.manual_worth_amount),
-        to_asset: optionalStr(info.manual_worth_asset),
+        amount: numStr(info.sent_amount),
+        asset: info.sent_asset,
+        wallet: info.sent_wallet,
+        manual_worth: getManualWorth(),
         cost: numStr(info.cost),
       }
     } else {
       popup('Unsupported tx type: ' + tag)
-      return
+      throw new UnreachableCaseError(tag.type)
     }
+    console.log('Add transaction:', json)
     await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
     close()
   }
-  const tags = [
+  type Tag = {
+    type: Transaction['type']
+    value: string
+    name: string
+  }
+  const tags: Tag[] = [
     { type: 'Trade', value: 'Trade', name: 'Trade' },
     { type: 'Transfer', value: 'Transfer', name: 'Transfer' },
     { type: 'Deposit', value: 'Deposit', name: 'Deposit' },
@@ -178,6 +185,7 @@
       errors.add('recv_amount')
       errors.add('recv_asset')
       errors.add('recv_wallet')
+      errors.add('manual_worth_asset')
     }
     if (!enabledFields.sent || info.sent_amount) errors.delete('sent_amount')
     if (!enabledFields.sent || info.sent_asset) errors.delete('sent_asset')
@@ -185,6 +193,8 @@
     if (!enabledFields.recv || info.recv_amount) errors.delete('recv_amount')
     if (!enabledFields.recv || info.recv_asset) errors.delete('recv_asset')
     if (!enabledFields.recv || info.recv_wallet) errors.delete('recv_wallet')
+    if (info.manual_worth_amount && info.manual_worth_asset) errors.delete('manual_worth_asset')
+    if (!info.manual_worth_amount) errors.delete('manual_worth_asset')
     if (!info.date) validDate = false
     errors = errors
     hasErrors = !!errors.size || !validDate
@@ -208,7 +218,7 @@
         <div class="tag-option" class:selected data-type={option.type}>
           <svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="12" />
-          </svg>{option.name}
+          </svg>{option.value}
         </div>
       </Dropdown>
     </div>
@@ -289,7 +299,9 @@
     </div>
     {#if !showNetWorth}
       <div class="set-net-worth">
-        <div on:click={() => (showNetWorth = true)}>Set Worth</div>
+        <button type="button" class="m-0.5 py-0.5 px-1" on:click={() => (showNetWorth = true)}
+          >Set Worth</button
+        >
       </div>
     {/if}
     {#if showNetWorth}
@@ -302,7 +314,13 @@
             placeholder="Amount"
           />
         </div>
-        <input type="text" class="asset" bind:value={info.manual_worth_asset} placeholder="Asset" />
+        <input
+          type="text"
+          class="asset"
+          class:invalid={errors.has('manual_worth_asset')}
+          bind:value={info.manual_worth_asset}
+          placeholder="Asset"
+        />
       </div>
     {/if}
     <div class="row">
@@ -321,6 +339,12 @@
 </Modal>
 
 <style lang="sass">
+  // fix tailwind issues
+  :global(.dropdown select)
+    background-image: none
+  div :global(.date-time-picker .dropdown svg)
+    box-sizing: content-box
+
   .container
     width: 580px
     max-width: 100%
@@ -420,11 +444,6 @@
     color: #0269f7
     font-size: 12px
     text-align: right
-    div
-      display: inline-block
-      cursor: pointer
-      margin: 2px
-      padding: 2px 4px
   .amount-container
     max-width: 130px
 </style>
