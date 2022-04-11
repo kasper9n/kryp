@@ -2,7 +2,7 @@ use crate::import::get_cell_index;
 use crate::import::ImportData;
 use crate::tax::Tax;
 use crate::throw;
-use crate::transaction::{BaseTransaction, Value};
+use crate::transaction::{BaseTransaction, UncostedTransaction, Value};
 use chrono::{TimeZone, Utc};
 use csv::StringRecord;
 use std::fs::File;
@@ -20,39 +20,32 @@ pub async fn read(
     Err(e) => throw!("Unable to read headers: {}", e),
   };
   let header_length = 1;
-  let mut has_errors = false;
   let mut uncosted_transactions = Vec::new();
 
   for (i, record) in reader.records().enumerate() {
     let n = i + 1 + header_length;
     let row = record.map_err(|e| format!("Unable to read row {}: {}", n, e))?;
 
-    let import_transaction = match from_row(row, &cols, &mut *tax).await {
+    let uncosted_transaction = match from_row(row, &cols).await {
       Ok(Some(tx)) => tx,
       Ok(None) => continue,
       Err(e) => throw!("Error in row {}: {}", n, e),
     };
-    if import_transaction.error.is_some() {
-      has_errors = true;
-    }
+    let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
+    uncosted_transactions.push(import_tx);
 
     win
       .emit("importStatus", ImportStatus { index: n as u64 })
       .ok();
-    uncosted_transactions.push(import_transaction);
   }
 
-  Ok(ImportData {
-    transactions: uncosted_transactions.clone(),
-    has_errors,
-  })
+  Ok(ImportData::new("Binance", uncosted_transactions))
 }
 
 async fn from_row(
   row: StringRecord,
   cols: &CsvCols,
-  tax: &mut Tax,
-) -> Result<Option<ImportTransaction>, String> {
+) -> Result<Option<UncostedTransaction>, String> {
   // let user_id = cols.get(&row, Some(cols.user_id), "User_ID")?;
   let utc_time = cols.get(&row, Some(cols.utc_time), "Utc_Time")?;
   let account = cols.get(&row, Some(cols.account), "Account")?;
@@ -121,25 +114,7 @@ async fn from_row(
 
   let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
   println!("{:#?}", uncosted_transaction);
-
-  let cost = uncosted_transaction.get_or_calculate_cost(
-    &mut tax.price_data,
-    &tax.settings.apis,
-    &tax.settings.base_currency,
-  );
-  let import_transaction = match cost.await {
-    Ok(cost) => ImportTransaction {
-      transaction: uncosted_transaction,
-      cost: Some(cost),
-      error: None,
-    },
-    Err(e) => ImportTransaction {
-      transaction: uncosted_transaction,
-      cost: None,
-      error: Some(e),
-    },
-  };
-  Ok(Some(import_transaction))
+  Ok(Some(uncosted_transaction))
 }
 
 #[derive(Debug)]

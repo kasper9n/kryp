@@ -65,7 +65,7 @@
 </script>
 
 <svelte:body on:keydown|self={rowKeydown} />
-<button class="list" on:keydown={rowKeydown}>
+<div class="list" on:keydown={rowKeydown}>
   {#each transactions as tx, i}
     <div
       class="item"
@@ -150,7 +150,7 @@
       </div>
     </div>
   {/each}
-</button>
+</div>
 
 <style lang="sass">
   $kind-icon-width: 26px

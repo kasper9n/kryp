@@ -12,7 +12,8 @@
   import ReportsPage from './routes/reports.svelte'
   import PricesPage from '$routes/prices.svelte'
   import HelpPage from '$routes/help.svelte'
-  import ImportPage from '$routes/import.svelte'
+  import ImportPage from '$routes/import/index.svelte'
+  import ImportConfirmPage from '$routes/import/confirm.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
   import './app.css'
@@ -92,6 +93,7 @@
   <Route path="/prices"><PricesPage /></Route>
   <Route path="/help"><HelpPage /></Route>
   <Route path="/import"><ImportPage /></Route>
+  <Route path="/import/confirm"><ImportConfirmPage /></Route>
   <Route path="/reports"><ReportsPage /></Route>
   <Route fallback>404</Route>
 {:else}

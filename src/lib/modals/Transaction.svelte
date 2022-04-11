@@ -116,21 +116,11 @@
   let tag = tags[0]
   $: enabledFields = getEnabledFields(tag.type)
   function getEnabledFields(kind: string) {
-    let fields = {
-      sent: true,
-      recv: true,
-      fee: false,
+    return {
+      sent: kind !== 'Deposit',
+      recv: kind !== 'Withdrawal',
+      fee: kind === 'Trade',
     }
-    if (kind === 'Trade') {
-      fields.fee = true
-    }
-    if (kind === 'Deposit') {
-      fields.sent = false
-    }
-    if (kind === 'Withdrawal') {
-      fields.recv = false
-    }
-    return fields
   }
   type Info = {
     date: Date | null
@@ -446,4 +436,5 @@
     text-align: right
   .amount-container
     max-width: 130px
+    display: flex
 </style>

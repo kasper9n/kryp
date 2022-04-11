@@ -18,6 +18,45 @@ mod kryp;
 pub struct ImportData {
   transactions: Vec<ImportTransaction>,
   has_errors: bool,
+  source: String,
+}
+impl ImportData {
+  pub fn new(source: &str, transactions: Vec<ImportTransaction>) -> ImportData {
+    let mut has_errors = false;
+    for transaction in &transactions {
+      if transaction.error.is_some() {
+        has_errors = true;
+      }
+    }
+    ImportData {
+      transactions,
+      has_errors,
+      source: source.to_string(),
+    }
+  }
+}
+
+#[command]
+pub async fn get_import_data(kryp: State<'_, Data>) -> Result<ImportData, String> {
+  let kryp = kryp.0.lock().await;
+  Ok(kryp.import_data.clone())
+}
+
+#[command]
+pub async fn update_import_transactions(
+  transactions: Vec<ImportTransaction>,
+  kryp: State<'_, Data>,
+) -> Result<ImportData, String> {
+  let mut kryp = kryp.0.lock().await;
+  let tax = &mut kryp.tax;
+
+  let mut uncosted_transactions = Vec::new();
+  for tx in transactions {
+    let import_tx = ImportTransaction::from_uncosted_tx(tx.transaction, tax).await;
+    uncosted_transactions.push(import_tx);
+  }
+  kryp.import_data = ImportData::new(&kryp.import_data.source, uncosted_transactions);
+  Ok(kryp.import_data.clone())
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -25,6 +64,27 @@ pub struct ImportTransaction {
   pub transaction: UncostedTransaction,
   pub cost: Option<Decimal>,
   pub error: Option<String>,
+}
+impl ImportTransaction {
+  pub async fn from_uncosted_tx(tx: UncostedTransaction, tax: &mut Tax) -> ImportTransaction {
+    let cost = tx.get_or_calculate_cost(
+      &mut tax.price_data,
+      &tax.settings.apis,
+      &tax.settings.base_currency,
+    );
+    match cost.await {
+      Ok(cost) => ImportTransaction {
+        transaction: tx,
+        cost: Some(cost),
+        error: None,
+      },
+      Err(e) => ImportTransaction {
+        transaction: tx,
+        cost: None,
+        error: Some(e),
+      },
+    }
+  }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -45,16 +105,17 @@ fn pick_file(_win: &Window) -> Option<PathBuf> {
   receiver.recv().unwrap_or_default()
 }
 
+/// Returns `true` if the scan was cancelled
 #[command]
 pub async fn scan_import_file(
   source: String,
   tz: String,
   win: Window,
   kryp: State<'_, Data>,
-) -> Result<Option<ImportData>, String> {
+) -> Result<bool, String> {
   let file_path = match pick_file(&win) {
     Some(p) => p,
-    None => return Ok(None),
+    None => return Ok(true),
   };
   let tz: chrono_tz::Tz = match tz.parse() {
     Ok(tz) => tz,
@@ -70,14 +131,16 @@ pub async fn scan_import_file(
     _ => throw!("Unsupported source: {}", source),
   };
 
-  kryp.import_data = import_data.clone();
-  Ok(Some(import_data))
+  kryp.import_data = import_data;
+  println!("scan_import_file() done");
+  Ok(false)
 }
 
 #[command]
 pub async fn cancel_import(kryp: State<'_, Data>) -> Result<(), ()> {
   let mut kryp = kryp.0.lock().await;
   kryp.import_data = ImportData::default();
+  println!("cancel_import() done");
   Ok(())
 }
 
@@ -106,6 +169,7 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
   kryp.tax.apply_calc_output(calculation);
   kryp.import_data = ImportData::default();
 
+  println!("continue_import() done");
   Ok(())
 }
 

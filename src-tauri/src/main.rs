@@ -80,6 +80,8 @@ fn main() {
       data::get_prices,
       reports::get_report,
       import::scan_import_file,
+      import::get_import_data,
+      import::update_import_transactions,
       import::continue_import,
       import::cancel_import,
       export::export,

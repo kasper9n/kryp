@@ -34,7 +34,6 @@
       }))
 
     walletHoldings = await runCmd('get_holdings_by_wallet')
-    console.log('by-w', walletHoldings)
   }
   getHoldings()
 

@@ -18,7 +18,6 @@ pub async fn read(
     Err(e) => throw!("Unable to read headers: {}", e),
   };
   let header_length = 1;
-  let mut has_errors = false;
   let mut uncosted_transactions = Vec::new();
 
   for (i, record) in reader.records().enumerate() {
@@ -28,36 +27,14 @@ pub async fn read(
     let uncosted_transaction = from_row(row, &cols, tz)
       .await
       .map_err(|e| format!("Error in row {}: {}", n, e))?;
+    let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
+    uncosted_transactions.push(import_tx);
 
-    let cost = uncosted_transaction.get_or_calculate_cost(
-      &mut tax.price_data,
-      &tax.settings.apis,
-      &tax.settings.base_currency,
-    );
-    let import_transaction = match cost.await {
-      Ok(cost) => ImportTransaction {
-        transaction: uncosted_transaction,
-        cost: Some(cost),
-        error: None,
-      },
-      Err(e) => ImportTransaction {
-        transaction: uncosted_transaction,
-        cost: None,
-        error: Some(e),
-      },
-    };
-    if import_transaction.error.is_some() {
-      has_errors = true;
-    }
     win
       .emit("importStatus", ImportStatus { index: n as u64 })
       .ok();
-    uncosted_transactions.push(import_transaction);
   }
-  Ok(ImportData {
-    transactions: uncosted_transactions.clone(),
-    has_errors,
-  })
+  Ok(ImportData::new("Kryp", uncosted_transactions))
 }
 
 fn pos(row: &Vec<String>, values: &[&str]) -> Option<usize> {
