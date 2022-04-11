@@ -4,6 +4,7 @@
 )]
 
 use data::{Data, Kryp};
+use localzone;
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::thread;
 use tauri::api::{dialog, shell};
@@ -51,12 +52,18 @@ pub fn round_8(num: Decimal) -> Decimal {
   return num.round_dp_with_strategy(8, RoundingStrategy::MidpointAwayFromZero);
 }
 
+#[command]
+fn get_system_timezone() -> Option<String> {
+  localzone::get_local_zone()
+}
+
 fn main() {
   let ctx = tauri::generate_context!();
   let tauri_app = tauri::Builder::default()
     .manage(import::ImportData::default())
     .invoke_handler(tauri::generate_handler![
       error_popup,
+      get_system_timezone,
       data::new_file,
       data::open,
       data::save,

@@ -18,8 +18,15 @@
   }
   let importData: ImportData | null = null
 
+  let timezone = ''
+  runCmd('get_system_timezone').then((tz: string | null) => {
+    if (tz) {
+      timezone = tz
+    }
+  })
+
   async function importFile() {
-    const newImportData = await runCmd('start_import')
+    const newImportData = await runCmd('scan_import_file', { source: 'kryp', tz: timezone })
     importData = newImportData
   }
 
@@ -157,6 +164,10 @@
     <p class="center">Scanned {status.index} transactions</p>
   {:else}
     <p class="center">Import a custom CSV or TSV file</p>
+    <div class="flex items-center justify-center my-4">
+      <span class="mr-2">Timezone</span>
+      <input type="text" bind:value={timezone} />
+    </div>
     <div class="center">
       <Button on:click={importFile}>Import</Button>
     </div>

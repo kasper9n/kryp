@@ -1,34 +1,33 @@
-use crate::import::{ImportData, ImportStatus, ImportTransaction};
+use crate::import::{get_cell_index, ImportData, ImportStatus, ImportTransaction};
 use crate::tax::Tax;
 use crate::throw;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
-use chrono::{Local, NaiveDateTime, TimeZone};
+use chrono::TimeZone;
 use csv::StringRecord;
 use std::fs::File;
 use tauri::Window;
 
 pub async fn read(
   mut reader: csv::Reader<File>,
+  tz: chrono_tz::Tz,
   win: Window,
   tax: &mut Tax,
 ) -> Result<ImportData, String> {
-  let header = match reader.headers() {
-    Ok(h) => h,
-    Err(e) => throw!("Error reading file: {}", e),
+  let cols = match reader.headers() {
+    Ok(header) => CsvCols::from_header(header)?,
+    Err(e) => throw!("Unable to read headers: {}", e),
   };
-  let cols = CsvCols::from_header(header)?;
-  println!("{:?}", cols);
-
-  let mut has_errors = false;
   let header_length = 1;
-  let mut i = 1;
+  let mut has_errors = false;
   let mut uncosted_transactions = Vec::new();
-  for record in reader.records() {
-    let row = record.map_err(|e| format!("Unable to read row {}: {}", i + header_length, e))?;
 
-    let uncosted_transaction = from_csv_record(row, &cols)
+  for (i, record) in reader.records().enumerate() {
+    let n = i + 1 + header_length;
+    let row = record.map_err(|e| format!("Unable to read row {}: {}", n, e))?;
+
+    let uncosted_transaction = from_row(row, &cols, tz)
       .await
-      .map_err(|e| format!("Error in row {}: {}", i + header_length, e))?;
+      .map_err(|e| format!("Error in row {}: {}", n, e))?;
 
     let cost = uncosted_transaction.get_or_calculate_cost(
       &mut tax.price_data,
@@ -50,9 +49,10 @@ pub async fn read(
     if import_transaction.error.is_some() {
       has_errors = true;
     }
-    win.emit("importStatus", ImportStatus { index: i }).ok();
+    win
+      .emit("importStatus", ImportStatus { index: n as u64 })
+      .ok();
     uncosted_transactions.push(import_transaction);
-    i += 1;
   }
   Ok(ImportData {
     transactions: uncosted_transactions.clone(),
@@ -66,10 +66,10 @@ fn pos(row: &Vec<String>, values: &[&str]) -> Option<usize> {
 
 #[derive(Debug)]
 pub struct CsvCols {
-  kind: Option<usize>,
-  date: Option<usize>,
-  note: Option<usize>,
-  hash: Option<usize>,
+  kind: usize,
+  date: usize,
+  note: usize,
+  hash: usize,
   sent_amount: Option<usize>,
   sent_asset: Option<usize>,
   sent_wallet: Option<usize>,
@@ -85,14 +85,9 @@ impl CsvCols {
     let row: Vec<String> = header.iter().map(|s| s.to_lowercase()).collect();
     println!("{:?}", row);
 
-    let kind = row.iter().position(|s| s == "type");
-    let date = row.iter().position(|s| s == "date");
-    let note = row.iter().position(|s| s == "note");
-    let hash = row.iter().position(|s| s == "hash" || s == "tx hash");
-
     let sent_amount = row.iter().position(|s| s == "sent");
-    let mut sent_asset = pos(&row, &["sent asset", "r asset"]);
-    let mut sent_wallet = pos(&row, &["sent wallet", "r wallet"]);
+    let mut sent_asset = pos(&row, &["sent asset", "s asset"]);
+    let mut sent_wallet = pos(&row, &["sent wallet", "s wallet"]);
     if let Some(i) = sent_amount {
       if sent_asset.is_none() && row.get(i + 1) == Some(&"asset".to_string()) {
         sent_asset = Some(i + 1);
@@ -125,10 +120,10 @@ impl CsvCols {
     let cost = row.iter().position(|s| s == "cost");
 
     Ok(CsvCols {
-      kind,
-      date,
-      note,
-      hash,
+      kind: get_cell_index(&row, &["type"])?,
+      date: get_cell_index(&row, &["date"])?,
+      note: get_cell_index(&row, &["note"])?,
+      hash: get_cell_index(&row, &["hash", "tx hash"])?,
       sent_amount,
       sent_asset,
       sent_wallet,
@@ -163,17 +158,6 @@ impl CsvCols {
   }
 }
 
-fn parse_local_datetime(text: &str, format: &str) -> Result<i64, String> {
-  let naive_dt = match NaiveDateTime::parse_from_str(text, format) {
-    Ok(d) => d,
-    Err(e) => throw!("Invalid date: {}", e),
-  };
-  match Local.from_local_datetime(&naive_dt) {
-    chrono::LocalResult::Single(d) => Ok(d.timestamp_millis()),
-    _ => throw!("Unable to add timezone to date {}", naive_dt),
-  }
-}
-
 fn parse_kind(kind: &str) -> &str {
   match kind {
     "Withdraw" => "Withdrawal",
@@ -181,11 +165,15 @@ fn parse_kind(kind: &str) -> &str {
   }
 }
 
-async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTransaction, String> {
-  let kind = cols.get(&row, cols.kind, "Kind")?;
-  let date = cols.get(&row, cols.date, "Date")?;
-  let note = cols.get(&row, cols.note, "Note")?;
-  let hash = cols.get(&row, cols.hash, "Hash")?;
+async fn from_row(
+  row: StringRecord,
+  cols: &CsvCols,
+  tz: chrono_tz::Tz,
+) -> Result<UncostedTransaction, String> {
+  let kind = cols.get(&row, Some(cols.kind), "Kind")?;
+  let date = cols.get(&row, Some(cols.date), "Date")?;
+  let note = cols.get(&row, Some(cols.note), "Note")?;
+  let hash = cols.get(&row, Some(cols.hash), "Hash")?;
   let cost = cols.get_or_empty(&row, cols.cost, "Cost")?;
 
   let sent_amount = cols.get(&row, cols.sent_amount, "Sent Amount")?.into();
@@ -201,7 +189,10 @@ async fn from_csv_record(row: StringRecord, cols: &CsvCols) -> Result<UncostedTr
 
   let base_transaction = BaseTransaction {
     tag: parse_kind(kind).into(),
-    date: parse_local_datetime(date, "%Y-%m-%d %H:%M:%S")?,
+    date: match tz.datetime_from_str(date, "%Y-%m-%d %H:%M:%S") {
+      Ok(date) => date.timestamp_millis(),
+      Err(e) => throw!("Invalid date: {}", e),
+    },
     note: note.into(),
     hash: hash.into(),
     sent: Value::new(sent_amount, sent_asset, sent_wallet)?,

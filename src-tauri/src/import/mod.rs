@@ -11,6 +11,7 @@ use std::sync::mpsc;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
 
+// mod binance;
 mod kryp;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
@@ -47,6 +48,7 @@ fn pick_file(_win: &Window) -> Option<PathBuf> {
 #[command]
 pub async fn scan_import_file(
   source: String,
+  tz: String,
   win: Window,
   kryp: State<'_, Data>,
 ) -> Result<Option<ImportData>, String> {
@@ -54,12 +56,16 @@ pub async fn scan_import_file(
     Some(p) => p,
     None => return Ok(None),
   };
+  let tz: chrono_tz::Tz = match tz.parse() {
+    Ok(tz) => tz,
+    Err(e) => throw!("Invalid timezone: {}", e),
+  };
 
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
 
   let import_data = match source.as_str() {
-    "kryp" => kryp::read(read_csv(file_path)?, win, tax).await?,
+    "kryp" => kryp::read(read_csv(file_path)?, tz, win, tax).await?,
     _ => throw!("Unsupported source: {}", source),
   };
 
@@ -113,4 +119,11 @@ fn read_csv(file_path: PathBuf) -> Result<csv::Reader<File>, String> {
     .from_path(file_path)
     .map_err(|_| "Error opening file".to_string())?;
   Ok(reader)
+}
+
+pub fn get_cell_index(row: &Vec<String>, string: &[&str]) -> Result<usize, String> {
+  match row.iter().position(|s| string.contains(&s.as_str())) {
+    Some(i) => Ok(i),
+    None => throw!("Missing column \"{}\"", string.get(0).unwrap_or(&"None")),
+  }
 }
