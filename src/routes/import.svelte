@@ -18,6 +18,8 @@
   }
   let importData: ImportData | null = null
 
+  let source = 'Kryp'
+
   let timezone = ''
   runCmd('get_system_timezone').then((tz: string | null) => {
     if (tz) {
@@ -26,7 +28,7 @@
   })
 
   async function importFile() {
-    const newImportData = await runCmd('scan_import_file', { source: 'kryp', tz: timezone })
+    const newImportData = await runCmd('scan_import_file', { source, tz: timezone })
     importData = newImportData
   }
 
@@ -163,12 +165,26 @@
   {:else if status}
     <p class="center">Scanned {status.index} transactions</p>
   {:else}
-    <p class="center">Import a custom CSV or TSV file</p>
-    <div class="flex items-center justify-center my-4">
-      <span class="mr-2">Timezone</span>
-      <input type="text" bind:value={timezone} />
+    <div class="my-4">
+      <div class="mx-auto text-center">Type</div>
+      <select class="mx-auto text-center block text-sm" bind:value={source}>
+        <option value={'Kryp'}>Kryp</option>
+        <option value={'Binance'}>Binance</option>
+      </select>
     </div>
-    <div class="center">
+    <div class="my-4">
+      <div class="mx-auto text-center">Timezone</div>
+      {#if source === 'Kryp'}
+        <input class="mx-auto block text-sm" type="text" bind:value={timezone} />
+      {:else}
+        <input class="mx-auto block text-sm" type="text" value="Auto" disabled />
+      {/if}
+    </div>
+    <p class="center">Import a custom CSV or TSV file</p>
+    {#if source === 'Binance'}
+    <p class="text-red-500 text-center">Trades are not supported</p>
+    {/if}
+    <div class="center my-4">
       <Button on:click={importFile}>Import</Button>
     </div>
   {/if}

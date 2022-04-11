@@ -195,9 +195,9 @@ async fn from_row(
     },
     note: note.into(),
     hash: hash.into(),
-    sent: Value::new(sent_amount, sent_asset, sent_wallet)?,
-    recv: Value::new(recv_amount, recv_asset, recv_wallet)?,
-    fee: Quantity::new(fee_amount, fee_asset)?,
+    sent: Value::new_optional(sent_amount, sent_asset, sent_wallet)?,
+    recv: Value::new_optional(recv_amount, recv_asset, recv_wallet)?,
+    fee: Quantity::new_optional(fee_amount, fee_asset)?,
     manual_worth: Quantity::parse(cost)?,
   };
   let uncosted_transaction = base_transaction.into_uncosted_transaction()?;

@@ -438,20 +438,26 @@ pub struct Quantity {
   pub asset: String,
 }
 impl Quantity {
-  pub fn new(amount: String, asset: String) -> Result<Option<Self>, String> {
-    if amount == "" && asset == "" {
-      Ok(None)
-    } else if amount == "" || asset == "" {
+  pub fn new(amount: String, asset: String) -> Result<Quantity, String> {
+    if amount == "" || asset == "" {
       throw!("Invalid amount/asset: {} {}", amount, asset);
     } else {
       let num = match Decimal::from_str(&amount) {
         Ok(d) => d,
         Err(_) => throw!("Invalid number \"{}\"", amount),
       };
-      Ok(Some(Self {
+      Ok(Quantity {
         amount: num,
         asset: asset,
-      }))
+      })
+    }
+  }
+  /// Returns `None` if both the amount and asset are empty
+  pub fn new_optional(amount: String, asset: String) -> Result<Option<Quantity>, String> {
+    if amount == "" && asset == "" {
+      Ok(None)
+    } else {
+      Ok(Some(Quantity::new(amount, asset)?))
     }
   }
   pub fn parse(value: &str) -> Result<Option<Self>, String> {
@@ -479,26 +485,33 @@ pub struct Value {
   pub wallet: String,
 }
 impl Value {
-  pub fn new(amount: String, asset: String, wallet: String) -> Result<Option<Value>, String> {
-    let quantity = Quantity::new(amount, asset)?;
-    if let Some(quantity) = quantity {
-      if wallet == "" {
-        throw!(
-          "The amount {} {} has no wallet",
-          quantity.amount,
-          quantity.asset
-        );
-      } else {
-        Ok(Some(Self {
-          amount: quantity.amount,
-          asset: quantity.asset,
-          wallet: wallet,
-        }))
-      }
-    } else if wallet == "" {
+  pub fn new<S: Into<String>>(amount: S, asset: S, wallet: S) -> Result<Value, String> {
+    let amount = amount.into();
+    let asset = asset.into();
+    let wallet = wallet.into();
+    if asset != "" && amount != "" && wallet == "" {
+      throw!("The amount {} {} has no wallet", amount, asset);
+    } else if asset == "" || amount == "" || wallet == "" {
+      throw!("Invalid amount {} {} with wallet {}", amount, asset, wallet,);
+    } else {
+      let quantity = Quantity::new(amount, asset)?;
+      Ok(Value {
+        amount: quantity.amount,
+        asset: quantity.asset,
+        wallet: wallet,
+      })
+    }
+  }
+  /// Returns `None` if all arguments are empty
+  pub fn new_optional(
+    amount: String,
+    asset: String,
+    wallet: String,
+  ) -> Result<Option<Value>, String> {
+    if amount == "" && asset == "" && wallet == "" {
       Ok(None)
     } else {
-      throw!("Wallet \"{}\" specified without any amount/asset", wallet);
+      Ok(Some(Value::new(amount, asset, wallet)?))
     }
   }
 }

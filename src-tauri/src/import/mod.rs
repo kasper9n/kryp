@@ -11,7 +11,7 @@ use std::sync::mpsc;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
 
-// mod binance;
+mod binance;
 mod kryp;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
@@ -65,7 +65,8 @@ pub async fn scan_import_file(
   let tax = &mut kryp.tax;
 
   let import_data = match source.as_str() {
-    "kryp" => kryp::read(read_csv(file_path)?, tz, win, tax).await?,
+    "Kryp" => kryp::read(read_csv(file_path)?, tz, win, tax).await?,
+    "Binance" => binance::read(read_csv(file_path)?, win, tax).await?,
     _ => throw!("Unsupported source: {}", source),
   };
 
