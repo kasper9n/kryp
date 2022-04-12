@@ -1,4 +1,5 @@
-use crate::import::get_cell_index;
+use super::csv::{csv_rows, get_cell, get_cell_index, read_csv_header};
+use super::{ImportStatus, ImportTransaction};
 use crate::import::ImportData;
 use crate::tax::Tax;
 use crate::throw;
@@ -8,35 +9,25 @@ use csv::StringRecord;
 use std::fs::File;
 use tauri::Window;
 
-use super::{ImportStatus, ImportTransaction};
-
 pub async fn read(
   mut reader: csv::Reader<File>,
   win: Window,
   tax: &mut Tax,
 ) -> Result<ImportData, String> {
-  let cols = match reader.headers() {
-    Ok(header) => CsvCols::from_header(header)?,
-    Err(e) => throw!("Unable to read headers: {}", e),
-  };
-  let header_length = 1;
+  let mut rows = csv_rows(&mut reader);
+  let cols = CsvCols::from_header(&read_csv_header(&mut rows)?)?;
   let mut uncosted_transactions = Vec::new();
 
-  for (i, record) in reader.records().enumerate() {
-    let n = i + 1 + header_length;
-    let row = record.map_err(|e| format!("Unable to read row {}: {}", n, e))?;
-
-    let uncosted_transaction = match from_row(row, &cols).await {
+  for (i, row) in rows {
+    let uncosted_transaction = match from_row(row?, &cols).await {
       Ok(Some(tx)) => tx,
       Ok(None) => continue,
-      Err(e) => throw!("Error in row {}: {}", n, e),
+      Err(e) => throw!("Error in row {}: {}", i + 1, e),
     };
     let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
     uncosted_transactions.push(import_tx);
 
-    win
-      .emit("importStatus", ImportStatus { index: n as u64 })
-      .ok();
+    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
 
   Ok(ImportData::new("Binance", uncosted_transactions))
@@ -46,13 +37,13 @@ async fn from_row(
   row: StringRecord,
   cols: &CsvCols,
 ) -> Result<Option<UncostedTransaction>, String> {
-  // let user_id = cols.get(&row, Some(cols.user_id), "User_ID")?;
-  let utc_time = cols.get(&row, Some(cols.utc_time), "Utc_Time")?;
-  let account = cols.get(&row, Some(cols.account), "Account")?;
-  let operation = cols.get(&row, Some(cols.operation), "Operation")?;
-  let coin = cols.get(&row, Some(cols.coin), "Coin")?;
-  let change = cols.get(&row, Some(cols.change), "Change")?;
-  let remark = cols.get(&row, Some(cols.remark), "Remark")?;
+  // let user_id = get_cell(&row, Some(cols.user_id), "User_ID")?;
+  let utc_time = get_cell(&row, Some(cols.utc_time), "Utc_Time")?;
+  let account = get_cell(&row, Some(cols.account), "Account")?;
+  let operation = get_cell(&row, Some(cols.operation), "Operation")?;
+  let coin = get_cell(&row, Some(cols.coin), "Coin")?;
+  let change = get_cell(&row, Some(cols.change), "Change")?;
+  let remark = get_cell(&row, Some(cols.remark), "Remark")?;
 
   let timestamp = match Utc.datetime_from_str(utc_time, "%Y-%m-%d %H:%M:%S") {
     Ok(date) => date.timestamp_millis(),
@@ -141,15 +132,5 @@ impl CsvCols {
       change: get_cell_index(&row, &["change"])?,
       remark: get_cell_index(&row, &["remark"])?,
     })
-  }
-  fn get<'a>(
-    &self,
-    row: &'a StringRecord,
-    col: Option<usize>,
-    name: &str,
-  ) -> Result<&'a str, String> {
-    let i = col.ok_or(format!("Missing \"{}\" column", name))?;
-    let cell = row.get(i).ok_or(format!("Missing \"{}\" cell", name))?;
-    Ok(cell)
   }
 }

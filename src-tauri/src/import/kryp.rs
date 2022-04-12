@@ -1,4 +1,5 @@
-use crate::import::{get_cell_index, ImportData, ImportStatus, ImportTransaction};
+use super::csv::{csv_rows, get_cell, get_cell_index, read_csv_header};
+use crate::import::{ImportData, ImportStatus, ImportTransaction};
 use crate::tax::Tax;
 use crate::throw;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
@@ -13,26 +14,18 @@ pub async fn read(
   win: Window,
   tax: &mut Tax,
 ) -> Result<ImportData, String> {
-  let cols = match reader.headers() {
-    Ok(header) => CsvCols::from_header(header)?,
-    Err(e) => throw!("Unable to read headers: {}", e),
-  };
-  let header_length = 1;
+  let mut rows = csv_rows(&mut reader);
+  let cols = CsvCols::from_header(&read_csv_header(&mut rows)?)?;
   let mut uncosted_transactions = Vec::new();
 
-  for (i, record) in reader.records().enumerate() {
-    let n = i + 1 + header_length;
-    let row = record.map_err(|e| format!("Unable to read row {}: {}", n, e))?;
-
-    let uncosted_transaction = from_row(row, &cols, tz)
+  for (i, row) in rows {
+    let uncosted_transaction = from_row(row?, &cols, tz)
       .await
-      .map_err(|e| format!("Error in row {}: {}", n, e))?;
+      .map_err(|e| format!("Error in row {}: {}", i + 1, e))?;
     let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
     uncosted_transactions.push(import_tx);
 
-    win
-      .emit("importStatus", ImportStatus { index: n as u64 })
-      .ok();
+    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
   Ok(ImportData::new("Kryp", uncosted_transactions))
 }
@@ -112,27 +105,6 @@ impl CsvCols {
       cost,
     })
   }
-  fn get_or_empty<'a>(
-    &self,
-    row: &'a StringRecord,
-    col: Option<usize>,
-    name: &str,
-  ) -> Result<&'a str, String> {
-    match col {
-      Some(i) => row.get(i).ok_or(format!("Missing \"{}\" cell", name)),
-      None => Ok(""),
-    }
-  }
-  fn get<'a>(
-    &self,
-    row: &'a StringRecord,
-    col: Option<usize>,
-    name: &str,
-  ) -> Result<&'a str, String> {
-    let i = col.ok_or(format!("Missing \"{}\" column", name))?;
-    let cell = row.get(i).ok_or(format!("Missing \"{}\" cell", name))?;
-    Ok(cell)
-  }
 }
 
 fn parse_kind(kind: &str) -> &str {
@@ -147,22 +119,25 @@ async fn from_row(
   cols: &CsvCols,
   tz: chrono_tz::Tz,
 ) -> Result<UncostedTransaction, String> {
-  let kind = cols.get(&row, Some(cols.kind), "Kind")?;
-  let date = cols.get(&row, Some(cols.date), "Date")?;
-  let note = cols.get(&row, Some(cols.note), "Note")?;
-  let hash = cols.get(&row, Some(cols.hash), "Hash")?;
-  let cost = cols.get_or_empty(&row, cols.cost, "Cost")?;
+  let kind = get_cell(&row, Some(cols.kind), "Kind")?;
+  let date = get_cell(&row, Some(cols.date), "Date")?;
+  let note = get_cell(&row, Some(cols.note), "Note")?;
+  let hash = get_cell(&row, Some(cols.hash), "Hash")?;
+  let cost = match cols.cost {
+    Some(i) => get_cell(&row, Some(i), "Cost")?,
+    None => "",
+  };
 
-  let sent_amount = cols.get(&row, cols.sent_amount, "Sent Amount")?.into();
-  let sent_asset = cols.get(&row, cols.sent_asset, "Sent Asset")?.into();
-  let sent_wallet = cols.get(&row, cols.sent_wallet, "Sent Wallet")?.into();
+  let sent_amount = get_cell(&row, cols.sent_amount, "Sent Amount")?.into();
+  let sent_asset = get_cell(&row, cols.sent_asset, "Sent Asset")?.into();
+  let sent_wallet = get_cell(&row, cols.sent_wallet, "Sent Wallet")?.into();
 
-  let recv_amount = cols.get(&row, cols.recv_amount, "Received Amount")?.into();
-  let recv_asset = cols.get(&row, cols.recv_asset, "Received Asset")?.into();
-  let recv_wallet = cols.get(&row, cols.recv_wallet, "Received Wallet")?.into();
+  let recv_amount = get_cell(&row, cols.recv_amount, "Received Amount")?.into();
+  let recv_asset = get_cell(&row, cols.recv_asset, "Received Asset")?.into();
+  let recv_wallet = get_cell(&row, cols.recv_wallet, "Received Wallet")?.into();
 
-  let fee_amount = cols.get(&row, cols.fee_amount, "Fee Amount")?.into();
-  let fee_asset = cols.get(&row, cols.fee_asset, "Fee Asset")?.into();
+  let fee_amount = get_cell(&row, cols.fee_amount, "Fee Amount")?.into();
+  let fee_asset = get_cell(&row, cols.fee_asset, "Fee Asset")?.into();
 
   let base_transaction = BaseTransaction {
     tag: parse_kind(kind).into(),

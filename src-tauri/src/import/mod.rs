@@ -1,17 +1,18 @@
 use crate::calc::Calculation;
 use crate::data::Data;
+use crate::import::csv::read_csv;
 use crate::tax::Tax;
 use crate::throw;
 use crate::transaction::UncostedTransaction;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::fs::File;
 use std::path::PathBuf;
 use std::sync::mpsc;
 use tauri::api::dialog;
 use tauri::{command, State, Window};
 
 mod binance;
+mod csv;
 mod kryp;
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
@@ -89,7 +90,7 @@ impl ImportTransaction {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ImportStatus {
-  index: u64,
+  index: usize,
 }
 
 fn pick_file(_win: &Window) -> Option<PathBuf> {
@@ -171,24 +172,4 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
 
   println!("continue_import() done");
   Ok(())
-}
-
-fn read_csv(file_path: PathBuf) -> Result<csv::Reader<File>, String> {
-  let delimiter = match file_path.extension().unwrap_or_default().to_str() {
-    Some("csv") => b',',
-    Some("tsv") => b'\t',
-    _ => throw!("Unknown file extension"),
-  };
-  let reader = csv::ReaderBuilder::new()
-    .delimiter(delimiter)
-    .from_path(file_path)
-    .map_err(|_| "Error opening file".to_string())?;
-  Ok(reader)
-}
-
-pub fn get_cell_index(row: &Vec<String>, string: &[&str]) -> Result<usize, String> {
-  match row.iter().position(|s| string.contains(&s.as_str())) {
-    Some(i) => Ok(i),
-    None => throw!("Missing column \"{}\"", string.get(0).unwrap_or(&"None")),
-  }
 }
