@@ -1,7 +1,8 @@
-use crate::throw;
-use csv::{Reader, StringRecord};
+use crate::{err, throw};
+use csv::{Reader, StringRecord, StringRecordsIntoIter};
 use std::fs::File;
-use std::iter::Enumerate;
+use std::io;
+use std::iter::Peekable;
 use std::path::PathBuf;
 
 pub fn read_csv(file_path: PathBuf) -> Result<Reader<File>, String> {
@@ -12,30 +13,46 @@ pub fn read_csv(file_path: PathBuf) -> Result<Reader<File>, String> {
   };
   let reader = csv::ReaderBuilder::new()
     .delimiter(delimiter)
+    .has_headers(true)
     .from_path(file_path)
     .map_err(|_| "Error opening file".to_string())?;
   Ok(reader)
 }
 
-pub fn read_csv_header(
-  records: &mut Enumerate<impl Iterator<Item = Result<StringRecord, String>>>,
-) -> Result<StringRecord, String> {
-  match records.next() {
-    Some((_, Ok(header))) => Ok(header),
-    Some((_, Err(e))) => throw!("Unable to read headers: {}", e),
-    None => throw!("No headers found"),
+pub fn lowercase_header_contains<R: io::Read>(reader: &mut Reader<R>, s: &str) -> bool {
+  match reader.headers() {
+    Ok(record) => {
+      for cell in record.iter() {
+        if cell.to_lowercase() == s.to_lowercase() {
+          return true;
+        }
+      }
+    }
+    Err(_) => {}
   }
+  false
+}
+pub fn get_header_lowercase<R: io::Read>(reader: &mut Reader<R>) -> Result<StringRecord, String> {
+  let header = match reader.headers() {
+    Ok(header) => header,
+    Err(e) => throw!("Unable to read headers: {}", e),
+  };
+  Ok(header.iter().map(|s| s.to_lowercase()).collect())
 }
 
-pub fn csv_rows<'a>(
-  reader: &'a mut Reader<File>,
-) -> Enumerate<impl Iterator<Item = Result<StringRecord, String>> + 'a> {
-  let records = reader
-    .records()
-    .enumerate()
-    .map(|(i, r)| r.map_err(|e| format!("Unable to read row {}: {}", i + 1, e)))
-    .enumerate();
-  records
+pub struct CsvIter {
+  row_index: usize,
+  records: Peekable<StringRecordsIntoIter<File>>,
+}
+impl Iterator for CsvIter {
+  type Item = Result<StringRecord, String>;
+  fn next(&mut self) -> Option<Result<StringRecord, String>> {
+    self.row_index += 1;
+    match self.records.next()? {
+      Ok(record) => Some(Ok(record)),
+      Err(e) => Some(err!("Unable to read row {}: {}", self.row_index, e)),
+    }
+  }
 }
 
 pub fn get_cell_index(row: &Vec<String>, string: &[&str]) -> Result<usize, String> {

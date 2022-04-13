@@ -1,33 +1,32 @@
-use super::csv::{csv_rows, get_cell, get_cell_index, read_csv_header};
-use crate::import::{ImportData, ImportStatus, ImportTransaction};
-use crate::tax::Tax;
+use super::csv::{get_cell, get_cell_index, get_header_lowercase, read_csv};
+use crate::import::ImportStatus;
 use crate::throw;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
 use chrono::TimeZone;
 use csv::StringRecord;
-use std::fs::File;
+use std::error::Error;
+use std::path::PathBuf;
 use tauri::Window;
 
 pub async fn read(
-  mut reader: csv::Reader<File>,
+  path: PathBuf,
   tz: chrono_tz::Tz,
   win: Window,
-  tax: &mut Tax,
-) -> Result<ImportData, String> {
-  let mut rows = csv_rows(&mut reader);
-  let cols = CsvCols::from_header(&read_csv_header(&mut rows)?)?;
+) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
+  let mut csv = read_csv(path)?;
   let mut uncosted_transactions = Vec::new();
 
-  for (i, row) in rows {
+  let cols = CsvCols::from_header(&get_header_lowercase(&mut csv)?)?;
+
+  for (i, row) in csv.records().enumerate() {
     let uncosted_transaction = from_row(row?, &cols, tz)
       .await
-      .map_err(|e| format!("Error in row {}: {}", i + 1, e))?;
-    let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
-    uncosted_transactions.push(import_tx);
+      .map_err(|e| format!("Error in row {}: {}", i + 2, e))?;
+    uncosted_transactions.push(uncosted_transaction);
 
-    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
+    win.emit("importStatus", ImportStatus { index: i + 2 }).ok();
   }
-  Ok(ImportData::new("Kryp", uncosted_transactions))
+  Ok(uncosted_transactions)
 }
 
 fn pos(row: &Vec<String>, values: &[&str]) -> Option<usize> {
@@ -150,7 +149,7 @@ async fn from_row(
     sent: Value::new_optional(sent_amount, sent_asset, sent_wallet)?,
     recv: Value::new_optional(recv_amount, recv_asset, recv_wallet)?,
     fee: Quantity::new_optional(fee_amount, fee_asset)?,
-    manual_worth: Quantity::parse(cost)?,
+    manual_worth: Quantity::parse_optional(cost)?,
   };
   let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
 

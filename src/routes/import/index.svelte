@@ -74,7 +74,10 @@
     </div>
     <p class="center">Import a custom CSV or TSV file</p>
     {#if source === 'Binance'}
-      <p class="text-red-500 text-center">Trades are not supported</p>
+      <p class="text-red-500 text-center">
+        Trades are not supported for Binance "All Statements" files. Trade history needs to be
+        imported separately
+      </p>
     {/if}
     <div class="center my-4">
       <Button on:click={importFile}>Import</Button>

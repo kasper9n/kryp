@@ -42,7 +42,7 @@
     <Button disabled={importData.has_errors} on:click={continueImport}>Continue</Button>
   </div>
 {:else}
-  <p class="red">
+  <p class="red text-center">
     Could not calculate the cost of the following transactions. Please enter them manually
   </p>
   <div class="button-row">

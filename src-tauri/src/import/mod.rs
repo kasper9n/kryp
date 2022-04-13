@@ -1,6 +1,5 @@
 use crate::calc::Calculation;
 use crate::data::Data;
-use crate::import::csv::read_csv;
 use crate::tax::Tax;
 use crate::throw;
 use crate::transaction::UncostedTransaction;
@@ -126,13 +125,27 @@ pub async fn scan_import_file(
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
 
-  let import_data = match source.as_str() {
-    "Kryp" => kryp::read(read_csv(file_path)?, tz, win, tax).await?,
-    "Binance" => binance::read(read_csv(file_path)?, win, tax).await?,
-    _ => throw!("Unsupported source: {}", source),
+  let uncosted_transactions = {
+    let result = match source.as_str() {
+      "Kryp" => kryp::read(file_path, tz, win).await,
+      "Binance" => binance::read(file_path, win).await,
+      _ => throw!("Unsupported source: {}", source),
+    };
+
+    match result {
+      Ok(transactions) => transactions,
+      Err(e) => throw!("{}", e),
+    }
   };
 
-  kryp.import_data = import_data;
+  let mut import_transactions = Vec::new();
+  for uncosted_transaction in uncosted_transactions {
+    let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
+    import_transactions.push(import_tx);
+  }
+
+  kryp.import_data = ImportData::new(&source, import_transactions);
+
   println!("scan_import_file() done");
   Ok(false)
 }

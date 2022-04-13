@@ -5,6 +5,7 @@ use chrono::{Local, TimeZone};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
+use std::iter::Peekable;
 use std::str::{Chars, FromStr};
 
 pub fn format_date(ts: i64) -> String {
@@ -244,7 +245,7 @@ impl UncostedTransaction {
   /// Gets the manual worth of a transaction as a Quantity
   pub fn manual_worth_qty(&self) -> Result<Option<Quantity>, String> {
     match self.manual_worth() {
-      Some(manual_worth) => Quantity::parse(&manual_worth),
+      Some(manual_worth) => Quantity::parse_optional(&manual_worth),
       None => Ok(None),
     }
   }
@@ -414,15 +415,15 @@ impl Transaction {
   }
 }
 
-fn take_decimal_from_chars(chars: &mut Chars) -> Option<Decimal> {
+fn take_decimal_from_chars(chars: &mut Peekable<Chars>) -> Option<Decimal> {
   let mut num_str = "".to_string();
   let mut found_period = false;
   loop {
-    let c = chars.next()?;
+    let c = chars.peek()?;
     if c.is_ascii_digit() {
-      num_str.push(c);
-    } else if c == '.' && !found_period {
-      num_str.push(c);
+      num_str.push(chars.next().unwrap());
+    } else if c == &'.' && !found_period {
+      num_str.push(chars.next().unwrap());
       found_period = true;
     } else {
       break;
@@ -460,20 +461,33 @@ impl Quantity {
       Ok(Some(Quantity::new(amount, asset)?))
     }
   }
-  pub fn parse(value: &str) -> Result<Option<Self>, String> {
-    if value.trim() == "" {
-      return Ok(None);
+  pub fn with_wallet(self, wallet: impl Into<String>) -> Value {
+    Value {
+      amount: self.amount,
+      asset: self.asset,
+      wallet: wallet.into(),
     }
-    let mut chars = value.chars();
+  }
+  pub fn parse(value: &str) -> Result<Self, String> {
+    if value.trim() == "" {
+      throw!("Empty");
+    }
+    let mut chars = value.chars().peekable();
     let amount = match take_decimal_from_chars(&mut chars) {
       Some(amount) => amount,
-      None => throw!("Invalid manual worth \"{}\"", value),
+      None => throw!("Invalid quantity \"{}\"", value),
     };
 
     let asset_str: String = chars.collect();
     let asset = asset_str.trim().to_string();
 
-    Ok(Some(Self { amount, asset }))
+    Ok(Self { amount, asset })
+  }
+  pub fn parse_optional(value: &str) -> Result<Option<Self>, String> {
+    if value.trim() == "" {
+      return Ok(None);
+    }
+    Ok(Some(Self::parse(value)?))
   }
   pub fn to_string(&self) -> String {
     self.amount.to_string() + " " + &self.asset
@@ -485,7 +499,11 @@ pub struct Value {
   pub wallet: String,
 }
 impl Value {
-  pub fn new<S: Into<String>>(amount: S, asset: S, wallet: S) -> Result<Value, String> {
+  pub fn new(
+    amount: impl Into<String>,
+    asset: impl Into<String>,
+    wallet: impl Into<String>,
+  ) -> Result<Value, String> {
     let amount = amount.into();
     let asset = asset.into();
     let wallet = wallet.into();

@@ -1,66 +1,78 @@
-use super::csv::{csv_rows, get_cell, get_cell_index, read_csv_header};
-use super::{ImportStatus, ImportTransaction};
-use crate::import::ImportData;
-use crate::tax::Tax;
-use crate::throw;
-use crate::transaction::{BaseTransaction, UncostedTransaction, Value};
+use super::csv::{lowercase_header_contains, read_csv};
+use super::ImportStatus;
+use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
+use crate::{err, throw};
 use chrono::{TimeZone, Utc};
-use csv::StringRecord;
+use csv::Reader;
+use serde::Deserialize;
+use std::error::Error;
 use std::fs::File;
+use std::path::PathBuf;
 use tauri::Window;
 
-pub async fn read(
-  mut reader: csv::Reader<File>,
-  win: Window,
-  tax: &mut Tax,
-) -> Result<ImportData, String> {
-  let mut rows = csv_rows(&mut reader);
-  let cols = CsvCols::from_header(&read_csv_header(&mut rows)?)?;
-  let mut uncosted_transactions = Vec::new();
+pub async fn read(path: PathBuf, win: Window) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
+  let mut csv = read_csv(path)?;
+  if lowercase_header_contains(&mut csv, "price") {
+    return parse_trade_history(csv, win).await;
+  } else {
+    return parse_all_statements(csv, win).await;
+  }
+}
 
-  for (i, row) in rows {
-    let uncosted_transaction = match from_row(row?, &cols).await {
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct AllStatementsRow {
+  // #[serde(rename = "User_ID")]
+  // user_id: String,
+  #[serde(rename = "UTC_Time")]
+  utc_time: String,
+  account: String,
+  operation: String,
+  coin: String,
+  change: String,
+  remark: String,
+}
+
+async fn parse_all_statements(
+  mut csv: Reader<File>,
+  win: Window,
+) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
+  let mut uncosted_transactions = Vec::new();
+  for (i, row) in csv.deserialize().enumerate() {
+    let uncosted_transaction = match parse_all_statements_row(row?).await {
       Ok(Some(tx)) => tx,
       Ok(None) => continue,
-      Err(e) => throw!("Error in row {}: {}", i + 1, e),
+      Err(e) => return err!("Error in row {}: {}", i + 2, e),
     };
-    let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
-    uncosted_transactions.push(import_tx);
+    uncosted_transactions.push(uncosted_transaction);
 
     win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
 
-  Ok(ImportData::new("Binance", uncosted_transactions))
+  Ok(uncosted_transactions)
 }
 
-async fn from_row(
-  row: StringRecord,
-  cols: &CsvCols,
+async fn parse_all_statements_row(
+  row: AllStatementsRow,
 ) -> Result<Option<UncostedTransaction>, String> {
-  // let user_id = get_cell(&row, Some(cols.user_id), "User_ID")?;
-  let utc_time = get_cell(&row, Some(cols.utc_time), "Utc_Time")?;
-  let account = get_cell(&row, Some(cols.account), "Account")?;
-  let operation = get_cell(&row, Some(cols.operation), "Operation")?;
-  let coin = get_cell(&row, Some(cols.coin), "Coin")?;
-  let change = get_cell(&row, Some(cols.change), "Change")?;
-  let remark = get_cell(&row, Some(cols.remark), "Remark")?;
-
-  let timestamp = match Utc.datetime_from_str(utc_time, "%Y-%m-%d %H:%M:%S") {
+  let timestamp = match Utc.datetime_from_str(&row.utc_time, "%Y-%m-%d %H:%M:%S") {
     Ok(date) => date.timestamp_millis(),
     Err(e) => throw!("Invalid date: {}", e),
   };
+  let change = row.change;
+  let coin = row.coin;
 
   let mut base_transaction = BaseTransaction {
     tag: "".into(),
     date: timestamp,
-    note: remark.into(),
+    note: row.remark,
     hash: "".into(),
     sent: None,
     recv: None,
     fee: None,
     manual_worth: None,
   };
-  match (account, operation) {
+  match (row.account.as_str(), row.operation.as_str()) {
     ("Spot", "Deposit") => {
       base_transaction.tag = "Deposit".into();
       base_transaction.recv = Some(Value::new(change, coin, "Binance")?);
@@ -99,8 +111,8 @@ async fn from_row(
       base_transaction.tag = "Withdrawal".into();
       base_transaction.sent = Some(Value::new(change, coin, "Binance")?);
     }
-    ("Spot", _) => throw!("Unsupported operation: {}", operation),
-    _ => throw!("Unsupported Account: {}", account),
+    ("Spot", _) => throw!("Unsupported operation: {}", row.operation),
+    (_, _) => throw!("Unsupported Account: {}", row.account),
   };
 
   let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
@@ -108,29 +120,69 @@ async fn from_row(
   Ok(Some(uncosted_transaction))
 }
 
-#[derive(Debug)]
-pub struct CsvCols {
-  // user_id: usize,
-  utc_time: usize,
-  account: usize,
-  operation: usize,
-  coin: usize,
-  change: usize,
-  remark: usize,
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct TradeHistoryRow {
+  #[serde(rename = "Date(UTC)")]
+  date_utc: String,
+  // pair: String,
+  side: Side,
+  // price: String,
+  executed: String,
+  amount: String,
+  fee: String,
 }
-impl CsvCols {
-  pub fn from_header(header: &StringRecord) -> Result<Self, String> {
-    let row: Vec<String> = header.iter().map(|s| s.to_lowercase()).collect();
-    println!("{:?}", row);
+#[derive(Deserialize)]
+enum Side {
+  BUY,
+  SELL,
+}
 
-    Ok(CsvCols {
-      // user_id: get_cell_index(&row, &["user_id"])?,
-      utc_time: get_cell_index(&row, &["utc_time"])?,
-      account: get_cell_index(&row, &["account"])?,
-      operation: get_cell_index(&row, &["operation"])?,
-      coin: get_cell_index(&row, &["coin"])?,
-      change: get_cell_index(&row, &["change"])?,
-      remark: get_cell_index(&row, &["remark"])?,
-    })
+async fn parse_trade_history(
+  mut csv: Reader<File>,
+  win: Window,
+) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
+  let mut uncosted_transactions = Vec::new();
+
+  for (i, row) in csv.deserialize().enumerate() {
+    let uncosted_transaction = match parse_trade_history_row(row?).await {
+      Ok(tx) => tx,
+      Err(e) => return err!("Error in row {}: {}", i + 2, e),
+    };
+    uncosted_transactions.push(uncosted_transaction);
+
+    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
+
+  Ok(uncosted_transactions)
+}
+
+async fn parse_trade_history_row(row: TradeHistoryRow) -> Result<UncostedTransaction, String> {
+  let timestamp = match Utc.datetime_from_str(&row.date_utc, "%Y-%m-%d %H:%M:%S") {
+    Ok(date) => date.timestamp_millis(),
+    Err(e) => throw!("Invalid date: {}", e),
+  };
+
+  let executed = Quantity::parse(&row.executed)?;
+  let amount = Quantity::parse(&row.amount)?;
+
+  let (from, to) = match row.side {
+    Side::BUY => (amount, executed),
+    Side::SELL => (executed, amount),
+  };
+
+  let base_transaction = BaseTransaction {
+    tag: "Trade".into(),
+    date: timestamp,
+    note: "".into(),
+    hash: "".into(),
+    sent: Some(from.with_wallet("Binance")),
+    recv: Some(to.with_wallet("Binance")),
+    fee: Quantity::parse_optional(&row.fee)?,
+    manual_worth: None,
+  };
+
+  let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
+  println!("{:#?}", uncosted_transaction);
+  Ok(uncosted_transaction)
 }
