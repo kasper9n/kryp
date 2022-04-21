@@ -445,12 +445,12 @@ impl Quantity {
     } else {
       let num = match Decimal::from_str(&amount) {
         Ok(d) => d,
-        Err(_) => throw!("Invalid number \"{}\"", amount),
+        Err(_) => match Decimal::from_scientific(&amount) {
+          Ok(d) => d,
+          Err(_) => throw!("Invalid number \"{}\"", amount),
+        },
       };
-      Ok(Quantity {
-        amount: num,
-        asset: asset,
-      })
+      Ok(Quantity { amount: num, asset })
     }
   }
   /// Returns `None` if both the amount and asset are empty
