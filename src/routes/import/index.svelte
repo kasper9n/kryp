@@ -38,6 +38,7 @@
 
   type ImportStatus = {
     index: number
+    count: number
   }
   let status: ImportStatus | null = null
   const statusUnlisten = event.listen('importStatus', (e) => {
@@ -45,17 +46,13 @@
       status = e.payload as ImportStatus
     }
   })
-
-  onDestroy(async () => {
-    const unlisten = await statusUnlisten
-    unlisten()
-  })
+  onDestroy(async () => (await statusUnlisten)())
 </script>
 
 <h1 class="center">Import</h1>
 <div class="page">
   {#if status}
-    <p class="center">Scanned {status.index} transactions</p>
+    <p class="center">Scanned {status.index}/{status.count} transactions</p>
   {:else}
     <div class="my-4">
       <div class="mx-auto text-center">Type</div>

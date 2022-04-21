@@ -90,16 +90,17 @@ impl ImportTransaction {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ImportStatus {
   index: usize,
+  count: usize,
 }
 
-fn pick_file(_win: &Window) -> Option<PathBuf> {
+fn pick_files(_win: &Window) -> Option<Vec<PathBuf>> {
   let mut d = dialog::FileDialogBuilder::new().add_filter("Table", &["csv", "tsv"]);
   #[cfg(any(target_os = "macos", target_os = "windows"))]
   {
     d = d.set_parent(&_win);
   }
   let (sender, receiver) = mpsc::channel();
-  d.pick_file(move |p| {
+  d.pick_files(move |p| {
     sender.send(p).unwrap();
   });
   receiver.recv().unwrap_or_default()
@@ -113,7 +114,7 @@ pub async fn scan_import_file(
   win: Window,
   kryp: State<'_, Data>,
 ) -> Result<bool, String> {
-  let file_path = match pick_file(&win) {
+  let file_paths = match pick_files(&win) {
     Some(p) => p,
     None => return Ok(true),
   };
@@ -125,24 +126,30 @@ pub async fn scan_import_file(
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;
 
-  let uncosted_transactions = {
+  let mut uncosted_transactions = Vec::new();
+  for file_path in file_paths {
     let result = match source.as_str() {
       "Kryp" => kryp::read(file_path, tz).await,
       "Binance" => binance::read(file_path).await,
       _ => throw!("Unsupported source: {}", source),
     };
-
     match result {
-      Ok(transactions) => transactions,
+      Ok(mut transactions) => uncosted_transactions.append(&mut transactions),
       Err(e) => throw!("{}", e),
     }
-  };
+  }
+  let transaction_count = uncosted_transactions.len();
 
   let mut import_transactions = Vec::new();
   for (i, uncosted_transaction) in uncosted_transactions.into_iter().enumerate() {
     let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
     import_transactions.push(import_tx);
-    win.emit("importStatus", ImportStatus { index: i }).ok();
+
+    let status = ImportStatus {
+      index: i,
+      count: transaction_count,
+    };
+    win.emit("importStatus", status).ok();
   }
 
   kryp.import_data = ImportData::new(&source, import_transactions);
