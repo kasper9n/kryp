@@ -161,8 +161,8 @@ async fn parse_trade_history_row(row: TradeHistoryRow) -> Result<UncostedTransac
     Err(e) => throw!("Invalid date: {}", e),
   };
 
-  let executed = Quantity::parse(&row.executed)?;
-  let amount = Quantity::parse(&row.amount)?;
+  let executed = Quantity::parse_with_commas(&row.executed)?;
+  let amount = Quantity::parse_with_commas(&row.amount)?;
 
   let (from, to) = match row.side {
     Side::BUY => (amount, executed),

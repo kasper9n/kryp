@@ -119,6 +119,7 @@ impl Calculation {
   }
 
   fn apply_transaction(&mut self, transaction: &Transaction) -> Result<(), DeductError> {
+    println!("tx {:?}", transaction);
     match transaction {
       Transaction::Trade(trade) => {
         self.balances.add_if_positive(Balance {

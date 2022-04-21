@@ -2,11 +2,13 @@ use crate::prices::{symbol_kind, AssetKind, PriceData};
 use crate::tax::Api;
 use crate::{round_8, throw};
 use chrono::{Local, TimeZone};
+use lazy_static::lazy_static;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use std::iter::Peekable;
 use std::str::{Chars, FromStr};
+use tauri::regex::Regex;
 
 pub fn format_date(ts: i64) -> String {
   let dt = Local.timestamp_millis(ts);
@@ -433,6 +435,11 @@ fn take_decimal_from_chars(chars: &mut Peekable<Chars>) -> Option<Decimal> {
   Some(amount)
 }
 
+lazy_static! {
+  static ref QUANTITY_COMMA_PATTERN: Regex =
+    Regex::new(r"^((\d+[\d,])*\d+(.\d+)*) *(.+)$").unwrap();
+}
+
 #[derive(Debug)]
 pub struct Quantity {
   pub amount: Decimal,
@@ -482,6 +489,25 @@ impl Quantity {
     let asset = asset_str.trim().to_string();
 
     Ok(Self { amount, asset })
+  }
+  pub fn parse_with_commas(value: &str) -> Result<Self, String> {
+    if value.trim() == "" {
+      throw!("Empty");
+    }
+
+    let caps = match QUANTITY_COMMA_PATTERN.captures(value) {
+      Some(caps) => caps,
+      None => throw!("Invalid quantity \"{}\"", value),
+    };
+    let amount = match Decimal::from_str(&caps[1].replace(",", "")) {
+      Ok(d) => d,
+      Err(_) => throw!("Invalid quantity \"{}\"", value),
+    };
+
+    Ok(Self {
+      amount,
+      asset: caps[4].to_string(),
+    })
   }
   pub fn parse_optional(value: &str) -> Result<Option<Self>, String> {
     if value.trim() == "" {
