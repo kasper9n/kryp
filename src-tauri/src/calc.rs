@@ -50,6 +50,11 @@ pub struct Calculation {
 }
 
 enum DeductError {
+  LessThanZero {
+    amount_to_deduct: Decimal,
+    asset_to_deduct: String,
+    wallet_to_deduct: String,
+  },
   InsufficientBalance {
     actual_balance: Decimal,
     amount_to_deduct: Decimal,
@@ -79,12 +84,26 @@ impl Calculation {
           wallet_to_deduct,
         }) => {
           throw!(
-            "Tried to deduct deduct {} {} from \"{}\" wallet, but the balance is only {} {}. The deduction is from a {} transaction at {}",
+            "Tried to deduct {} {} from \"{}\" wallet, but the balance is only {} {}. The deduction is from a {} transaction at {}",
             amount_to_deduct,
             asset_to_deduct,
             wallet_to_deduct,
             actual_balance,
             asset_to_deduct,
+            transaction.tag(),
+            format_date(transaction.date()),
+          );
+        }
+        Err(DeductError::LessThanZero {
+          amount_to_deduct,
+          asset_to_deduct,
+          wallet_to_deduct,
+        }) => {
+          throw!(
+            "Tried to deduct a negative amount of {} {} from \"{}\" wallet. The deduction is from a {} transaction at {}",
+            amount_to_deduct,
+            asset_to_deduct,
+            wallet_to_deduct,
             transaction.tag(),
             format_date(transaction.date()),
           );
@@ -196,7 +215,13 @@ impl Calculation {
         continue;
       }
 
-      if amount_left >= balance.amount {
+      if amount_left < dec!(0) {
+        return Err(DeductError::LessThanZero {
+          amount_to_deduct: amount,
+          asset_to_deduct: asset.to_string(),
+          wallet_to_deduct: wallet.to_string(),
+        });
+      } else if amount_left >= balance.amount {
         // more stuff to deduct
         amount_left = amount_left - balance.amount;
         deducted_balances.push(balance.clone());

@@ -547,6 +547,34 @@ pub struct BaseTransaction {
 }
 impl BaseTransaction {
   pub fn into_uncosted_transaction(self) -> Result<UncostedTransaction, String> {
+    if let Some(sent) = &self.sent {
+      if sent.amount < dec!(0) {
+        throw!(
+          "Tried to create a transaction with a negative \"sent\" amount of {} {}",
+          sent.amount,
+          sent.asset
+        );
+      }
+    }
+    if let Some(fee) = &self.fee {
+      if fee.amount < dec!(0) {
+        throw!(
+          "Tried to create a transaction with a negative \"fee\" of {} {}",
+          fee.amount,
+          fee.asset
+        );
+      }
+    }
+    if let Some(recv) = &self.recv {
+      if recv.amount < dec!(0) {
+        throw!(
+          "Tried to create a transaction with a negative \"received\" amount of {} {}",
+          recv.amount,
+          recv.asset
+        );
+      }
+    }
+
     let manual_worth_str = self.manual_worth.map(|q| q.to_string());
     let uncosted_transaction = match self.tag.as_str() {
       "Trade" => {

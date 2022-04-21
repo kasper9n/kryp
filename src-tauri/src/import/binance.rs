@@ -109,6 +109,12 @@ async fn parse_all_statements_row(
     ("Spot", _) => throw!("Unsupported operation: {}", row.operation),
     (_, _) => throw!("Unsupported Account: {}", row.account),
   };
+  if let Some(sent) = &mut base_transaction.sent {
+    sent.amount = -sent.amount;
+  }
+  if let Some(fee) = &mut base_transaction.fee {
+    fee.amount = -fee.amount;
+  }
 
   let uncosted_transaction = base_transaction.into_uncosted_transaction()?;
   println!("{:#?}", uncosted_transaction);
