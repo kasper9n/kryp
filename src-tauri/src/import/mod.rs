@@ -127,8 +127,8 @@ pub async fn scan_import_file(
 
   let uncosted_transactions = {
     let result = match source.as_str() {
-      "Kryp" => kryp::read(file_path, tz, win).await,
-      "Binance" => binance::read(file_path, win).await,
+      "Kryp" => kryp::read(file_path, tz).await,
+      "Binance" => binance::read(file_path).await,
       _ => throw!("Unsupported source: {}", source),
     };
 
@@ -139,9 +139,10 @@ pub async fn scan_import_file(
   };
 
   let mut import_transactions = Vec::new();
-  for uncosted_transaction in uncosted_transactions {
+  for (i, uncosted_transaction) in uncosted_transactions.into_iter().enumerate() {
     let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
     import_transactions.push(import_tx);
+    win.emit("importStatus", ImportStatus { index: i }).ok();
   }
 
   kryp.import_data = ImportData::new(&source, import_transactions);

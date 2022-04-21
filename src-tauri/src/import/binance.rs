@@ -1,5 +1,4 @@
 use super::csv::{lowercase_header_contains, read_csv};
-use super::ImportStatus;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
 use crate::{err, throw};
 use chrono::{TimeZone, Utc};
@@ -8,14 +7,13 @@ use serde::Deserialize;
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
-use tauri::Window;
 
-pub async fn read(path: PathBuf, win: Window) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
+pub async fn read(path: PathBuf) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
   let mut csv = read_csv(path)?;
   if lowercase_header_contains(&mut csv, "price") {
-    return parse_trade_history(csv, win).await;
+    return parse_trade_history(csv).await;
   } else {
-    return parse_all_statements(csv, win).await;
+    return parse_all_statements(csv).await;
   }
 }
 
@@ -35,7 +33,6 @@ pub struct AllStatementsRow {
 
 async fn parse_all_statements(
   mut csv: Reader<File>,
-  win: Window,
 ) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
   let mut uncosted_transactions = Vec::new();
   for (i, row) in csv.deserialize().enumerate() {
@@ -45,8 +42,6 @@ async fn parse_all_statements(
       Err(e) => return err!("Error in row {}: {}", i + 2, e),
     };
     uncosted_transactions.push(uncosted_transaction);
-
-    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
 
   Ok(uncosted_transactions)
@@ -140,7 +135,6 @@ enum Side {
 
 async fn parse_trade_history(
   mut csv: Reader<File>,
-  win: Window,
 ) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
   let mut uncosted_transactions = Vec::new();
 
@@ -150,8 +144,6 @@ async fn parse_trade_history(
       Err(e) => return err!("Error in row {}: {}", i + 2, e),
     };
     uncosted_transactions.push(uncosted_transaction);
-
-    win.emit("importStatus", ImportStatus { index: i + 1 }).ok();
   }
 
   Ok(uncosted_transactions)

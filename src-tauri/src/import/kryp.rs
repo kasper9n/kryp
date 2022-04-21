@@ -1,17 +1,14 @@
 use super::csv::{get_cell, get_cell_index, get_header_lowercase, read_csv};
-use crate::import::ImportStatus;
 use crate::throw;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
 use chrono::TimeZone;
 use csv::StringRecord;
 use std::error::Error;
 use std::path::PathBuf;
-use tauri::Window;
 
 pub async fn read(
   path: PathBuf,
   tz: chrono_tz::Tz,
-  win: Window,
 ) -> Result<Vec<UncostedTransaction>, Box<dyn Error>> {
   let mut csv = read_csv(path)?;
   let mut uncosted_transactions = Vec::new();
@@ -23,8 +20,6 @@ pub async fn read(
       .await
       .map_err(|e| format!("Error in row {}: {}", i + 2, e))?;
     uncosted_transactions.push(uncosted_transaction);
-
-    win.emit("importStatus", ImportStatus { index: i + 2 }).ok();
   }
   Ok(uncosted_transactions)
 }
