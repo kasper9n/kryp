@@ -11,18 +11,39 @@ pub struct PriceData {
   assets: HashMap<String, PriceDataAsset>,
 }
 
-const FIAT_LIST_JSON: &str = include_str!("../../public/assets/fiat-list.json");
-const CRYPTO_LIST_JSON: &str = include_str!("../../public/assets/crypto-list.json");
-
-type FiatList = HashMap<String, String>;
 lazy_static! {
-  static ref FIAT_LIST: FiatList = serde_json::from_str(&FIAT_LIST_JSON).unwrap();
+  static ref FIAT_LIST: FiatList = get_fiat_list();
+  static ref CRYPTO_LIST: CryptoList = get_crypto_list();
 }
 
-// Map of (id, name)
-type CryptoList = HashMap<String, (String, String)>;
-lazy_static! {
-  static ref CRYPTO_LIST: CryptoList = serde_json::from_str(&CRYPTO_LIST_JSON).unwrap();
+type FiatList = HashMap<String, String>;
+fn get_fiat_list() -> FiatList {
+  let fiat_list_json: &str = include_str!("../../public/assets/fiat-list.json");
+  serde_json::from_str(&fiat_list_json).unwrap()
+}
+
+#[derive(Deserialize)]
+struct CryptoInfo {
+  symbol: String,
+  name: String,
+  coingecko_id: String,
+}
+type CryptoList = HashMap<String, CryptoInfo>;
+
+fn get_crypto_list() -> CryptoList {
+  let crypto_list_csv: &str = include_str!("../../public/assets/crypto-list.csv");
+  let mut reader = csv::ReaderBuilder::new()
+    .delimiter(',' as u8)
+    .has_headers(true)
+    .from_reader(crypto_list_csv.as_bytes());
+
+  let mut map = HashMap::new();
+  for row in reader.deserialize() {
+    let item: CryptoInfo = row.expect("Error reading csv");
+    let inserted = map.insert(item.symbol.clone(), item);
+    assert!(inserted.is_none(), "Duplicate symbol");
+  }
+  map
 }
 
 pub fn symbol_kind(symbol: &str) -> Option<AssetKind> {
@@ -38,7 +59,7 @@ pub fn get_id(symbol: &str) -> Option<String> {
   if let Some(_) = FIAT_LIST.get(symbol) {
     Some(symbol.to_string())
   } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
-    Some(crypto_asset.0.to_string())
+    Some(crypto_asset.coingecko_id.to_string())
   } else {
     None
   }
@@ -47,7 +68,7 @@ fn get_name(symbol: &str) -> Option<String> {
   if let Some(fiat_currency) = FIAT_LIST.get(symbol) {
     Some(fiat_currency.clone())
   } else if let Some(crypto_asset) = CRYPTO_LIST.get(symbol) {
-    Some(crypto_asset.1.to_string())
+    Some(crypto_asset.name.to_string())
   } else {
     None
   }
