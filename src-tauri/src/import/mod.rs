@@ -128,6 +128,7 @@ pub async fn scan_import_file(
 
   let mut uncosted_transactions = Vec::new();
   for file_path in file_paths {
+    let file_name = file_path.file_name().unwrap_or_default().to_owned();
     let result = match source.as_str() {
       "Kryp" => kryp::read(file_path, tz).await,
       "Binance" => binance::read(file_path).await,
@@ -135,7 +136,9 @@ pub async fn scan_import_file(
     };
     match result {
       Ok(mut transactions) => uncosted_transactions.append(&mut transactions),
-      Err(e) => throw!("{}", e),
+      Err(e) => {
+        throw!("Error in file {}\n\n{}", file_name.to_string_lossy(), e)
+      }
     }
   }
   let transaction_count = uncosted_transactions.len();
