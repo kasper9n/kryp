@@ -287,6 +287,7 @@ async fn parse_all_statements_row(
         base_transaction.tag = "Withdrawal".into();
         base_transaction.sent = Some(value);
       }
+      base_transaction.note = "Small assets exchange BNB".into();
     }
     ("Spot", "Withdraw") => {
       base_transaction.tag = "Withdrawal".into();
