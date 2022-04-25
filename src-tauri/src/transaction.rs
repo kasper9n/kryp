@@ -360,7 +360,6 @@ impl Transaction {
           trade.hash.clone(),
           chrono::Utc.timestamp_millis(trade.date).to_string(),
           manual_worth.to_string(),
-          // cost: Decimal,
         ]
       }
       Transaction::Transfer(transfer) => {
@@ -378,12 +377,13 @@ impl Transaction {
           transfer.hash.clone(),
           chrono::Utc.timestamp_millis(transfer.date).to_string(),
           manual_worth.to_string(),
-          // cost: Decimal,
         ]
       }
       Transaction::Deposit(deposit) => {
         vec![
           deposit.tag.clone(),
+          "".to_string(),
+          "".to_string(),
           "".to_string(),
           deposit.amount.to_string(),
           deposit.asset.clone(),
@@ -394,7 +394,6 @@ impl Transaction {
           deposit.hash.clone(),
           chrono::Utc.timestamp_millis(deposit.date).to_string(),
           manual_worth.to_string(),
-          // cost: Decimal,
         ]
       }
       Transaction::Withdrawal(withdrawal) => {
@@ -406,11 +405,12 @@ impl Transaction {
           "".to_string(),
           "".to_string(),
           "".to_string(),
+          "".to_string(),
+          "".to_string(),
           withdrawal.note.clone(),
           withdrawal.hash.clone(),
           chrono::Utc.timestamp_millis(withdrawal.date).to_string(),
           manual_worth.to_string(),
-          // cost: Decimal,
         ]
       }
     }

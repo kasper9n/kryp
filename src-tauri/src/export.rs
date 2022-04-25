@@ -35,7 +35,7 @@ pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
   };
   let header_record = vec![
     "Type", "Sent", "Asset", "Wallet", "Received", "Asset", "Wallet", "Fee", "Asset", "Note",
-    "Tx Hash", "Date",
+    "Tx Hash", "Date", "Cost",
   ];
   match writer.write_record(&header_record) {
     Ok(()) => {}
