@@ -48,6 +48,7 @@ pub async fn get_report(
   kryp: State<'_, Data>,
   deductible_tags: Vec<String>,
   income_tags: Vec<String>,
+  hide_values_less_than: Decimal,
 ) -> Result<Report, String> {
   let kryp = kryp.0.lock().await;
   let transactions: Vec<&Transaction> = kryp.tax.transactions.iter().collect();
@@ -66,7 +67,17 @@ pub async fn get_report(
     .collect();
 
   let calculation = Calculation::calculate(selected_transactions)?;
-  let report = generate_report(calculation, range, deductible_tags, income_tags)?;
+  let mut report = generate_report(calculation, range, deductible_tags, income_tags)?;
+  report.records = report
+    .records
+    .into_iter()
+    .filter(|row| {
+      row.deductible >= hide_values_less_than
+        || row.income >= hide_values_less_than
+        || row.realized_gain >= hide_values_less_than
+        || row.realized_loss >= hide_values_less_than
+    })
+    .collect();
   Ok(report)
 }
 
@@ -77,6 +88,7 @@ pub async fn download_report(
   kryp: State<'_, Data>,
   deductible_tags: Vec<String>,
   income_tags: Vec<String>,
+  hide_values_less_than: Decimal,
 ) -> Result<(), String> {
   let file_name = format!("Kryp Report {}", year);
   let file_path = match save_csv_tsv(&win, &file_name) {
@@ -84,7 +96,14 @@ pub async fn download_report(
     None => return Ok(()),
   };
 
-  let report = get_report(year, kryp, deductible_tags, income_tags).await?;
+  let report = get_report(
+    year,
+    kryp,
+    deductible_tags,
+    income_tags,
+    hide_values_less_than,
+  )
+  .await?;
 
   let mut writer = match csv::Writer::from_path(file_path) {
     Ok(writer) => writer,

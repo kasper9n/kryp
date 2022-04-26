@@ -34,17 +34,23 @@
 
   let deductibleTags = ['Lost']
   let incomeTags = ['Income', 'Interest']
+  let hideValuesLessThan: number | null = 0
 
   let report: Report | null = null
   $: if (tags) {
-    getReport(year, deductibleTags, incomeTags)
+    getReport(year, deductibleTags, incomeTags, hideValuesLessThan)
   }
-  async function getReport(year: number, deductibleTags: string[], incomeTags: string[]) {
-    report = null
+  async function getReport(
+    year: number,
+    deductibleTags: string[],
+    incomeTags: string[],
+    hideValuesLessThan: number | null
+  ) {
     report = await runCmd('get_report', {
       year: Number(year),
       deductibleTags,
       incomeTags,
+      hideValuesLessThan: hideValuesLessThan || 0,
     })
     console.log('report', report)
   }
@@ -54,6 +60,7 @@
       year: Number(year),
       deductibleTags,
       incomeTags,
+      hideValuesLessThan: hideValuesLessThan || 0,
     })
   }
 </script>
@@ -62,6 +69,9 @@
   <div class="mx-4 my-4 flex items-center">
     <p class="mr-4">Year</p>
     <input type="number" bind:value={year} />
+    {#if !report}
+      <span class="ml-4">Loading...</span>
+    {/if}
   </div>
   <div class="mx-4 my-4 flex items-center">
     <p class="mr-4">Cost basis method</p>
@@ -97,45 +107,57 @@
     {/if}
   </div>
 
-  {#if report === null}
-    Loading...
-  {:else}
-    <div class="m-4 px-4 py-2 bg-white rounded border border-slate-200 max-w-xl">
-      <div class="my-1.5 flex">
-        <div class="w-18 mr-auto">Realized gain</div>
-        <div class="text-emerald-500 font-medium">+ {report.total_realized_gain}</div>
-      </div>
-      <div class="my-1.5 flex">
-        <div class="w-18 mr-auto">Realized loss</div>
-        <div class="text-red-500 font-medium">- {report.total_realized_loss}</div>
-      </div>
-      <div class="my-1.5 flex">
-        <div class="w-18 mr-auto">Realized</div>
-        <div class="text-blue-500 font-medium">{report.total_realized}</div>
-      </div>
-      <div class="border-t my-2" />
-      <div class="my-1.5 flex">
-        <div class="w-18 mr-auto">Income</div>
-        <div class="text-emerald-500 font-medium">+ {report.total_income}</div>
-      </div>
-      <div class="my-1.5 flex">
-        <div class="w-18 mr-auto">Deductible amount</div>
-        <div class="text-red-500 font-medium">- {report.total_deductible}</div>
+  <div class="m-4 max-w-xl rounded border border-slate-200 bg-white px-4 py-2">
+    <div class="my-1.5 flex">
+      <div class="w-18 mr-auto">Realized gain</div>
+      <div class="font-medium text-emerald-500">
+        {#if report}+ {report.total_realized_gain}{/if}
       </div>
     </div>
-    <div class="m-4 bg-white py-2 rounded border border-slate-200">
-      <table class="w-full px-4 border-separate text-sm">
-        <thead class="flex my-1 font-bold text-left">
-          <th class="w-0 flex-grow">Name</th>
-          <th class="w-0 flex-grow">Income</th>
-          <th class="w-0 flex-grow">Deductible</th>
-          <th class="w-0 flex-grow">Realized</th>
-          <th class="w-0 flex-grow">Realized Gain</th>
-          <th class="w-0 flex-grow">Realized Loss</th>
-        </thead>
-        <tbody>
+    <div class="my-1.5 flex">
+      <div class="w-18 mr-auto">Realized loss</div>
+      <div class="font-medium text-red-500">
+        {#if report}- {report.total_realized_loss}{/if}
+      </div>
+    </div>
+    <div class="my-1.5 flex">
+      <div class="w-18 mr-auto">Realized</div>
+      <div class="font-medium text-blue-500">
+        {#if report}{report.total_realized}{/if}
+      </div>
+    </div>
+    <div class="my-2 border-t" />
+    <div class="my-1.5 flex">
+      <div class="w-18 mr-auto">Income</div>
+      <div class="font-medium text-emerald-500">
+        {#if report}+ {report.total_income}{/if}
+      </div>
+    </div>
+    <div class="my-1.5 flex">
+      <div class="w-18 mr-auto">Deductible amount</div>
+      <div class="font-medium text-red-500">
+        {#if report}- {report.total_deductible}{/if}
+      </div>
+    </div>
+  </div>
+  <div class="m-4 rounded border border-slate-200 bg-white py-2">
+    <div class="mx-4 my-4 flex items-center">
+      <p class="mr-4">Hide values less than</p>
+      <input type="number" bind:value={hideValuesLessThan} />
+    </div>
+    <table class="w-full border-separate px-4 text-sm">
+      <thead class="my-1 flex text-left font-bold">
+        <th class="w-0 flex-grow">Name</th>
+        <th class="w-0 flex-grow">Income</th>
+        <th class="w-0 flex-grow">Deductible</th>
+        <th class="w-0 flex-grow">Realized</th>
+        <th class="w-0 flex-grow">Realized Gain</th>
+        <th class="w-0 flex-grow">Realized Loss</th>
+      </thead>
+      <tbody>
+        {#if report}
           {#each report.records as row}
-            <tr class="flex py-1 border-t border-slate-200">
+            <tr class="flex border-t border-slate-200 py-1">
               <td class="w-0 flex-grow">{row.name}</td>
               <td class="w-0 flex-grow">{row.income}</td>
               <td class="w-0 flex-grow">{row.deductible}</td>
@@ -144,11 +166,9 @@
               <td class="w-0 flex-grow">{row.realized_loss}</td>
             </tr>
           {/each}
-        </tbody>
-      </table>
-      <button type="button" class="my-4 text-blue-500 px-2 mx-2" on:click={download}
-        >Download</button
-      >
-    </div>
-  {/if}
+        {/if}
+      </tbody>
+    </table>
+    <button type="button" class="my-4 mx-2 px-2 text-blue-500" on:click={download}>Download</button>
+  </div>
 </div>
