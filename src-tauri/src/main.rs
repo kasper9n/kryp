@@ -6,6 +6,8 @@
 use data::{Data, Kryp};
 use localzone;
 use rust_decimal::{Decimal, RoundingStrategy};
+use std::path::PathBuf;
+use std::sync::mpsc;
 use std::thread;
 use tauri::api::{dialog, shell};
 use tauri::async_runtime::Mutex;
@@ -25,6 +27,21 @@ mod prices;
 mod reports;
 mod tax;
 mod transaction;
+
+fn save_csv_tsv(_win: &Window, file_name: &str) -> Option<PathBuf> {
+  let mut d = dialog::FileDialogBuilder::new()
+    .add_filter("Table", &["csv", "tsv"])
+    .set_file_name(file_name);
+  #[cfg(any(target_os = "macos", target_os = "windows"))]
+  {
+    d = d.set_parent(&_win);
+  }
+  let (sender, receiver) = mpsc::channel();
+  d.save_file(move |p| {
+    sender.send(p).unwrap();
+  });
+  receiver.recv().unwrap_or_default()
+}
 
 #[command]
 fn error_popup(msg: String, win: Window) {
@@ -79,6 +96,7 @@ fn main() {
       data::list_assets,
       data::get_prices,
       reports::get_report,
+      reports::download_report,
       import::scan_import_file,
       import::get_import_data,
       import::update_import_transactions,

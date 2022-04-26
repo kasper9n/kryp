@@ -1,22 +1,6 @@
 use crate::data::Data;
-use crate::throw;
-use std::path::PathBuf;
-use std::sync::mpsc;
-use tauri::api::dialog;
+use crate::{save_csv_tsv, throw};
 use tauri::{command, State, Window};
-
-fn save_file(_win: &Window) -> Option<PathBuf> {
-  let mut d = dialog::FileDialogBuilder::new().add_filter("Table", &["csv", "tsv"]);
-  #[cfg(any(target_os = "macos", target_os = "windows"))]
-  {
-    d = d.set_parent(&_win);
-  }
-  let (sender, receiver) = mpsc::channel();
-  d.save_file(move |p| {
-    sender.send(p).unwrap();
-  });
-  receiver.recv().unwrap_or_default()
-}
 
 #[command]
 pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
@@ -24,7 +8,8 @@ pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
   if !kryp.is_open() {
     return Ok(());
   }
-  let file_path = match save_file(&win) {
+  let file_name = format!("Kryp Export");
+  let file_path = match save_csv_tsv(&win, &file_name) {
     Some(p) => p,
     None => return Ok(()),
   };

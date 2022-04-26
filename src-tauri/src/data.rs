@@ -119,7 +119,7 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
   } else {
     let (sender, receiver) = std::sync::mpsc::channel();
     dialog::FileDialogBuilder::new()
-      .set_file_name("Kryp Report.json")
+      .set_file_name("Kryp Tax.json")
       .add_filter("Kryp", &["json"])
       .save_file(move |p| {
         sender.send(p).unwrap();

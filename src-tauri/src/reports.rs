@@ -1,13 +1,14 @@
 use crate::calc::Calculation;
 use crate::data::Data;
 use crate::transaction::Transaction;
+use crate::{save_csv_tsv, throw};
 use chrono::{Local, TimeZone};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::ops::Range;
-use tauri::{command, State};
+use tauri::{command, State, Window};
 
 #[derive(Serialize, Debug)]
 pub struct Row {
@@ -56,6 +57,42 @@ pub async fn get_report(year: i32, kryp: State<'_, Data>) -> Result<Report, Stri
   let calculation = Calculation::calculate(selected_transactions)?;
   let report = generate_report(calculation, range)?;
   Ok(report)
+}
+
+#[command]
+pub async fn download_report(year: i32, win: Window, kryp: State<'_, Data>) -> Result<(), String> {
+  let file_name = format!("Kryp Report {}", year);
+  let file_path = match save_csv_tsv(&win, &file_name) {
+    Some(p) => p,
+    None => return Ok(()),
+  };
+
+  let report = get_report(year, kryp).await?;
+
+  let mut writer = match csv::Writer::from_path(file_path) {
+    Ok(writer) => writer,
+    Err(e) => throw!("Unable to write to file: {}", e),
+  };
+  let header_record = vec!["Name", "Realized", "Realized Gain", "Realized Loss"];
+  match writer.write_record(&header_record) {
+    Ok(()) => {}
+    Err(e) => throw!("Unable to write row: {}", e),
+  };
+
+  for record in report.records {
+    let record = vec![
+      record.name,
+      record.realized.to_string(),
+      record.realized_gain.to_string(),
+      record.realized_loss.to_string(),
+    ];
+    match writer.write_record(&record) {
+      Ok(()) => {}
+      Err(e) => throw!("Unable to write row: {}", e),
+    };
+  }
+
+  Ok(())
 }
 
 fn generate_report(calculation: Calculation, range: Range<i64>) -> Result<Report, String> {

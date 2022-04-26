@@ -187,7 +187,7 @@ impl PriceData {
 #[cfg(test)]
 macro_rules! map(
   ($($k:expr => $v:expr),* $(,)?) => {
-    std::iter::Iterator::collect(std::array::IntoIter::new([$(($k, $v),)*]))
+    std::iter::Iterator::collect(IntoIterator::into_iter([$(($k, $v),)*]))
   };
 );
 
