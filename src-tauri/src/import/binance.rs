@@ -213,7 +213,7 @@ async fn parse_all_statements_row(
 ) -> Result<Option<ParsedAllStatementsRow>, String> {
   let timestamp = match Utc.datetime_from_str(&row.utc_time, "%Y-%m-%d %H:%M:%S") {
     Ok(date) => date.timestamp_millis(),
-    Err(e) => throw!("Invalid date: {}", e),
+    Err(e) => throw!("Invalid date \"{}\": {}", row.utc_time, e),
   };
   let change = row.change;
   let coin = row.coin;
@@ -344,7 +344,7 @@ async fn parse_trade_history(
 async fn parse_trade_history_row(row: TradeHistoryRow) -> Result<UncostedTransaction, String> {
   let timestamp = match Utc.datetime_from_str(&row.date_utc, "%Y-%m-%d %H:%M:%S") {
     Ok(date) => date.timestamp_millis(),
-    Err(e) => throw!("Invalid date: {}", e),
+    Err(e) => throw!("Invalid date \"{}\": {}", row.date_utc, e),
   };
 
   let executed = Quantity::parse_with_commas(&row.executed)?;

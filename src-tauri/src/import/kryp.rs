@@ -1,7 +1,7 @@
 use super::csv::{get_cell, get_cell_index, get_header_lowercase, read_csv};
 use crate::throw;
 use crate::transaction::{BaseTransaction, Quantity, UncostedTransaction, Value};
-use chrono::TimeZone;
+use chrono::{TimeZone, Utc};
 use csv::StringRecord;
 use std::error::Error;
 use std::path::PathBuf;
@@ -135,9 +135,12 @@ async fn from_row(
 
   let base_transaction = BaseTransaction {
     tag: parse_kind(kind).into(),
-    date: match tz.datetime_from_str(date, "%Y-%m-%d %H:%M:%S") {
+    date: match Utc.datetime_from_str(date, "%Y-%m-%d %H:%M:%S UTC") {
       Ok(date) => date.timestamp_millis(),
-      Err(e) => throw!("Invalid date: {}", e),
+      Err(_) => match tz.datetime_from_str(date, "%Y-%m-%d %H:%M:%S") {
+        Ok(date) => date.timestamp_millis(),
+        Err(e) => throw!("Invalid date \"{}\": {}", date, e),
+      },
     },
     note: note.into(),
     hash: hash.into(),
