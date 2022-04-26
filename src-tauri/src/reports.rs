@@ -179,6 +179,9 @@ fn generate_report(
       let row = report_map
         .entry(realized.asset.clone())
         .or_insert(Row::new(realized.asset.clone()));
+      if realized.asset == "BNB" {
+        println!("{:?}", realized);
+      }
       if realized.output > realized.input {
         let gain = realized.output - realized.input;
         row.realized_gain += gain;
@@ -187,7 +190,7 @@ fn generate_report(
       } else {
         let loss = realized.input - realized.output;
         row.realized_loss += loss;
-        row.realized += loss;
+        row.realized -= loss;
         total_realized_loss += loss;
       }
     }

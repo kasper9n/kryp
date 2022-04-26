@@ -145,7 +145,7 @@ impl Calculation {
         });
 
         let deducted = self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
-        self.realized_gains.push(Realized {
+        let r = Realized {
           tag: trade.tag.clone(),
           date: trade.date,
           input: sum_balance_costs(&deducted),
@@ -153,19 +153,28 @@ impl Calculation {
           is_fee: false,
           output: trade.cost(),
           wallet: trade.sent_wallet.clone(),
-        });
+        };
+        if trade.recv_asset == "BNB" || trade.sent_asset == "BNB" {
+          println!("\n\n{:?}\n{:?}\n{:?}", trade, deducted, r);
+        }
+        self.realized_gains.push(r);
 
         if trade.fee_asset != "" {
           let fee_deducted = self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
-          self.realized_gains.push(Realized {
+          let rf = Realized {
             tag: trade.tag.clone(),
             date: trade.date,
             input: sum_balance_costs(&fee_deducted),
             asset: trade.fee_asset.clone(),
             is_fee: true,
-            output: trade.cost(),
+            // TODO calculate fee output cost
+            output: sum_balance_costs(&fee_deducted),
             wallet: trade.sent_wallet.clone(),
-          });
+          };
+          if trade.fee_asset == "BNB" {
+            println!("\n\n{:?}\n{:?}\n{:?}", trade, fee_deducted, rf);
+          }
+          self.realized_gains.push(rf);
         };
       }
       Transaction::Transfer(transfer) => {
@@ -179,7 +188,8 @@ impl Calculation {
             input: sum_balance_costs(&fee_deducted),
             asset: transfer.sent_asset.clone(),
             is_fee: true,
-            output: fee_amount,
+            // TODO calculate fee output cost
+            output: sum_balance_costs(&fee_deducted),
             wallet: transfer.sent_wallet.clone(),
           });
         }
