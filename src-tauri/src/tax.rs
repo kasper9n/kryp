@@ -281,6 +281,7 @@ mod tests {
       tax.realized_gains,
       [
         Realized {
+          tag: "Trade".to_string(),
           date: 1500100000000,
           input: dec!(800),
           asset: "NOK".to_string(),
@@ -289,6 +290,7 @@ mod tests {
           wallet: "Binance".to_string()
         },
         Realized {
+          tag: "Trade".to_string(),
           date: 1500300000000,
           input: dec!(800),
           asset: "BTC".to_string(),
@@ -329,6 +331,7 @@ mod tests {
     assert_eq!(
       tax.realized_gains,
       [Realized {
+        tag: "Transfer".to_string(),
         date: 1500100000000,
         input: dec!(250),
         asset: "NOK".to_string(),
@@ -369,6 +372,7 @@ mod tests {
     assert_eq!(
       tax.realized_gains,
       [Realized {
+        tag: "Withdrawal".to_string(),
         date: 1500100000000,
         input: dec!(1633.83825099),
         asset: "ETH".to_string(),

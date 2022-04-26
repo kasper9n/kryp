@@ -95,6 +95,7 @@ fn main() {
       holdings::get_holdings_by_wallet,
       data::list_assets,
       data::get_prices,
+      reports::get_deposit_withdrawal_tags,
       reports::get_report,
       reports::download_report,
       import::scan_import_file,

@@ -1,4 +1,4 @@
-use crate::transaction::{format_date, Transaction};
+use crate::transaction::{format_date, Quantity, Transaction};
 use crate::{round_8, throw};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
@@ -36,6 +36,7 @@ impl Balances {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Realized {
+  pub tag: String,
   pub date: i64,
   pub input: Decimal,
   pub asset: String,
@@ -44,9 +45,20 @@ pub struct Realized {
   pub wallet: String,
 }
 
+#[derive(Debug)]
+pub struct TaggedValue {
+  pub tag: String,
+  pub date: i64,
+  pub quantity: Quantity,
+  pub wallet: String,
+  pub cost: Decimal,
+}
+
 pub struct Calculation {
   pub balances: Balances,
   pub realized_gains: Vec<Realized>,
+  pub deposits: Vec<TaggedValue>,
+  pub withdrawals: Vec<TaggedValue>,
 }
 
 enum DeductError {
@@ -69,6 +81,8 @@ impl Calculation {
     let mut calc = Calculation {
       balances: Balances::default(),
       realized_gains: Vec::new(),
+      deposits: Vec::new(),
+      withdrawals: Vec::new(),
     };
 
     // sort by date
@@ -119,7 +133,7 @@ impl Calculation {
   }
 
   fn apply_transaction(&mut self, transaction: &Transaction) -> Result<(), DeductError> {
-    println!("tx {:?}", transaction);
+    // println!("tx {:?}", transaction);
     match transaction {
       Transaction::Trade(trade) => {
         self.balances.add_if_positive(Balance {
@@ -132,6 +146,7 @@ impl Calculation {
 
         let deducted = self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
         self.realized_gains.push(Realized {
+          tag: trade.tag.clone(),
           date: trade.date,
           input: sum_balance_costs(&deducted),
           asset: trade.sent_asset.clone(),
@@ -143,6 +158,7 @@ impl Calculation {
         if trade.fee_asset != "" {
           let fee_deducted = self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
           self.realized_gains.push(Realized {
+            tag: trade.tag.clone(),
             date: trade.date,
             input: sum_balance_costs(&fee_deducted),
             asset: trade.fee_asset.clone(),
@@ -158,6 +174,7 @@ impl Calculation {
           let fee_deducted =
             self.deduct(&transfer.sent_wallet, &transfer.sent_asset, fee_amount)?;
           self.realized_gains.push(Realized {
+            tag: transfer.tag.clone(),
             date: transfer.date,
             input: sum_balance_costs(&fee_deducted),
             asset: transfer.sent_asset.clone(),
@@ -185,16 +202,37 @@ impl Calculation {
           wallet: deposit.wallet.clone(),
           cost: deposit.cost(),
         });
+        self.deposits.push(TaggedValue {
+          tag: deposit.tag.clone(),
+          date: deposit.date,
+          quantity: Quantity {
+            amount: deposit.amount,
+            asset: deposit.asset.clone(),
+          },
+          wallet: deposit.wallet.clone(),
+          cost: deposit.cost(),
+        });
       }
       Transaction::Withdrawal(withdrawal) => {
         let deducted = self.deduct(&withdrawal.wallet, &withdrawal.asset, withdrawal.amount)?;
         self.realized_gains.push(Realized {
+          tag: withdrawal.tag.clone(),
           date: withdrawal.date,
           input: sum_balance_costs(&deducted),
           asset: withdrawal.asset.clone(),
           is_fee: false,
           output: withdrawal.cost(),
           wallet: withdrawal.wallet.clone(),
+        });
+        self.withdrawals.push(TaggedValue {
+          tag: withdrawal.tag.clone(),
+          date: withdrawal.date,
+          quantity: Quantity {
+            amount: withdrawal.amount,
+            asset: withdrawal.asset.clone(),
+          },
+          wallet: withdrawal.wallet.clone(),
+          cost: withdrawal.cost(),
         });
       }
     }
