@@ -16,11 +16,11 @@ use rust_decimal::Decimal;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Tax {
-  pub version: String,
+  version: String,
   pub transactions: Vec<Transaction>,
   pub settings: TaxSettings,
   pub price_data: PriceData,
-  pub realized_gains: Vec<Realized>,
+  realized_gains: Vec<Realized>,
   pub balances: Vec<Balance>,
   #[serde(skip)]
   pub dirty: bool,

@@ -3,7 +3,7 @@ use crate::data::Data;
 use crate::transaction::Transaction;
 use crate::{save_csv_tsv, throw};
 use chrono::{Local, TimeZone};
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::{Decimal, RoundingStrategy::AwayFromZero as AwayFrom0};
 use rust_decimal_macros::dec;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -72,12 +72,11 @@ pub async fn get_report(
     .records
     .into_iter()
     .map(|mut row| {
-      let awayfrom0 = RoundingStrategy::MidpointAwayFromZero;
-      row.income = row.income.round_dp_with_strategy(2, awayfrom0);
-      row.deductible = row.deductible.round_dp_with_strategy(2, awayfrom0);
-      row.realized = row.realized.round_dp_with_strategy(2, awayfrom0);
-      row.realized_gain = row.realized_gain.round_dp_with_strategy(2, awayfrom0);
-      row.realized_loss = row.realized_loss.round_dp_with_strategy(2, awayfrom0);
+      row.income = row.income.round_dp_with_strategy(2, AwayFrom0);
+      row.deductible = row.deductible.round_dp_with_strategy(2, AwayFrom0);
+      row.realized = row.realized.round_dp_with_strategy(2, AwayFrom0);
+      row.realized_gain = row.realized_gain.round_dp_with_strategy(2, AwayFrom0);
+      row.realized_loss = row.realized_loss.round_dp_with_strategy(2, AwayFrom0);
       row
     })
     .filter(|row| {

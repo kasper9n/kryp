@@ -1,20 +1,22 @@
+use crate::calc::Balance;
 use crate::data::{to_json, Data};
 use crate::fetch_current::fetch_current;
-use crate::tax::Tax;
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, RoundingStrategy::AwayFromZero as AwayFrom0};
 use rust_decimal_macros::dec;
+use serde;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::borrow::Borrow;
+use std::collections::{HashMap, HashSet};
 use tauri::{command, State};
 
 #[derive(Serialize, Debug)]
-struct Holding {
-  asset: String,
-  amount: Decimal,
-  cost: Decimal,
-  value: Option<Decimal>,
-  error: Option<String>,
+pub struct Holding {
+  pub asset: String,
+  pub amount: Decimal,
+  pub cost: Decimal,
+  pub value: Option<Decimal>,
+  pub error: Option<String>,
 }
 impl Holding {
   fn new(key: String) -> Self {
@@ -26,74 +28,104 @@ impl Holding {
       error: None,
     }
   }
+  pub fn round(&mut self) {
+    self.cost = self.cost.round_dp_with_strategy(2, AwayFrom0);
+    self
+      .value
+      .map(|value| value.round_dp_with_strategy(2, AwayFrom0));
+  }
 }
 
-fn get_holdings_unsorted(tax: &Tax) -> Vec<Holding> {
-  let mut holdings_map: HashMap<String, Holding> = HashMap::new();
-  for balance in &tax.balances {
-    let key = balance.currency.clone();
-    if balance.amount > dec!(0) {
-      let holding = holdings_map.entry(key.clone()).or_insert(Holding::new(key));
-      holding.amount += balance.amount;
-      holding.cost += balance.cost;
-    }
+#[derive(Default, Serialize)]
+pub struct Holdings {
+  pub list: Vec<Holding>,
+  pub total_cost: Decimal,
+  pub total_value: Option<Decimal>,
+}
+impl Holdings {
+  pub fn sort(&mut self) {
+    self.list.sort_by(|a, b| b.amount.cmp(&a.amount));
+    self.list.sort_by(|a, b| b.value.cmp(&a.value));
   }
-  holdings_map.into_iter().map(|(_k, v)| v).collect()
+}
+
+pub fn holdings_from_balances<B: Borrow<Balance>>(balances: &Vec<B>) -> Holdings {
+  let mut map = HashMap::new();
+  for balance in balances {
+    let balance = balance.borrow();
+    let holding = map
+      .entry(balance.currency.clone())
+      .or_insert(Holding::new(balance.currency.clone()));
+    holding.amount += balance.amount;
+    holding.cost += balance.cost;
+  }
+  let mut holdings = Holdings {
+    list: map.into_values().collect(),
+    total_cost: dec!(0),
+    total_value: None,
+  };
+  holdings.sort();
+  holdings
 }
 
 #[command]
 pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
-  let mut holdings = get_holdings_unsorted(&kryp.tax);
-  holdings.sort_by(|a, b| a.amount.cmp(&b.amount));
+  let mut holdings = holdings_from_balances(&kryp.tax.balances);
+  for holding in &mut holdings.list {
+    holding.round();
+  }
   to_json(&holdings)
 }
 
 #[command]
 pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
-  let mut holdings = get_holdings_unsorted(&kryp.tax);
+  let mut holdings = holdings_from_balances(&kryp.tax.balances);
 
-  let assets: Vec<_> = holdings.iter().map(|h| &h.asset).collect();
+  let assets: Vec<_> = holdings.list.iter().map(|h| &h.asset).collect();
   let prices = fetch_current(assets, &kryp.tax.settings.base_currency).await?;
 
-  for holding in &mut holdings {
+  for holding in &mut holdings.list {
     if let Some(price) = prices.get(&holding.asset) {
       holding.value = Some(holding.amount * price);
     } else {
       holding.error = Some("No price".to_string());
     }
   }
-  holdings.sort_by(|a, b| b.value.cmp(&a.value));
+
+  holdings.sort();
+  for holding in &mut holdings.list {
+    holding.round();
+  }
   to_json(&holdings)
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize)]
 struct WalletHoldings {
   name: String,
-  holdings: HashMap<String, Holding>,
+  holdings: Holdings,
 }
 
 #[command]
 pub async fn get_holdings_by_wallet(kryp: State<'_, Data>) -> Result<Value, String> {
   let kryp = kryp.0.lock().await;
+
+  let balances = &kryp.tax.balances;
+  let wallets: HashSet<_> = kryp.tax.balances.iter().map(|b| &b.wallet).collect();
+
   let mut wallets_map: HashMap<String, WalletHoldings> = HashMap::new();
-  for balance in &kryp.tax.balances {
-    let asset = balance.currency.clone();
-    if balance.amount > dec!(0) {
-      let wallet = wallets_map
-        .entry(balance.wallet.clone())
-        .or_insert(WalletHoldings {
-          name: balance.wallet.clone(),
-          holdings: HashMap::new(),
-        });
-      let holding = wallet
-        .holdings
-        .entry(asset.clone())
-        .or_insert(Holding::new(asset));
-      holding.amount += balance.amount;
-      holding.cost += balance.cost;
+  for wallet in wallets {
+    let balances: Vec<&Balance> = balances.iter().filter(|b| &b.wallet == wallet).collect();
+    let holdings = holdings_from_balances(&balances);
+    let mut wallet_holdings = WalletHoldings {
+      name: wallet.clone(),
+      holdings,
+    };
+    for holding in &mut wallet_holdings.holdings.list {
+      holding.round();
     }
+    wallets_map.insert(wallet.clone(), wallet_holdings);
   }
   to_json(&wallets_map)
 }

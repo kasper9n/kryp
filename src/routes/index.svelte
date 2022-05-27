@@ -13,12 +13,17 @@
     value: string | null
     error: string | null
   }
+  type Holdings = {
+    list: Holding[]
+    total_cost: string
+    total_value: string | null
+  }
   type WalletHoldings = {
     name: string
-    holdings: { [asset: string]: Holding }
+    holdings: Holdings
   }
 
-  let holdings = [] as Holding[]
+  let holdings: Holdings = { list: [], total_cost: '', total_value: null }
   let chartHoldings = [] as ChartItem[]
   let walletHoldings = {} as { [wallet: string]: WalletHoldings }
 
@@ -26,7 +31,7 @@
     holdings = await runCmd('get_holdings')
     holdings = await runCmd('get_holdings_valued')
 
-    chartHoldings = holdings
+    chartHoldings = holdings.list
       .filter((holding) => holding.value !== null)
       .map((holding) => ({
         label: holding.asset,
@@ -102,11 +107,11 @@
         <div>
           <div class="tr header">
             <div class="asset">Asset</div>
-            <div class="amount">Amount</div>
-            <div class="cost">Cost</div>
-            <div class="value">Value</div>
+            <div class="align-right amount">Amount</div>
+            <div class="align-right cost">Cost</div>
+            <div class="align-right value">Value</div>
           </div>
-          {#each holdings as holding}
+          {#each holdings.list as holding}
             <div class="tr">
               <div class="asset">{holding.asset}</div>
               <div class="align-right amount">{holding.amount}</div>
@@ -136,10 +141,10 @@
           <div class="wallet">
             <div class="header tr">
               <div class="asset">Asset</div>
-              <div class="amount">Amount</div>
-              <div class="cost">Cost</div>
+              <div class="align-right amount">Amount</div>
+              <div class="align-right cost">Cost</div>
             </div>
-            {#each Object.values(wallet.holdings) as holding}
+            {#each wallet.holdings.list as holding}
               <div class="tr">
                 <td class="asset">{holding.asset}</td>
                 <td class="align-right amount">{holding.amount}</td>
@@ -160,6 +165,8 @@
     display: block
     margin-bottom: 10px
     font-size: 16px
+  .align-right
+    text-align: right
   .page
     margin: 20px auto
     max-width: 950px
