@@ -17,7 +17,8 @@
 [type='week'],
 [multiple],
 textarea,
-select {
+select,
+button {
   line-height: normal;
 }
 

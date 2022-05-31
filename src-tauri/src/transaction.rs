@@ -317,7 +317,7 @@ pub enum Transaction {
 }
 
 impl Transaction {
-  pub fn tag(&self) -> &str {
+  pub fn tag(&self) -> &String {
     match self {
       Transaction::Trade(tx) => &tx.tag,
       Transaction::Transfer(tx) => &tx.tag,
@@ -331,6 +331,30 @@ impl Transaction {
       Transaction::Transfer(tx) => tx.date,
       Transaction::Deposit(tx) => tx.date,
       Transaction::Withdrawal(tx) => tx.date,
+    }
+  }
+  pub fn recv_asset(&self) -> Option<&String> {
+    match self {
+      Transaction::Trade(tx) => Some(&tx.recv_asset),
+      Transaction::Transfer(tx) => Some(&tx.recv_asset),
+      Transaction::Deposit(tx) => Some(&tx.asset),
+      Transaction::Withdrawal(tx) => None,
+    }
+  }
+  pub fn sent_asset(&self) -> Option<&String> {
+    match self {
+      Transaction::Trade(tx) => Some(&tx.sent_asset),
+      Transaction::Transfer(tx) => Some(&tx.sent_asset),
+      Transaction::Deposit(tx) => None,
+      Transaction::Withdrawal(tx) => Some(&tx.asset),
+    }
+  }
+  pub fn fee_asset(&self) -> Option<&String> {
+    match self {
+      Transaction::Trade(tx) => Some(&tx.fee_asset),
+      Transaction::Transfer(tx) => None,
+      Transaction::Deposit(tx) => None,
+      Transaction::Withdrawal(tx) => None,
     }
   }
   pub fn manual_worth<'a>(&'a self) -> &'a Option<String> {

@@ -173,12 +173,6 @@ pub async fn get_tax_settings(kryp: State<'_, Data>) -> Result<Value, String> {
 }
 
 #[command]
-pub async fn get_transactions(kryp: State<'_, Data>) -> Result<Value, String> {
-  let kryp = kryp.0.lock().await;
-  to_json(&kryp.tax.transactions)
-}
-
-#[command]
 pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), String> {
   let mut kryp = kryp.0.lock().await;
   let tax = &mut kryp.tax;

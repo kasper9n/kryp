@@ -2,7 +2,7 @@
   import { DateInput } from 'date-picker-svelte'
   import Button from '$lib/Button.svelte'
   import Modal from '$lib/Modal.svelte'
-  import type { Transaction } from '$lib/transactions'
+  import { tags, Transaction } from '$lib/transactions'
   import { popup, runCmd, UnreachableCaseError } from '$lib/general'
   import NumericInput from '$lib/NumericInput.svelte'
   import Dropdown from '$lib/Dropdown.svelte'
@@ -98,21 +98,6 @@
     await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
     close()
   }
-  type Tag = {
-    type: Transaction['type']
-    value: string
-    name: string
-  }
-  const tags: Tag[] = [
-    { type: 'Trade', value: 'Trade', name: 'Trade' },
-    { type: 'Transfer', value: 'Transfer', name: 'Transfer' },
-    { type: 'Deposit', value: 'Deposit', name: 'Deposit' },
-    { type: 'Deposit', value: 'Gift', name: 'Gift' },
-    { type: 'Deposit', value: 'Interest', name: 'Interest' },
-    { type: 'Withdrawal', value: 'Withdrawal', name: 'Withdrawal' },
-    { type: 'Withdrawal', value: 'Spend', name: 'Spend' },
-    { type: 'Withdrawal', value: 'Lost', name: 'Lost' },
-  ]
   let tag = tags[0]
   $: enabledFields = getEnabledFields(tag.type)
   function getEnabledFields(kind: string) {

@@ -21,6 +21,7 @@ mod data;
 mod export;
 mod fetch;
 mod fetch_current;
+mod get_transactions;
 mod holdings;
 mod import;
 mod prices;
@@ -88,7 +89,6 @@ fn main() {
       data::is_open,
       data::get_tax,
       data::get_tax_settings,
-      data::get_transactions,
       data::add_transaction,
       holdings::get_holdings,
       holdings::get_holdings_valued,
@@ -104,6 +104,7 @@ fn main() {
       import::continue_import,
       import::cancel_import,
       export::export,
+      get_transactions::get_transactions,
     ])
     .menu(Menu::with_items([
       #[cfg(target_os = "macos")]

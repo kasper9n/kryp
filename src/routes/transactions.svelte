@@ -4,9 +4,10 @@
   import TransactionModal from '$lib/modals/Transaction.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
-  import type { Transaction } from '$lib/transactions'
+  import { tags, Transaction } from '$lib/transactions'
   import { runCmd } from '$lib/general'
   import ButtonGroup from '$lib/ButtonGroup.svelte'
+  import InlinePopup from '$lib/InlinePopup.svelte'
 
   let view = 0
 
@@ -17,19 +18,49 @@
     reload()
   }
 
-  let transactions: Promise<Transaction[]> = runCmd('get_transactions')
-  function reload() {
-    transactions = runCmd('get_transactions')
+  let search = {
+    tags: [] as string[],
+    asset: '',
   }
+
+  let transactions: Promise<Transaction[]> = runCmd('get_transactions', { search })
+  function reload() {
+    transactions = runCmd('get_transactions', { search })
+  }
+  $: transactions = runCmd('get_transactions', { search })
 </script>
 
 <div class="page">
   <div class="toolbar">
     <ButtonGroup values={['List', 'Table']} bind:selected={view} />
-    <div style="padding: 6px;" />
+    <div class="p-1.5" />
     <Button on:click={() => (showAdd = true)}>Add</Button>
-    <div style="padding: 6px;" />
+    <div class="p-1.5" />
     <Button secondary on:click={() => dispatch('import')}>Import</Button>
+  </div>
+  <div class="toolbar">
+    <InlinePopup let:toggle>
+      <button class="rounded border border-gray-300 bg-white py-1.5 px-3" on:click={toggle}
+        >Type</button
+      >
+      <div slot="popup" class="rounded border bg-white px-4 py-2">
+        {#each tags as tag}
+          <label class="flex select-none items-center">
+            <input type="checkbox" bind:group={search.tags} value={tag.name} />
+            <span class="ml-1">{tag.name}</span>
+          </label>
+        {/each}
+      </div>
+    </InlinePopup>
+    <div class="p-1.5" />
+    <div class="relative">
+      <input
+        class="w-28 rounded border-gray-300 py-1.5 px-3"
+        type="text"
+        placeholder="Asset"
+        bind:value={search.asset}
+      />
+    </div>
   </div>
   {#await transactions then transactions}
     {#if view === 0}
