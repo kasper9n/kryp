@@ -30,15 +30,15 @@
   $: transactions = runCmd('get_transactions', { search })
 </script>
 
-<div class="page">
-  <div class="toolbar">
+<div class="flex h-0 flex-grow flex-col">
+  <div class="my-2 flex flex-shrink-0 items-center px-4">
     <ButtonGroup values={['List', 'Table']} bind:selected={view} />
     <div class="p-1.5" />
     <Button on:click={() => (showAdd = true)}>Add</Button>
     <div class="p-1.5" />
     <Button secondary on:click={() => dispatch('import')}>Import</Button>
   </div>
-  <div class="toolbar">
+  <div class="my-2 flex flex-shrink-0 items-center px-4">
     <InlinePopup let:toggle>
       <button class="rounded border border-gray-300 bg-white py-1.5 px-3" on:click={toggle}
         >Type</button
@@ -62,27 +62,17 @@
       />
     </div>
   </div>
-  {#await transactions then transactions}
-    {#if view === 0}
-      <TxList {transactions} />
-    {:else if view === 1}
-      <TxTable {transactions} />
-    {/if}
-  {/await}
+  <div class="h-0 flex-grow">
+    {#await transactions then transactions}
+      {#if view === 0}
+        <TxList {transactions} />
+      {:else if view === 1}
+        <TxTable {transactions} />
+      {/if}
+    {/await}
+  </div>
 </div>
 
 {#if showAdd}
   <TransactionModal on:close={closeModal} />
 {/if}
-
-<style lang="sass">
-  $accent: #3061F6
-  $border: #c6cddd
-  .page
-    padding: 20px
-    margin: auto
-  .toolbar
-    padding: 10px 0px
-    display: flex
-    align-items: center
-</style>

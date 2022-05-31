@@ -338,23 +338,23 @@ impl Transaction {
       Transaction::Trade(tx) => Some(&tx.recv_asset),
       Transaction::Transfer(tx) => Some(&tx.recv_asset),
       Transaction::Deposit(tx) => Some(&tx.asset),
-      Transaction::Withdrawal(tx) => None,
+      Transaction::Withdrawal(_) => None,
     }
   }
   pub fn sent_asset(&self) -> Option<&String> {
     match self {
       Transaction::Trade(tx) => Some(&tx.sent_asset),
       Transaction::Transfer(tx) => Some(&tx.sent_asset),
-      Transaction::Deposit(tx) => None,
+      Transaction::Deposit(_) => None,
       Transaction::Withdrawal(tx) => Some(&tx.asset),
     }
   }
   pub fn fee_asset(&self) -> Option<&String> {
     match self {
       Transaction::Trade(tx) => Some(&tx.fee_asset),
-      Transaction::Transfer(tx) => None,
-      Transaction::Deposit(tx) => None,
-      Transaction::Withdrawal(tx) => None,
+      Transaction::Transfer(_) => None,
+      Transaction::Deposit(_) => None,
+      Transaction::Withdrawal(_) => None,
     }
   }
   pub fn manual_worth<'a>(&'a self) -> &'a Option<String> {

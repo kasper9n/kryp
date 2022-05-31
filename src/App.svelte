@@ -78,7 +78,7 @@
 </script>
 
 {#if $opened}
-  <div class="nav">
+  <nav>
     <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
     <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
     <a on:click={go} use:active href="/reports"><button>Reports</button></a>
@@ -86,7 +86,7 @@
     <span class="base">{$settings.base_currency}</span>
     <a on:click={go} use:active href="/prices"><button>Prices</button></a>
     <a on:click={go} use:active href="/help"><button>Help</button></a>
-  </div>
+  </nav>
 
   <Route path="/"><DashboardPage /></Route>
   <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route>
@@ -125,6 +125,9 @@
     background-color: #f8f9fc
     color: hsl(0, 0%, 27%)
     margin: 0px
+    display: flex
+    flex-direction: column
+    height: 100vh
   :global(h2)
     font-size: 24px
   :global(h4)
@@ -140,15 +143,17 @@
   :global(body), :global(input)
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
     --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
-  .nav
+  nav
     display: flex
     align-items: center
     user-select: none
     padding: 0px 20px
+    height: 54px
+    flex-shrink: 0
     a, .base
       font-size: 15px
       padding: 10px 5px
-      margin: 5px
+      margin: 0px 5px
       cursor: default
     a
       border: none

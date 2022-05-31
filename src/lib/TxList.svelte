@@ -2,10 +2,11 @@
   import { formatDate, formatTime, Transaction } from '$lib/transactions'
   import { newSelection } from './selection'
   import { checkMouseShortcut, checkShortcut } from './general'
+  import VirtualList from './VirtualList.svelte'
 
   export let transactions: Transaction[]
-
   const selection = newSelection()
+  let virtualList: VirtualList<Transaction>
 
   let justSelected = false
   function rowMouseDown(e: MouseEvent, index: number, ctx = false) {
@@ -39,22 +40,30 @@
       selection.clear()
     } else if (checkShortcut(e, 'ArrowUp')) {
       selection.goBackward(transactions.length - 1)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true })) {
       selection.shiftSelectBackward()
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowUp', { alt: true })) {
       selection.clear()
       selection.add(0)
+      virtualList.scrollToItem(0)
     } else if (checkShortcut(e, 'ArrowUp', { shift: true, alt: true })) {
       selection.shiftSelectTo(0)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown')) {
       selection.goForward(transactions.length - 1)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true })) {
       selection.shiftSelectForward(transactions.length - 1)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { alt: true })) {
       selection.clear()
       selection.add(transactions.length - 1)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'ArrowDown', { shift: true, alt: true })) {
       selection.shiftSelectTo(transactions.length - 1)
+      virtualList.scrollToItem($selection.lastAdded || 0)
     } else if (checkShortcut(e, 'A', { cmdOrCtrl: true })) {
       selection.add(0, transactions.length - 1)
     } else {
@@ -65,8 +74,16 @@
 </script>
 
 <svelte:body on:keydown|self={rowKeydown} />
-<div class="list" on:keydown={rowKeydown}>
-  {#each transactions as tx, i}
+<div class="list h-full border-t border-[#e7e8e8]">
+  <VirtualList
+    bind:this={virtualList}
+    getItem={(i) => transactions[i]}
+    itemCount={transactions.length}
+    itemHeight={62}
+    on:keydown={rowKeydown}
+    let:item={tx}
+    let:index={i}
+  >
     <div
       class="item"
       class:selected={$selection.list[i] === true}
@@ -153,7 +170,7 @@
         <span class="time">{formatTime(new Date(tx.date))}</span>
       </div>
     </div>
-  {/each}
+  </VirtualList>
 </div>
 
 <style lang="sass">
@@ -161,29 +178,23 @@
   $kind-width: 50px
   .list
     background-color: #ffffff
-    border-bottom: 0px
-    outline: none
-    border: none
-    color: inherit
-    display: block
-    width: 100%
-    padding: 0px
-    display: block
-    &:focus
-      box-shadow: 0px 0px 0px 2px #e5ecff
   .item
-    font-size: 15px
+    height: 62px
     display: flex
     align-items: center
-    border: 1px solid #e7e8e8
-    margin-bottom: -1px
+    font-size: 15px
+    z-index: 1
+    box-sizing: border-box
+    border-bottom: 1px solid #e7e8e8
+    border-left: 1px solid #e7e8e8
+    border-right: 1px solid #e7e8e8
     padding: 0px 16px
-    position: relative
     &.selected
       background-color: #dbe5ff
-      border: 1px solid #c7d5ff
       z-index: 5
       position: relative
+      box-shadow: 0px -1px 0px 0px #c7d5ff
+      border-color: #c7d5ff
   .icon
     width: $kind-icon-width
     display: block
