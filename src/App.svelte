@@ -78,24 +78,40 @@
 </script>
 
 {#if $opened}
-  <nav>
-    <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
-    <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
-    <a on:click={go} use:active href="/reports"><button>Reports</button></a>
+  <!-- <nav
+    class="z-10 flex h-12 select-none items-center space-x-3 px-4 text-sm shadow-sm backdrop-blur-md"
+  >
+    <a on:click={go} use:active data-exact href="/">Dashboard</a>
+    <a on:click={go} use:active href="/transactions">Transactions</a>
+    <a on:click={go} use:active href="/reports">Reports</a>
     <div class="nav-mid" />
-    <span class="base">{$settings.base_currency}</span>
-    <a on:click={go} use:active href="/prices"><button>Prices</button></a>
-    <a on:click={go} use:active href="/help"><button>Help</button></a>
+    <span class="rounded border bg-white px-1.5">{$settings.base_currency}</span>
+    <a on:click={go} use:active href="/prices">Prices</a>
+    <a on:click={go} use:active href="/help">Help</a>
+  </nav> -->
+  <nav class="h-12">
+    <div class="z-10 flex h-12 select-none items-center space-x-4 px-4 text-sm">
+      <a on:click={go} use:active data-exact href="/">Dashboard</a>
+      <a on:click={go} use:active href="/transactions">Transactions</a>
+      <a on:click={go} use:active href="/reports">Reports</a>
+      <div class="nav-mid" />
+      <span class="rounded border bg-white px-1.5">{$settings.base_currency}</span>
+      <a on:click={go} use:active href="/prices">Prices</a>
+      <a on:click={go} use:active href="/help">Help</a>
+    </div>
   </nav>
 
-  <Route path="/"><DashboardPage /></Route>
-  <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route>
-  <Route path="/prices"><PricesPage /></Route>
-  <Route path="/help"><HelpPage /></Route>
-  <Route path="/import"><ImportPage /></Route>
-  <Route path="/import/confirm"><ImportConfirmPage /></Route>
-  <Route path="/reports"><ReportsPage /></Route>
-  <Route fallback>404</Route>
+  <main class="h-0 flex-grow overflow-y-auto">
+    <Route path="/"><DashboardPage /></Route>
+    <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route
+    >
+    <Route path="/prices"><PricesPage /></Route>
+    <Route path="/help"><HelpPage /></Route>
+    <Route path="/import"><ImportPage /></Route>
+    <Route path="/import/confirm"><ImportConfirmPage /></Route>
+    <Route path="/reports"><ReportsPage /></Route>
+    <Route fallback>404</Route>
+  </main>
 {:else}
   <div class="start-page">
     <h1>Kryp</h1>
@@ -143,43 +159,18 @@
   :global(body), :global(input)
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
     --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
-  nav
-    display: flex
-    align-items: center
-    user-select: none
-    padding: 0px 20px
-    height: 54px
-    flex-shrink: 0
-    a, .base
-      font-size: 15px
-      padding: 10px 5px
-      margin: 0px 5px
-      cursor: default
-    a
-      border: none
-      font: inherit
-      font-weight: 500
-      text-decoration: none
-      transition: all 120ms var(--ease)
-      color: hsl(226, 5%, 20%)
-      &:hover
-        color: hsl(226, 5%, 28%)
-        opacity: 0.8
-      &:global(.active)
-        color: #15b28d
-        opacity: 1
-      button
-        border: none
-        font: inherit
-        background-color: transparent
-        color: inherit
-        padding: 0px
-        margin: 0px
-    .base
-      background-color: #ffffff
-      padding: 2px 5px
-      border-radius: 4px
-      border: 1px solid #e7e8e8
+  a
+    opacity: 0.5
+    color: #000000
+    font-weight: 500
+    transition: all 150ms var(--ease)
+    padding: 0px 6px
+    border-radius: 1px
+    cursor: default
+    &:global(.active)
+      opacity: 1
+      background-color: hsl(215, 20%, 94%)
+      box-shadow: 0px 0px 0px 5px hsl(215, 20%, 94%)
   .nav-mid
     width: 50px
     flex-grow: 1

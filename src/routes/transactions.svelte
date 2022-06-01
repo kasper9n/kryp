@@ -30,8 +30,8 @@
   $: transactions = runCmd('get_transactions', { search })
 </script>
 
-<div class="flex h-0 flex-grow flex-col">
-  <div class="my-2 flex flex-shrink-0 items-center px-4">
+<div class="flex h-full flex-col">
+  <div class="mt-2 flex flex-shrink-0 items-center px-4">
     <ButtonGroup values={['List', 'Table']} bind:selected={view} />
     <div class="p-1.5" />
     <Button on:click={() => (showAdd = true)}>Add</Button>
@@ -40,7 +40,7 @@
   </div>
   <div class="my-2 flex flex-shrink-0 items-center px-4">
     <InlinePopup let:toggle>
-      <button class="rounded border border-gray-300 bg-white py-1.5 px-3" on:click={toggle}
+      <button class="rounded border border-gray-300 bg-white py-1 px-3" on:click={toggle}
         >Type</button
       >
       <div slot="popup" class="rounded border bg-white px-4 py-2">
@@ -55,7 +55,7 @@
     <div class="p-1.5" />
     <div class="relative">
       <input
-        class="w-28 rounded border-gray-300 py-1.5 px-3"
+        class="w-28 rounded border-gray-300 py-1 px-3"
         type="text"
         placeholder="Asset"
         bind:value={search.asset}
