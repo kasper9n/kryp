@@ -90,14 +90,14 @@
     <a on:click={go} use:active href="/help">Help</a>
   </nav> -->
   <nav class="h-12">
-    <div class="z-10 flex h-12 select-none items-center space-x-4 px-4 text-sm">
-      <a on:click={go} use:active data-exact href="/">Dashboard</a>
-      <a on:click={go} use:active href="/transactions">Transactions</a>
-      <a on:click={go} use:active href="/reports">Reports</a>
+    <div class="z-10 flex h-12 select-none items-center space-x-2 px-4 text-sm">
+      <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
+      <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
+      <a on:click={go} use:active href="/reports"><button>Reports</button></a>
       <div class="nav-mid" />
       <span class="rounded border bg-white px-1.5">{$settings.base_currency}</span>
-      <a on:click={go} use:active href="/prices">Prices</a>
-      <a on:click={go} use:active href="/help">Help</a>
+      <a on:click={go} use:active href="/prices"><button>Prices</button></a>
+      <a on:click={go} use:active href="/help"><button>Help</button></a>
     </div>
   </nav>
 
@@ -160,17 +160,23 @@
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
     --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
   a
+    --shadow-size: 5px
     opacity: 0.5
     color: #000000
-    font-weight: 500
-    transition: all 150ms var(--ease)
-    padding: 0px 6px
-    border-radius: 1px
+    padding: var(--shadow-size)
     cursor: default
-    &:global(.active)
+    transition: all 150ms var(--ease)
+    button
+      transition: all 150ms var(--ease)
+      font-weight: 500
+      padding: 1px 6px
+      border-radius: 1px
+      cursor: default
+  a:global(.active)
       opacity: 1
-      background-color: hsl(215, 20%, 94%)
-      box-shadow: 0px 0px 0px 5px hsl(215, 20%, 94%)
+      button
+        background-color: hsl(215, 20%, 94%)
+        box-shadow: 0px 0px 0px var(--shadow-size) hsl(215, 20%, 94%)
   .nav-mid
     width: 50px
     flex-grow: 1
