@@ -1,6 +1,9 @@
 <script lang="ts">
   import { runCmd } from '$lib/general'
   import { Pie } from 'svelte-chartjs'
+  import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale } from 'chart.js'
+
+  ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale)
 
   type ChartItem = {
     label: string
