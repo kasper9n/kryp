@@ -68,13 +68,15 @@
     font-family: inherit
     font-size: inherit
     box-sizing: border-box
-    border: 1px solid #c6cddd
+    border: 1px solid var(--input-border)
+    background-color: var(--bg-max)
     border-radius: 3px
-    outline: none
-    transition: all 80ms var(--ease)
+    transition: all 80ms ease-out
+    box-shadow: none
     &:focus
-      border-color: #0269f7
-      box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
+      outline: none
+      border-color: var(--input-highlight-border)
+      box-shadow: 0px 0px 0px 2px var(--input-highlight-shadow)
   .noLeftBorder
     border-top-left-radius: 0px
     border-bottom-left-radius: 0px
@@ -82,5 +84,5 @@
     z-index: 1 // outline fix
   .invalid
     border: 1px solid rgba(#f92f72, 0.5)
-    background-color: #fff0f5
+    background-color: var(--input-invalid-bg)
 </style>

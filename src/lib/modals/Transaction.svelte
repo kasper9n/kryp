@@ -350,7 +350,7 @@
     &[data-type='Transfer'] svg
       fill: #b853ee
   .sent, .received, .fee
-    background-color: #eff2f5
+    background-color: rgba(0, 0%, 50%, 0.05)
     border: 1px solid #c6cddd
     width: 0px
     flex-grow: 1
@@ -386,19 +386,25 @@
     min-width: 0px
     padding: 4px 6px
     margin: 0px
-    border: 1px solid #c6cddd
+    background-color: var(--bg-max)
+    color: var(--text)
     border-radius: 3px
-    outline: none
-    transition: 80ms var(--ease)
+    transition: 80ms ease-out
     transition-property: border-color, box-shadow
     &:focus
-      border-color: #0269f7
-      box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
+      outline: none
+      border-color: var(--input-highlight-border)
+      box-shadow: 0px 0px 0px 2px var(--input-highlight-shadow)
+  div :global(input)
+    border: 1px solid var(--input-border)
   input, textarea, .date-row :global(input)
     font-size: inherit
+    color: var(--text)
+    &:focus
+      outline: none
   .invalid
     border: 1px solid rgba(#f92f72, 0.5)
-    background-color: #fff0f5
+    background-color: var(--input-invalid-bg)
   textarea
     resize: vertical
   :disabled

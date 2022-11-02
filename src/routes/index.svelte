@@ -5,6 +5,8 @@
 
   ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale)
 
+  export let darkMode: boolean
+
   type ChartItem = {
     label: string
     value: number
@@ -77,14 +79,15 @@
         label: 'Value',
         backgroundColor: chartHoldings.map((_, index) => getColor(index) + 'cc'),
         hoverBackgroundColor: chartHoldings.map((_, index) => getColor(index)),
-        borderColor: '#ffffff',
-        hoverBorderColor: '#ffffff',
+        borderColor: darkMode ? '#000000' : '#ffffff',
+        hoverBorderColor: darkMode ? '#000000' : '#ffffff',
         data: chartHoldings.map((item) => Number(item.value)),
         borderWidth: 2,
         hoverBorderWidth: 0,
       },
     ],
   }
+
   const options = {
     cutout: '75%',
     plugins: {
@@ -180,9 +183,8 @@
   .big-card
     font-size: 14px
     padding: 15px
-    border: 1px solid #e5e5e5
+    border: 1px solid hsla(0, 0%, 50%, 0.2)
     border-radius: 3px
-    background-color: #ffffff
     width: 550px
     flex-grow: 1
     max-width: 650px

@@ -107,7 +107,7 @@
     {/if}
   </div>
 
-  <div class="m-4 max-w-xl rounded border border-slate-200 bg-white px-4 py-2">
+  <div class="m-4 max-w-xl rounded border border-slate-200 px-4 py-2">
     <div class="my-1.5 flex">
       <div class="w-18 mr-auto">Realized gain</div>
       <div class="font-medium text-emerald-500">
@@ -140,7 +140,7 @@
       </div>
     </div>
   </div>
-  <div class="m-4 rounded border border-slate-200 bg-white py-2">
+  <div class="m-4 rounded border border-slate-200 py-2">
     <div class="mx-4 my-4 flex items-center">
       <p class="mr-4">Hide values less than</p>
       <input type="number" bind:value={hideValuesLessThan} />

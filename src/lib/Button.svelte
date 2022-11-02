@@ -2,17 +2,22 @@
   export let secondary = false
   export let neutral = false
   export let disabled = false
+  export let slim = false
   export let type = 'button'
 </script>
 
-<button {type} class:neutral class:secondary class:disabled on:click {disabled} {...$$restProps}
-  ><slot /></button
+<button
+  {type}
+  class:neutral
+  class:slim
+  class:secondary
+  class:disabled
+  on:click
+  {disabled}
+  {...$$restProps}><slot /></button
 >
 
 <style lang="sass">
-  $accent: #3061F6
-  $neutral: #242429
-  $border: #c6cddd
   button
     cursor: pointer
     user-select: none
@@ -23,26 +28,30 @@
     border: none
     font-size: 13px
     font-weight: 500
+    $accent: #3061F6
     background-color: $accent
     box-shadow: 0px 0px 2px 0px $accent
     color: #ffffff
     border-radius: 7px
-    transition: 0.1s var(--ease)
+    transition: 100ms ease-out
     transition-property: transform, opacity, box-shadow
     &:active
       opacity: 0.95
       transform: scale(0.95)
   .neutral
     margin: 0px 5px
+    $neutral: #242429
     background-color: $neutral
+    box-shadow: 0px 0px 2px 0px $neutral
     height: 30px
     padding: 0px 22px
-    box-shadow: 0px 0px 2px 0px $neutral
   .secondary
-    background-color: #ffffff
-    color: #191B20
-    border: 1px solid $border
-    box-shadow: 0px 0px 2px 0px $border
+    background-color: var(--bg-max)
+    color: var(--text)
+    border: 1px solid var(--input-border)
+    box-shadow: 0px 0px 2px 0px var(--input-border)
+  .slim
+    height: 28px
   .disabled
     background-color: #191B20
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
+  import './app.css'
   import { event } from '@tauri-apps/api'
-  import { onDestroy } from 'svelte'
+  import { onDestroy, onMount } from 'svelte'
   import { Route, active, router } from 'tinro'
   import { runCmd } from '$lib/general'
   import { opened, settings } from '$lib/data'
@@ -16,7 +17,6 @@
   import ImportConfirmPage from '$routes/import/confirm.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
-  import './app.css'
 
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
@@ -75,34 +75,34 @@
     const unlisten = await unlistenFuture
     unlisten()
   })
+
+  const prefersDarkMQ = matchMedia('(prefers-color-scheme: dark)')
+  let darkMode = prefersDarkMQ.matches
+  function handler(e: { matches: boolean }) {
+    darkMode = e.matches
+  }
+  // new onchange/addEventListenr api not supported in macOS Catalina
+  prefersDarkMQ.addListener(handler)
+  onDestroy(() => {
+    prefersDarkMQ.removeListener(handler)
+  })
 </script>
 
 {#if $opened}
-  <!-- <nav
-    class="z-10 flex h-12 select-none items-center space-x-3 px-4 text-sm shadow-sm backdrop-blur-md"
-  >
-    <a on:click={go} use:active data-exact href="/">Dashboard</a>
-    <a on:click={go} use:active href="/transactions">Transactions</a>
-    <a on:click={go} use:active href="/reports">Reports</a>
-    <div class="nav-mid" />
-    <span class="rounded border bg-white px-1.5">{$settings.base_currency}</span>
-    <a on:click={go} use:active href="/prices">Prices</a>
-    <a on:click={go} use:active href="/help">Help</a>
-  </nav> -->
   <nav class="h-12">
     <div class="z-10 flex h-12 select-none items-center space-x-2 px-4 text-sm">
       <a on:click={go} use:active data-exact href="/"><button>Dashboard</button></a>
       <a on:click={go} use:active href="/transactions"><button>Transactions</button></a>
       <a on:click={go} use:active href="/reports"><button>Reports</button></a>
       <div class="nav-mid" />
-      <span class="rounded border bg-white px-1.5">{$settings.base_currency}</span>
+      <span class="rounded border bg-white px-1.5 dark:bg-black">{$settings.base_currency}</span>
       <a on:click={go} use:active href="/prices"><button>Prices</button></a>
       <a on:click={go} use:active href="/help"><button>Help</button></a>
     </div>
   </nav>
 
   <main class="h-0 flex-grow overflow-y-auto">
-    <Route path="/"><DashboardPage /></Route>
+    <Route path="/"><DashboardPage {darkMode} /></Route>
     <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route
     >
     <Route path="/prices"><PricesPage /></Route>
@@ -137,9 +137,39 @@
 {/if}
 
 <style lang="sass">
+  :root
+    --accent: #3061F6
+    --bg: #f8f9fc
+    --bg-max: #ffffff
+    --bg-modal: #f8f9fc
+    --text: hsl(0, 0%, 27%)
+    --text-50: hsla(0, 0%, 27%, 0.5)
+    --selected-button-group: #191B20
+    --input-border: hsla(222, 25%, 65%, 0.45)
+    --input-invalid-bg: #fff0f5
+  @media (prefers-color-scheme: dark)
+    :root
+      --bg: #0F0F0F
+      --bg-max: #000000
+      --bg-modal: #16181d
+      --text: hsl(0, 0%, 90%)
+      --text-50: hsla(0, 0%, 90%, 0.5)
+      --selected-button-group: #e8e9f2
+      --input-border: hsla(222, 25%, 65%, 0.45)
+      --input-invalid-bg: hsl(340, 100%, 5%)
+      --input-highlight-border: hsl(215, 98%, 49%)
+      --input-highlight-shadow: hsla(215, 98%, 49%, 0.4)
+
+  @media (prefers-color-scheme: dark)
+    :root
+      --date-picker-background: #000000
+      --date-picker-foreground: #ffffff
+      --date-picker-highlight-border: var(--input-highlight-border)
+      --date-picker-highlight-shadow: var(--input-highlight-shadow)
+
   :global(body)
-    background-color: #f8f9fc
-    color: hsl(0, 0%, 27%)
+    background-color: var(--bg)
+    color: var(--text)
     margin: 0px
     display: flex
     flex-direction: column
@@ -159,24 +189,33 @@
   :global(body), :global(input)
     font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji
     --ease: cubic-bezier(0.4, 0.0, 0.2, 1)
-  a
+  :global([type='text'], [type='email'], [type='url'], [type='password'], [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='time'], [type='week'], select)
+    background-color: var(--bg-max)
+    border-color: var(--input-border)
+    color: var(--text)
+  :global([type='checkbox'], [type='radio'])
+    background-color: var(--bg-max)
+    border-color: var(--input-border)
+  :global([type='checkbox']:checked:hover, [type='checkbox']:checked:focus, [type='radio']:checked:hover, [type='radio']:checked:focus)
+    background-color: var(--accent)
+  nav a
     --shadow-size: 5px
-    opacity: 0.5
-    color: #000000
+    color: var(--text-50)
     padding: var(--shadow-size)
     cursor: default
-    transition: all 150ms var(--ease)
     button
-      transition: all 150ms var(--ease)
+      transition: all 100ms ease-out
       font-weight: 500
       padding: 1px 6px
       border-radius: 1px
       cursor: default
-  a:global(.active)
-      opacity: 1
+    &:hover
       button
-        background-color: hsl(215, 20%, 94%)
-        box-shadow: 0px 0px 0px var(--shadow-size) hsl(215, 20%, 94%)
+        background-color: hsla(215, 20%, 50%, 0.2)
+        box-shadow: 0px 0px 0px var(--shadow-size) hsla(215, 20%, 50%, 0.2)
+  // global to prevent treeshaking
+  nav :global(a.active)
+    color: var(--text)
   .nav-mid
     width: 50px
     flex-grow: 1
@@ -198,8 +237,8 @@
     justify-content: center
     h1
       margin: 0px
-      background-color: #ffffff
-      border: 1px solid #e7e8e8
+      background-color: var(--bg-max)
+      border: 1px solid var(--input-border)
       padding: 35px 60px
       border-radius: 10px
 </style>

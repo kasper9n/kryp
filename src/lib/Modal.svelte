@@ -75,7 +75,8 @@
     background-color: rgba(#000000, 0.5)
   .box
     position: relative
-    background-color: #f8f9fc
+    background-color: var(--bg-modal)
+    border: 1px solid var(--input-border)
     max-width: 100%
     max-height: 100%
     padding: 22px
@@ -83,16 +84,9 @@
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
     overflow: auto
   svg
-    // position: absolute
-    // cursor: pointer
-    // right: 12px
-    // top: 12px
-    // padding: 6px
-    // width: 12px
-    // height: 12px
-    fill: #58586f
-    transition: all 0.2s var(--ease)
+    fill: rgba(#6e6e8c, 1)
+    transition: all 100ms ease-out
     &:hover
-      fill: #2c2c35
+      fill: var(--text)
       transform: scale(1.1)
 </style>

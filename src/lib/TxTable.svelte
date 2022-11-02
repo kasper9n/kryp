@@ -117,7 +117,7 @@
     font-weight: 600
   td
     padding: 6px 10px
-    border: 1px solid #e7e8e8
+    border: 1px solid var(--input-border)
     &.amount
       text-align: right
   thead
@@ -126,12 +126,14 @@
       padding-bottom: 4px
   tbody
     background-color: #f6f6f9
+    @media (prefers-color-scheme: dark)
+      background-color: hsl(240, 20%, 12%)
   .odd
-    background-color: #ffffff
+    background-color: var(--bg-max)
   .edit-cell
     font-size: 13px
     position: absolute
-    background: #ffffff
+    background-color: var(--bg-max)
     box-sizing: border-box
     padding: 6px 10px
     padding-right: 0px
@@ -145,4 +147,7 @@
     color: #f92f72
   .green
     color: #25b670
+  .date
+    white-space: nowrap
+    font-family: Arial
 </style>

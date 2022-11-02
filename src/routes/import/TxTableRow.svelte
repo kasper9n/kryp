@@ -99,12 +99,12 @@
     margin: 0px
     border: 1px solid #c6cddd
     border-radius: 3px
-    outline: none
     transition: 80ms var(--ease)
     transition-property: border-color, box-shadow
     &:focus
-      border-color: #0269f7
-      box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
+      outline: none
+      border-color: var(--input-highlight-border)
+      box-shadow: 0px 0px 0px 2px var(--input-highlight-shadow)
   .asset:focus
     z-index: 1 // outline fix
   .asset

@@ -182,8 +182,9 @@
     display: flex
     align-items: center
     margin: 0px
-    background-color: #ffffff
-    border: 1px solid #c6cddd
+    color: var(--text)
+    background-color: var(--bg-max)
+    border: 1px solid var(--input-border)
     border-radius: 3px
     transition: all 80ms var(--ease)
     &:active .icon
@@ -201,26 +202,27 @@
       svg
         width: 10px
         height: 10px
-        opacity: 0.8
-        background: #e7e9f4
+        fill: var(--text)
+        background: hsla(231, 37%, 75%, 0.27)
         padding: 3px
-        border-radius: 4px
+        border-radius: 2px
         transform: rotate(90deg)
   .focused .field
-    border-color: #0269f7
-    box-shadow: 0px 0px 0px 2px rgba(#0269f7, 0.4)
+    border-color: var(--input-highlight-border)
+    box-shadow: 0px 0px 0px 2px var(--input-highlight-shadow)
   input
     min-width: 10px
     width: 100%
-    outline: none
     border: none
     user-select: text
     background-color: transparent
     cursor: default
     margin: 0px
+    &:focus
+      outline: none
     &.hide-cursor
       color: transparent
-      text-shadow: 0 0 0 #000000
+      text-shadow: 0 0 0 var(--text)
       user-select: none
   .menu
     display: none
@@ -228,8 +230,8 @@
     position: absolute
     margin-top: 1px
     width: 100%
-    background-color: #ffffff
-    border: 1px solid #c6cddd
+    background-color: var(--bg-max)
+    border: 1px solid var(--input-border)
     box-sizing: border-box
     border-top: none
     border-radius: 3px

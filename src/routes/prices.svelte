@@ -102,9 +102,8 @@
   .card
     font-size: 14px
     padding: 10px
-    border: 1px solid #e7e8e8
+    border: 1px solid var(--input-border)
     border-radius: 3px
-    background-color: #ffffff
   .flex
     display: flex
   .asset-item

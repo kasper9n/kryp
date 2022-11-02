@@ -89,7 +89,7 @@
     font-size: 13px
   td
     padding: 5px
-    border: 1px solid #e7e8e8
+    border: 1px solid var(--input-border)
     overflow: hidden
     text-overflow: ellipsis
     &.amount

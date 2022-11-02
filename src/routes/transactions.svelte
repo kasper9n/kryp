@@ -40,10 +40,8 @@
   </div>
   <div class="my-2 flex flex-shrink-0 items-center px-4">
     <InlinePopup let:toggle>
-      <button class="rounded border border-gray-300 bg-white py-1 px-3" on:click={toggle}
-        >Type</button
-      >
-      <div slot="popup" class="rounded border bg-white px-4 py-2">
+      <Button secondary slim on:click={toggle}>Type</Button>
+      <div slot="popup" class="popup-box rounded bg-white px-4 py-2 dark:bg-black">
         {#each tags as tag}
           <label class="flex select-none items-center">
             <input type="checkbox" bind:group={search.tags} value={tag.name} />
@@ -55,7 +53,7 @@
     <div class="p-1.5" />
     <div class="relative">
       <input
-        class="w-28 rounded border-gray-300 py-1 px-3"
+        class="w-28 rounded py-1 px-3"
         type="text"
         placeholder="Asset"
         bind:value={search.asset}
@@ -76,3 +74,13 @@
 {#if showAdd}
   <TransactionModal on:close={closeModal} />
 {/if}
+
+<style lang="sass">
+  input[type='text']
+    background-color: var(--bg-max)
+    color: var(--text)
+    border: 1px solid var(--input-border)
+    border-radius: 7px
+  .popup-box
+    border: 1px solid var(--input-border)
+</style>

@@ -74,7 +74,7 @@
 </script>
 
 <svelte:body on:keydown|self={rowKeydown} />
-<div class="list h-full border-t border-[#e7e8e8]">
+<div class="list h-full">
   <VirtualList
     bind:this={virtualList}
     getItem={(i) => transactions[i]}
@@ -177,7 +177,7 @@
   $kind-icon-width: 26px
   $kind-width: 50px
   .list
-    background-color: #ffffff
+    border-top: 1px solid hsla(225, 50%, 60%, 0.5)
   .item
     height: 62px
     display: flex
@@ -185,16 +185,15 @@
     font-size: 15px
     z-index: 1
     box-sizing: border-box
-    border-bottom: 1px solid #e7e8e8
-    border-left: 1px solid #e7e8e8
-    border-right: 1px solid #e7e8e8
+    border-bottom: 1px solid hsla(225, 50%, 60%, 0.5)
+    border-top: none
     padding: 0px 16px
     &.selected
-      background-color: #dbe5ff
+      background-color: hsla(223, 100%, 55%, 0.3)
       z-index: 5
       position: relative
-      box-shadow: 0px -1px 0px 0px #c7d5ff
-      border-color: #c7d5ff
+      box-shadow: 0px -1px 0px 0px hsla(225, 50%, 60%, 0.6)
+      border-color: hsla(225, 50%, 60%, 0.6)
   .icon
     width: $kind-icon-width
     display: block
