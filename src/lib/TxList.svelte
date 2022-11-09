@@ -84,6 +84,7 @@
     let:item={tx}
     let:index={i}
   >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="item"
       class:selected={$selection.list[i] === true}

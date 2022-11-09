@@ -37,9 +37,11 @@
 </script>
 
 <div class="modal cover" on:keydown tabindex="-1" use:focus>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="bg cover" on:click={close} tabindex="-1" bind:this={modalBg} />
   <div class="box" style="width: {width};">
     {#if closeIcon}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <svg
         on:click={close}
         class="absolute right-3 top-3 h-6 p-1.5"

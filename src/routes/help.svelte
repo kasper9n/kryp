@@ -9,7 +9,7 @@
 
   <h3>Trade</h3>
   <p>Exchange one asset for another. There are three types of trades:</p>
-  <ul>
+  <ul class="my-4 list-disc pl-10">
     <li>Buy transaction: Trade from your base currency. These are tax-free.</li>
     <li>
       Sell transaction: Trade into your base currency. These will realize capital gains taxes.
@@ -53,6 +53,8 @@
   .page
     padding: 20px
     margin: auto
-  h3
-    font-size: 16px
+  // h3
+  //   font-size: 1.25rem
+  p
+    margin: 16px 0px
 </style>

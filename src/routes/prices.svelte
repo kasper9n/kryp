@@ -1,6 +1,7 @@
 <script lang="ts">
   import { runCmd } from '$lib/general'
   import type { PriceDataAsset } from '$lib/data'
+  import { tick } from 'svelte'
 
   let assets: string[] = []
   let symbol: string | null = null
@@ -13,9 +14,13 @@
     }
   })
 
+  let loading = false
   $: if (symbol) {
-    runCmd('get_prices', { symbol }).then((result: PriceDataAsset) => {
+    loading = true
+    runCmd('get_prices', { symbol }).then(async (result: PriceDataAsset) => {
       asset = result
+      await tick()
+      loading = false
     })
   }
 
@@ -46,26 +51,26 @@
   <p>
     This page contains the prices that have been fetched and saved.
     <br />
-    Crypto prices are fetched from
-    <a target="_blank" href="https://www.coingecko.com/en">CoinGecko</a>
-    <br />
-    Fiat prices are fetched from
-    <a target="_blank" href="https://exchangerate.host">exchangerate.host</a>
+    Prices are fetched from
+    <a target="_blank" rel="noreferrer" href="https://www.coingecko.com/en">CoinGecko</a> and
+    <a target="_blank" rel="noreferrer" href="https://exchangerate.host">exchangerate.host</a>
   </p>
   <div class="card flex">
     {#if assets}
       <div>
         {#each assets as asset}
-          <div
-            class="asset-item"
+          <button
+            class="asset-item block"
             class:current={symbol === asset}
             on:click={() => (symbol = asset)}
           >
             {asset}
-          </div>
+          </button>
         {/each}
       </div>
-      {#if asset}
+      {#if loading}
+        Loading
+      {:else if asset}
         <div>
           <h2>{asset.symbol}</h2>
           <p>
@@ -96,6 +101,8 @@
 </div>
 
 <style lang="sass">
+  a
+    color: var(--accent)
   .page
     padding: 20px
     margin: auto

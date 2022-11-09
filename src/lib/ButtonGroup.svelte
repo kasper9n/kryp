@@ -6,15 +6,11 @@
 
 <div class="view">
   {#each values as value, i}
-    <div class="wrapper" on:click={() => (selected = i)}>
-      <button class:selected={selected === i}>{value}</button>
-    </div>
+    <button class:selected={selected === i} on:click={() => (selected = i)}>{value}</button>
   {/each}
 </div>
 
 <style lang="sass">
-  .wrapper
-    margin: 2px
   .view
     display: flex
     background-color: var(--bg-max)
@@ -24,6 +20,7 @@
     border: 1px solid var(--input-border)
   button
     display: block
+    margin: 2px
     cursor: pointer
     user-select: none
     font-size: 13px
@@ -31,7 +28,6 @@
     background-color: transparent
     border: none
     color: var(--text)
-    height: 100%
     padding: 0px 16px
     min-width: 60px
     transition: 100ms ease-out

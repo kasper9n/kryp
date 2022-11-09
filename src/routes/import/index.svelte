@@ -56,7 +56,7 @@
   {:else}
     <div class="my-4">
       <div class="mx-auto text-center">Type</div>
-      <select class="mx-auto text-center block text-sm" bind:value={source}>
+      <select class="mx-auto block text-center text-sm" bind:value={source}>
         <option value={'Kryp'}>Kryp</option>
         <option value={'Binance'}>Binance</option>
       </select>
