@@ -188,6 +188,8 @@
     display: flex
     flex-direction: column
     height: 100vh
+    @media (prefers-color-scheme: dark)
+      color-scheme: dark
   :global(h1)
     font-size: 2rem
   :global(h2)

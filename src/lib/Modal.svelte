@@ -1,49 +1,97 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from 'svelte'
-
-  let modalBg: HTMLDivElement
-  $: if (modalBg) {
-    modalBg.focus()
-  }
+  import { createEventDispatcher } from 'svelte'
+  import { checkShortcut } from './general'
 
   export let width = '580px'
   export let title: null | string = null
+  export let form: (() => void) | undefined = undefined
+  $: tag = form === undefined ? 'div' : 'form'
   export let closeIcon = true
+  export let cancelOnEscape = true
 
   const dispatch = createEventDispatcher()
-  function close() {
+  function onCancel() {
     dispatch('close')
   }
 
+  let lastActiveElement: Element | null = null
+
   function focus(el: HTMLElement) {
-    let lastActiveElement = document.body
-    if (document.activeElement instanceof HTMLElement) {
+    if (lastActiveElement === null) {
       lastActiveElement = document.activeElement
     }
-    tick().then(() => {
-      const tabbableEl = el.querySelector('a[href], area, button, input, object, select, textarea')
-      if (tabbableEl instanceof HTMLElement) {
-        tabbableEl.focus()
-      } else {
-        el.focus()
+    el.focus()
+  }
+
+  function focusTrap(el: HTMLElement) {
+    function getFocusElements() {
+      // return el.querySelectorAll(
+      //   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      // )
+      return el.querySelectorAll(
+        `a[href]:not([tabindex='-1']),\n\
+        area[href]:not([tabindex='-1']),\n\
+        input:not([disabled]):not([tabindex='-1']),\n\
+        select:not([disabled]):not([tabindex='-1']),\n\
+        textarea:not([disabled]):not([tabindex='-1']),\n\
+        button:not([disabled]):not([tabindex='-1']),\n\
+        iframe:not([tabindex='-1']),\n\
+        [tabindex]:not([tabindex='-1']),\n\
+        [contentEditable=true]:not([tabindex='-1'])`
+      )
+    }
+
+    if (lastActiveElement === null) {
+      lastActiveElement = document.activeElement || document.body
+      el.focus()
+    }
+
+    function handleKeydown(e: KeyboardEvent) {
+      if (checkShortcut(e, 'Tab', { shift: true })) {
+        const focusElements = getFocusElements()
+        const lastFocusElement = focusElements[focusElements.length - 1]
+        if (
+          focusElements[0] &&
+          document.activeElement?.isSameNode(focusElements[0]) &&
+          lastFocusElement instanceof HTMLElement
+        ) {
+          lastFocusElement.focus()
+          e.preventDefault()
+        }
+      } else if (checkShortcut(e, 'Tab')) {
+        const focusElements = getFocusElements()
+        const lastFocusElement = focusElements[focusElements.length - 1]
+        if (
+          document.activeElement?.isSameNode(lastFocusElement) &&
+          focusElements[0] instanceof HTMLElement
+        ) {
+          focusElements[0].focus()
+          e.preventDefault()
+        }
+      } else if (checkShortcut(e, 'Escape') && cancelOnEscape) {
+        onCancel()
       }
-    })
+    }
+    el.addEventListener('keydown', handleKeydown)
     return {
       destroy() {
-        lastActiveElement.focus()
+        el.removeEventListener('keydown', handleKeydown)
+        if (lastActiveElement instanceof HTMLElement) {
+          lastActiveElement.focus()
+        }
       },
     }
   }
 </script>
 
-<div class="modal cover" on:keydown tabindex="-1" use:focus>
+<div class="modal cover" on:keydown>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="bg cover" on:click={close} tabindex="-1" bind:this={modalBg} />
-  <div class="box" style="width: {width};">
+  <div class="bg cover" on:click={onCancel} on:mousedown|preventDefault />
+  <svelte:element this={tag} class="box" style="width: {width};" use:focusTrap tabindex="-1">
     {#if closeIcon}
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <svg
-        on:click={close}
+        on:click={onCancel}
         class="absolute right-3 top-3 h-6 p-1.5"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -55,8 +103,8 @@
     {#if title !== null}
       <h2>{title}</h2>
     {/if}
-    <slot />
-  </div>
+    <slot {focus} />
+  </svelte:element>
 </div>
 
 <style lang="sass">
@@ -85,6 +133,7 @@
     border-radius: 7px
     box-shadow: 0px 0px 30px 0px rgba(#000000, 0.5)
     overflow: auto
+    outline: none
   svg
     fill: rgba(#6e6e8c, 1)
     transition: all 100ms ease-out
