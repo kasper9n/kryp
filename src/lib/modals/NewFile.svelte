@@ -22,11 +22,11 @@
   }
 </script>
 
-<Modal width="340px" on:close on:keydown={keydown}>
+<Modal width="340px" on:close on:keydown={keydown} let:focus>
   <h2>New File</h2>
   <form on:submit|preventDefault={create}>
     <p>Base currency</p>
-    <TextInput bind:value={baseCurrency} />
+    <TextInput bind:value={baseCurrency} action={focus} />
     <div class="mt-4 grid grid-flow-col justify-end gap-2">
       <Button secondary on:click={() => dispatch('close')}>Cancel</Button>
       <Button type="submit">Create</Button>
