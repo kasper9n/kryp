@@ -1,7 +1,6 @@
 [package]
 name = "kryp"
 version = "0.1.0"
-description = "A Tauri App"
 default-run = "kryp"
 edition = "2018"
 build = "src/build.rs"
