@@ -314,12 +314,6 @@
 </Modal>
 
 <style lang="sass">
-  // fix tailwind issues
-  :global(.dropdown select)
-    background-image: none
-  div :global(.date-time-picker .dropdown svg)
-    box-sizing: content-box
-
   .container
     width: 580px
     max-width: 100%
