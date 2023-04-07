@@ -5,28 +5,15 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-function get(url) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, (res) => {
-      let data = ''
-      res.on('data', (d) => {
-        data += d
-      })
-      res.on('end', () => {
-        if (
-          res.statusCode !== 200 ||
-          res.headers['content-type'] !== 'application/json; charset=utf-8'
-        ) {
-          console.log('statusCode:', res.statusCode)
-          console.log('headers:', res.headers)
-          console.log(data)
-          reject('Unexpected response code or content type')
-        }
-        resolve(data)
-      })
-    })
-    req.on('error', reject)
-  })
+async function get(url) {
+  const response = await fetch(url)
+  if (!response.ok) {
+    console.log('statusCode:', response.statusCode)
+    console.log('headers:', response.headers)
+    console.log(response.body)
+    throw 'Unexpected response code or content type'
+  }
+  return response
 }
 
 async function download(uri, filename) {
@@ -52,10 +39,10 @@ async function getTopCoins(coinCount) {
   for (let n = 1; n < pageCount; n++) {
     console.log('Fetching page ' + n)
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    const data = await get(
+    const response = await get(
       `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${n}`
     )
-    const pageCoins = JSON.parse(data)
+    const pageCoins = await response.json()
     coins = coins.concat(pageCoins)
   }
   if (coins.length < coinCount) {
@@ -77,7 +64,7 @@ function imageToSmall(urlstring) {
 }
 
 async function main() {
-  const fiatFullListStr = fs.readFileSync(path.join(__dirname, '../assets/fiat-list-full.json'))
+  const fiatFullListStr = fs.readFileSync(path.join(__dirname, './fiat-list-full.json'))
   const fiatFullList = JSON.parse(fiatFullListStr)
 
   const fetchedCoinObjects = await getTopCoins(500)
