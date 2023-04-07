@@ -139,7 +139,8 @@ fn correlate_trade_rows(
         trade_group.buys.len(),
         trade_group.sells.len(),
         Utc
-          .timestamp_millis(key.timestamp)
+          .timestamp_millis_opt(key.timestamp)
+          .unwrap()
           .format("%Y-%m-%d %H:%M:%S UTC")
       );
     }

@@ -53,9 +53,9 @@ pub async fn get_report(
   let kryp = kryp.0.lock().await;
   let transactions: Vec<&Transaction> = kryp.tax.transactions.iter().collect();
 
-  let at_least = Local.ymd(year, 1, 1).and_hms(0, 0, 0);
+  let at_least = Local.with_ymd_and_hms(year, 1, 1, 0, 0, 0).unwrap();
   let at_least_ts = at_least.timestamp_millis();
-  let less_than = Local.ymd(year + 1, 1, 1).and_hms(0, 0, 0);
+  let less_than = Local.with_ymd_and_hms(year + 1, 1, 1, 0, 0, 0).unwrap();
   let less_than_ts = less_than.timestamp_millis();
   let range = at_least_ts..less_than_ts;
 

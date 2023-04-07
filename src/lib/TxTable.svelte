@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDateTime, Transaction } from '$lib/transactions'
+  import { formatDateTime, type Transaction } from '$lib/transactions'
 
   export let transactions: Transaction[]
 

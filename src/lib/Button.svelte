@@ -3,7 +3,7 @@
   export let neutral = false
   export let disabled = false
   export let slim = false
-  export let type = 'button'
+  export let type: 'button' | 'reset' | 'submit' = 'button'
 </script>
 
 <button

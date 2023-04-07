@@ -4,7 +4,7 @@
   import TransactionModal from '$lib/modals/Transaction.svelte'
   import Button from '$lib/Button.svelte'
   import { createEventDispatcher } from 'svelte'
-  import { tags, Transaction } from '$lib/transactions'
+  import { tags, type Transaction } from '$lib/transactions'
   import { runCmd } from '$lib/general'
   import ButtonGroup from '$lib/ButtonGroup.svelte'
   import InlinePopup from '$lib/InlinePopup.svelte'
@@ -53,7 +53,7 @@
     <div class="p-1.5" />
     <div class="relative">
       <input
-        class="w-28 rounded py-1 px-3"
+        class="w-28 rounded px-3 py-1"
         type="text"
         placeholder="Asset"
         bind:value={search.asset}

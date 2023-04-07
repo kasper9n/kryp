@@ -11,7 +11,7 @@ use std::str::{Chars, FromStr};
 use tauri::regex::Regex;
 
 pub fn format_date(ts: i64) -> String {
-  let dt = Local.timestamp_millis(ts);
+  let dt = Local.timestamp_millis_opt(ts).unwrap();
   dt.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
@@ -382,7 +382,10 @@ impl Transaction {
           trade.fee_asset.clone(),
           trade.note.clone(),
           trade.hash.clone(),
-          chrono::Utc.timestamp_millis(trade.date).to_string(),
+          chrono::Utc
+            .timestamp_millis_opt(trade.date)
+            .unwrap()
+            .to_string(),
           manual_worth.to_string(),
         ]
       }
@@ -399,7 +402,10 @@ impl Transaction {
           "".to_string(),
           transfer.note.clone(),
           transfer.hash.clone(),
-          chrono::Utc.timestamp_millis(transfer.date).to_string(),
+          chrono::Utc
+            .timestamp_millis_opt(transfer.date)
+            .unwrap()
+            .to_string(),
           manual_worth.to_string(),
         ]
       }
@@ -416,7 +422,10 @@ impl Transaction {
           "".to_string(),
           deposit.note.clone(),
           deposit.hash.clone(),
-          chrono::Utc.timestamp_millis(deposit.date).to_string(),
+          chrono::Utc
+            .timestamp_millis_opt(deposit.date)
+            .unwrap()
+            .to_string(),
           manual_worth.to_string(),
         ]
       }
@@ -433,7 +442,10 @@ impl Transaction {
           "".to_string(),
           withdrawal.note.clone(),
           withdrawal.hash.clone(),
-          chrono::Utc.timestamp_millis(withdrawal.date).to_string(),
+          chrono::Utc
+            .timestamp_millis_opt(withdrawal.date)
+            .unwrap()
+            .to_string(),
           manual_worth.to_string(),
         ]
       }

@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import path from 'path'
 import autoprefixer from 'autoprefixer'
 
@@ -24,10 +23,7 @@ export default defineConfig({
   },
   plugins: [
     svelte({
-      preprocess: sveltePreprocess({
-        pug: {
-          pretty: true,
-        },
+      preprocess: vitePreprocess({
         postcss: {
           plugins: [autoprefixer],
         },

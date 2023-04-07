@@ -1,32 +1,15 @@
 {
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "target": "es2019",
-    "module": "es2020",
-    "lib": ["es2020"],
-
-    // svelte-preprocess can't tell if you're importing a value or
-    // type, so require 'import type' instead of 'import' for types
-    "importsNotUsedAsValues": "error",
-
-    // To have svelte warnings/errors correct position
-    "sourceMap": true,
-
-    // Prevent type errors
-    "types": ["svelte", "vite/client"],
-
-    "isolatedModules": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
     "resolveJsonModule": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
-    "allowJs": true,
     "paths": {
       "$lib/*": ["src/lib/*"],
       "$routes/*": ["src/routes/*"]
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.svelte"]
 }

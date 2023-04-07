@@ -2,7 +2,7 @@
   import { DateInput } from 'date-picker-svelte'
   import Button from '$lib/Button.svelte'
   import Modal from '$lib/Modal.svelte'
-  import { tags, Transaction } from '$lib/transactions'
+  import { tags, type Transaction } from '$lib/transactions'
   import { popup, runCmd, UnreachableCaseError } from '$lib/general'
   import NumericInput from '$lib/NumericInput.svelte'
   import Dropdown from '$lib/Dropdown.svelte'
@@ -274,7 +274,7 @@
     </div>
     {#if !showNetWorth}
       <div class="set-net-worth">
-        <button type="button" class="m-0.5 py-0.5 px-1" on:click={() => (showNetWorth = true)}
+        <button type="button" class="m-0.5 px-1 py-0.5" on:click={() => (showNetWorth = true)}
           >Set Worth</button
         >
       </div>

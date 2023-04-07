@@ -13,6 +13,6 @@
   use:action
   {placeholder}
   {maxlength}
-  class={`w-full relative text-sm py-1 px-1.5 m-0 outline-none transition-all duration-75 ease-md rounded border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-40 ${$$props.class}`}
+  class={`relative m-0 w-full rounded border border-slate-300 px-1.5 py-1 text-sm outline-none transition-all duration-75 ease-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-40 ${$$props.class}`}
   {...$$restProps}
 />

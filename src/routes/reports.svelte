@@ -169,6 +169,6 @@
         {/if}
       </tbody>
     </table>
-    <button type="button" class="my-4 mx-2 px-2 text-blue-500" on:click={download}>Download</button>
+    <button type="button" class="mx-2 my-4 px-2 text-blue-500" on:click={download}>Download</button>
   </div>
 </div>

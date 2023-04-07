@@ -173,7 +173,7 @@ impl PriceData {
       }
     }
     if errors.len() == 0 {
-      let naive_dt = NaiveDateTime::from_timestamp(date / 1000, 0);
+      let naive_dt = NaiveDateTime::from_timestamp_opt(date / 1000, 0).unwrap();
       let date_str = naive_dt.format("%Y-%m-%d").to_string();
       throw!("No price found for {} at {}", currency, date_str);
     } else if errors.len() == 1 {
@@ -317,7 +317,10 @@ mod api_fetch {
   #[tokio::test]
   async fn exchangerate_host() {
     let mut pd = PriceData::new();
-    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+    let date = chrono::NaiveDate::from_ymd_opt(2020, 01, 10)
+      .unwrap()
+      .and_hms_opt(0, 0, 0)
+      .unwrap();
 
     let exchangerate_host = Api::new(ApiName::ExchangerateHost);
     let nok_price = pd
@@ -330,7 +333,10 @@ mod api_fetch {
   #[tokio::test]
   async fn coin_gecko() {
     let mut pd = PriceData::new();
-    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+    let date = chrono::NaiveDate::from_ymd_opt(2020, 01, 10)
+      .unwrap()
+      .and_hms_opt(0, 0, 0)
+      .unwrap();
     let coin_gecko = Api::new(ApiName::CoinGecko);
     let eth_price = pd
       .get_usd_price("ETH", date.timestamp_millis(), &[coin_gecko])
@@ -342,7 +348,10 @@ mod api_fetch {
   #[tokio::test]
   async fn crypto_compare() {
     let mut pd = PriceData::new();
-    let date = chrono::NaiveDate::from_ymd(2020, 01, 10).and_hms(0, 0, 0);
+    let date = chrono::NaiveDate::from_ymd_opt(2020, 01, 10)
+      .unwrap()
+      .and_hms_opt(0, 0, 0)
+      .unwrap();
     let crypto_compare = Api::new(ApiName::CryptoCompare);
     let eth_price = pd
       .get_usd_price("ETH", date.timestamp_millis(), &[crypto_compare])

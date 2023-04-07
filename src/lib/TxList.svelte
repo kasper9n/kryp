@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDate, formatTime, Transaction } from '$lib/transactions'
+  import { formatDate, formatTime, type Transaction } from '$lib/transactions'
   import { newSelection } from './selection'
   import { checkMouseShortcut, checkShortcut } from './general'
   import VirtualList from './VirtualList.svelte'

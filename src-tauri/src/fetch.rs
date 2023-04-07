@@ -10,7 +10,7 @@ use std::error::Error;
 use std::{thread, time};
 
 pub async fn fetch_prices(pda: &PriceDataAsset, api: &Api, date: i64) -> Result<Prices, String> {
-  let naive_dt = NaiveDateTime::from_timestamp(date / 1000, 0);
+  let naive_dt = NaiveDateTime::from_timestamp_opt(date / 1000, 0).unwrap();
   let date_str = naive_dt.format("%Y-%m-%d").to_string();
   println!("Fetch {:?} prices {} {}", api.name, pda.symbol, date_str);
 
@@ -41,7 +41,7 @@ async fn exchangerate_host(pda: &PriceDataAsset, date: i64) -> Result<Prices, Bo
   thread::sleep(time::Duration::from_millis(500));
 
   let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
-  let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
+  let start_dt = NaiveDateTime::from_timestamp_opt(start_timestamp, 0).unwrap();
   let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
   let end_dt = start_dt + Duration::days(365);
 
@@ -75,7 +75,7 @@ async fn exchangerate_host(pda: &PriceDataAsset, date: i64) -> Result<Prices, Bo
       Some(rate) => rate.parse().expect("Error parsing price"),
     };
     let d = NaiveDate::parse_from_str(&date, "%Y-%m-%d").expect("Error parsing price time");
-    let timestamp = d.and_hms(0, 0, 0).timestamp_millis();
+    let timestamp = d.and_hms_opt(0, 0, 0).unwrap().timestamp_millis();
     prices.entry(timestamp).or_insert(rate);
   }
   Ok(prices)
@@ -111,7 +111,7 @@ async fn coin_gecko(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn E
   thread::sleep(time::Duration::from_millis(600));
 
   let start_timestamp = date / 1000 - 60 * 60 * 24 * 3; // 3 day before
-  let start_dt = NaiveDateTime::from_timestamp(start_timestamp, 0);
+  let start_dt = NaiveDateTime::from_timestamp_opt(start_timestamp, 0).unwrap();
   let end_dt = start_dt + Duration::days(30);
 
   let request_url = format!(
