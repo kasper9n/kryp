@@ -1,4 +1,6 @@
 <script lang="ts">
+  // https://github.com/sveltejs/eslint-plugin-svelte/issues/348
+  // eslint-disable-next-line no-undef
   type T = $$Generic
   interface $$Slots {
     default: {

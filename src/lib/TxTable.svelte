@@ -55,6 +55,7 @@
       <th>Date</th>
     </tr>
   </thead>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <tbody on:click={tbodyClick}>
     {#each transactions as tx, i}
       <tr class:odd={i % 2 === 0}>

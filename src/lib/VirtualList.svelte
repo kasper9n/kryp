@@ -3,6 +3,8 @@
 
   const dispatch = createEventDispatcher()
 
+  // https://github.com/sveltejs/eslint-plugin-svelte/issues/348
+  // eslint-disable-next-line no-undef
   type T = $$Generic
   export let getItem: (index: number) => T
   export let itemCount: number
