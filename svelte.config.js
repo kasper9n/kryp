@@ -3,13 +3,13 @@ import { vitePreprocess } from '@sveltejs/kit/vite'
 
 /** @type {import('@sveltejs/kit').Config} */
 export default {
-  preprocess: vitePreprocess(),
+	preprocess: vitePreprocess(),
 
-  kit: {
-    adapter: adapter(),
-    alias: {
-      $routes: './src/routes',
-      $lib: './src/lib',
-    },
-  },
+	kit: {
+		adapter: adapter(),
+		alias: {
+			$routes: './src/routes',
+			$lib: './src/lib',
+		},
+	},
 }

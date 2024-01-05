@@ -2,14 +2,14 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  clearScreen: false,
-  server: {
-    port: 5448,
-    strictPort: true,
-  },
-  build: {
-    sourcemap: true,
-    target: ['chrome64', 'edge79', 'firefox62', 'safari11.1'],
-  },
-  plugins: [sveltekit()],
+	clearScreen: false,
+	server: {
+		port: 5448,
+		strictPort: true,
+	},
+	build: {
+		sourcemap: true,
+		target: ['chrome64', 'edge79', 'firefox62', 'safari11.1'],
+	},
+	plugins: [sveltekit()],
 })
