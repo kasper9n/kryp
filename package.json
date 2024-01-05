@@ -12,13 +12,15 @@
     "format": "eslint --fix src && prettier --write src"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^2.0.3",
+    "@sveltejs/kit": "^1.30.3",
     "@sveltejs/vite-plugin-svelte": "^2.5.3",
     "@tailwindcss/forms": "^0.5.7",
     "@tauri-apps/api": "^1.5.3",
     "@tauri-apps/cli": "^1.5.9",
     "@tsconfig/svelte": "^5.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
     "autoprefixer": "^10.4.16",
     "date-picker-svelte": "^2.10.1",
     "eslint": "^8.56.0",

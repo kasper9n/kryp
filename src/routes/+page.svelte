@@ -2,10 +2,9 @@
   import { runCmd } from '$lib/general'
   import { Pie } from 'svelte-chartjs'
   import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale } from 'chart.js'
+  import { darkMode } from '$lib/DarkMode'
 
   ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale)
-
-  export let darkMode: boolean
 
   type ChartItem = {
     label: string
@@ -79,8 +78,8 @@
         label: 'Value',
         backgroundColor: chartHoldings.map((_, index) => getColor(index) + 'cc'),
         hoverBackgroundColor: chartHoldings.map((_, index) => getColor(index)),
-        borderColor: darkMode ? '#000000' : '#ffffff',
-        hoverBorderColor: darkMode ? '#000000' : '#ffffff',
+        borderColor: $darkMode ? '#000000' : '#ffffff',
+        hoverBorderColor: $darkMode ? '#000000' : '#ffffff',
         data: chartHoldings.map((item) => Number(item.value)),
         borderWidth: 2,
         hoverBorderWidth: 0,

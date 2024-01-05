@@ -18,7 +18,7 @@
   import { runCmd } from '$lib/general'
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
-  import { router } from 'tinro'
+  import { goto } from '$app/navigation'
 
   let source = 'Kryp'
 
@@ -32,7 +32,7 @@
   async function importFile() {
     const cancelled = await runCmd('scan_import_file', { source, tz: timezone })
     if (!cancelled) {
-      router.goto('/import/confirm')
+      goto('/import/confirm')
     }
   }
 

@@ -1,23 +1,16 @@
 <script lang="ts">
-  import './app.css'
+  import '../app.css'
   import { event } from '@tauri-apps/api'
   import { onDestroy } from 'svelte'
-  import { active, router } from 'tinro'
-  import Route from 'tinro/cmp/Route.svelte'
+  import { goto } from '$app/navigation'
   import { runCmd } from '$lib/general'
   import { opened, settings } from '$lib/data'
   import NewFileModal from '$lib/modals/NewFile.svelte'
   import SettingsModal from '$lib/modals/Settings.svelte'
   import Button from '$lib/Button.svelte'
-  import DashboardPage from '$routes/+page.svelte'
-  import TransactionsPage from '$routes/transactions/+page.svelte'
-  import ReportsPage from './reports/+page.svelte'
-  import PricesPage from '$routes/prices/+page.svelte'
-  import HelpPage from '$routes/help/+page.svelte'
-  import ImportPage from '$routes/import/+page.svelte'
-  import ImportConfirmPage from '$routes/import/confirm/+page.svelte'
   import FileDrop from 'svelte-tauri-filedrop'
   import { fade } from 'svelte/transition'
+  import { page } from '$app/stores'
 
   // prevent history from being written, to hide context menu Back/Forwards buttons
   function go(e: MouseEvent) {
@@ -27,7 +20,7 @@
         e.preventDefault()
         e.stopPropagation()
         e.stopImmediatePropagation()
-        router.goto(href, true)
+        goto(href)
       }
     }
   }
@@ -49,11 +42,11 @@
   }
   const unlistenFuture = event.listen('tauri://menu', async ({ payload }) => {
     if (payload === 'Dashboard') {
-      router.goto('/', true)
+      goto('/')
     } else if (payload === 'Transactions') {
-      router.goto('/transactions', true)
+      goto('/transactions')
     } else if (payload === 'Reports') {
-      router.goto('/reports', true)
+      goto('/reports')
     } else if (payload === 'New' && !$opened) {
       newFileModalVisible = true
     } else if (payload === 'Preferences...' && $opened) {
@@ -65,7 +58,7 @@
     } else if (payload === 'Save As...') {
       saveAs()
     } else if (payload === 'Import...' && $opened) {
-      router.goto('/import', true)
+      goto('/import')
     } else if (payload === 'Export...') {
       await runCmd('export')
     } else if (payload === 'Close') {
@@ -76,30 +69,30 @@
     const unlisten = await unlistenFuture
     unlisten()
   })
-
-  const prefersDarkMQ = matchMedia('(prefers-color-scheme: dark)')
-  let darkMode = prefersDarkMQ.matches
-  function handler(e: { matches: boolean }) {
-    darkMode = e.matches
-  }
-  // new onchange/addEventListenr api not supported in macOS Catalina
-  if (prefersDarkMQ.addListener) {
-    prefersDarkMQ.addListener(handler)
-    onDestroy(() => {
-      prefersDarkMQ?.removeListener(handler)
-    })
-  }
 </script>
 
 {#if $opened}
   <nav class="z-10 flex h-12 select-none items-center space-x-2 px-4 text-sm">
-    <a class="item" on:click={go} use:active data-exact href="/"><span>Dashboard</span></a>
-    <a class="item" on:click={go} use:active href="/transactions"><span>Transactions</span></a>
-    <a class="item" on:click={go} use:active href="/reports"><span>Reports</span></a>
+    <a class="item" on:click={go} class:active={$page.route.id === '/'} href="/"
+      ><span>Dashboard</span></a
+    >
+    <a
+      class="item"
+      on:click={go}
+      class:active={$page.route.id === '/transactions'}
+      href="/transactions"><span>Transactions</span></a
+    >
+    <a class="item" on:click={go} class:active={$page.route.id === '/reports'} href="/reports"
+      ><span>Reports</span></a
+    >
     <div class="nav-mid" />
     <span class="rounded border bg-white px-1.5 dark:bg-black">{$settings.base_currency}</span>
-    <a class="item" on:click={go} use:active href="/prices"><span>Prices</span></a>
-    <a class="item" on:click={go} use:active href="/help"><span>Help</span></a>
+    <a class="item" on:click={go} class:active={$page.route.id === '/prices'} href="/prices"
+      ><span>Prices</span></a
+    >
+    <a class="item" on:click={go} class:active={$page.route.id === '/help'} href="/help"
+      ><span>Help</span></a
+    >
     <button class="item" on:click={() => (settingsModalVisible = true)}>
       <span class="icon">
         <svg
@@ -117,15 +110,7 @@
   </nav>
 
   <main class="h-0 flex-grow overflow-y-auto">
-    <Route path="/"><DashboardPage {darkMode} /></Route>
-    <Route path="/transactions"><TransactionsPage on:import={() => router.goto('/import')} /></Route
-    >
-    <Route path="/prices"><PricesPage /></Route>
-    <Route path="/help"><HelpPage /></Route>
-    <Route path="/import"><ImportPage /></Route>
-    <Route path="/import/confirm"><ImportConfirmPage /></Route>
-    <Route path="/reports"><ReportsPage /></Route>
-    <Route fallback>404</Route>
+    <slot />
   </main>
 {:else}
   <div class="start-page">
@@ -237,7 +222,7 @@
       background-color: hsla(215, 20%, 50%, 0.2)
       box-shadow: 0px 0px 0px var(--shadow-size) hsla(215, 20%, 50%, 0.2)
   // global to prevent treeshaking
-  nav :global(.item.active)
+  nav .item.active
     color: var(--text)
   .nav-mid
     width: 50px

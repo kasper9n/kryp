@@ -3,16 +3,15 @@
   import TxList from '$lib/TxList.svelte'
   import TransactionModal from '$lib/modals/Transaction.svelte'
   import Button from '$lib/Button.svelte'
-  import { createEventDispatcher } from 'svelte'
   import { tags, type Transaction } from '$lib/transactions'
   import { runCmd } from '$lib/general'
   import ButtonGroup from '$lib/ButtonGroup.svelte'
   import InlinePopup from '$lib/InlinePopup.svelte'
+  import { goto } from '$app/navigation'
 
   let view = 0
 
   let showAdd = false
-  const dispatch = createEventDispatcher()
   function closeModal() {
     showAdd = false
     reload()
@@ -36,7 +35,7 @@
     <div class="p-1.5" />
     <Button on:click={() => (showAdd = true)}>Add</Button>
     <div class="p-1.5" />
-    <Button secondary on:click={() => dispatch('import')}>Import</Button>
+    <Button secondary on:click={() => goto('/import')}>Import</Button>
   </div>
   <div class="my-2 flex flex-shrink-0 items-center px-4">
     <InlinePopup let:toggle>

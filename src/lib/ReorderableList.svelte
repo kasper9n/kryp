@@ -2,6 +2,7 @@
   // https://github.com/sveltejs/eslint-plugin-svelte/issues/348
   // eslint-disable-next-line no-undef
   type T = $$Generic
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface $$Slots {
     default: {
       item: T

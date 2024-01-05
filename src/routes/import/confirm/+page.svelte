@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '$lib/Button.svelte'
   import { runCmd } from '$lib/general'
-  import { router } from 'tinro'
+  import { goto } from '$app/navigation'
   import type { ImportData } from '../+page.svelte'
   import TxTableRow from '../TxTableRow.svelte'
 
@@ -13,12 +13,12 @@
 
   async function continueImport() {
     await runCmd('continue_import')
-    router.goto('/transactions')
+    goto('/transactions')
   }
 
   async function cancel() {
     await runCmd('cancel_import')
-    router.goto('/import')
+    goto('/import')
   }
 
   async function updateImportTransactions() {
