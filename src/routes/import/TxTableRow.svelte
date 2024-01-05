@@ -3,7 +3,7 @@
   import StringQuantity from '$lib/StringQuantity.svelte'
   import { formatDateTime } from '$lib/transactions'
   import type { Transaction } from '$lib/transactions'
-  import type { ImportData } from './index.svelte'
+  import type { ImportData } from './+page.svelte'
 
   export let transaction: Transaction
   export let cost: string | null

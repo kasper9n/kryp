@@ -2,8 +2,8 @@
   import Button from '$lib/Button.svelte'
   import { runCmd } from '$lib/general'
   import { router } from 'tinro'
-  import type { ImportData } from './index.svelte'
-  import TxTableRow from './TxTableRow.svelte'
+  import type { ImportData } from '../+page.svelte'
+  import TxTableRow from '../TxTableRow.svelte'
 
   let importData: ImportData | null = null
   runCmd('get_import_data').then((data: ImportData) => {
