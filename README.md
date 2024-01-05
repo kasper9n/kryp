@@ -17,11 +17,11 @@
 - `npm run test`: Runs tests. Some of these could fail due to API rate limiting or downtime.
 
 ### ToDo
+- https://www.frankfurter.app/docs/
+- https://www.amdoren.com/currency-api/
 - https://crates.io/crates/undo
 - https://www.quandl.com/tools/api
 - https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
-- https://openexchangerates.org/
-- https://www.amdoren.com/currency-api/
 
 ### Attribution
 - Icons: Material & Iconmonstr

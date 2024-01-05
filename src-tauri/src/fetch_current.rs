@@ -33,7 +33,7 @@ pub async fn fetch_current(assets: Vec<&String>, base: &String) -> Result<Curren
 		Err(e) => throw!("{}", e),
 		Ok(p) => p,
 	};
-	let fiat_prices = match exchangerate_host().await {
+	let fiat_prices = match frankfurter().await {
 		Err(e) => throw!("{}", e),
 		Ok(p) => p,
 	};
@@ -62,24 +62,34 @@ pub async fn fetch_current(assets: Vec<&String>, base: &String) -> Result<Curren
 	Ok(prices)
 }
 
-async fn exchangerate_host() -> Result<CurrentPrices, Box<dyn Error>> {
+async fn frankfurter() -> Result<CurrentPrices, Box<dyn Error>> {
 	#[derive(Deserialize, Debug)]
 	struct Latest {
-		success: bool,
-		rates: CurrentPrices,
+		// amount: f64,
+		rates: Option<CurrentPrices>,
+		message: Option<String>,
 	}
 
-	let request_url = "https://api.exchangerate.host/latest?base=USD";
+	let request_url = "https://api.frankfurter.app/latest?base=USD";
 	let response = http_get(request_url).await?;
-	if !response.status().is_success() {
-		return err!("Error fetching current prices from Exchanerate.host");
-	}
-	let latest: Latest = response.json().await?;
-	if !latest.success {
-		return err!("Unknown error fetching current prices from Exchanerate.host");
+	let status = response.status();
+	let latest = response.json::<Latest>().await;
+
+	if !status.is_success() {
+		let message = match latest {
+			Ok(latest) => latest.message.unwrap_or_default(),
+			Err(e) => e.to_string(),
+		};
+		return err!(
+			"Error fetching current prices from frankfurter.app: {}",
+			message
+		);
 	}
 
-	Ok(latest.rates)
+	match latest?.rates {
+		None => err!("No rates returned from frankfurter.app"),
+		Some(rates) => Ok(rates),
+	}
 }
 
 async fn coin_gecko(ids: &[String]) -> Result<CurrentPrices, Box<dyn Error>> {
