@@ -5,7 +5,6 @@ use chrono::{Duration, NaiveDate, NaiveDateTime};
 use reqwest;
 use serde::Deserialize;
 use serde_json::Value;
-use std::collections::HashMap;
 use std::error::Error;
 use std::{thread, time};
 
@@ -16,7 +15,7 @@ pub async fn fetch_prices(pda: &PriceDataAsset, api: &Api, date: i64) -> Result<
 
 	let result = match pda.kind {
 		AssetKind::Fiat => match api.name {
-			ApiName::ExchangerateHost => exchangerate_host(pda, date).await,
+			ApiName::ExchangerateHost => ecb(pda, date).await,
 			_ => throw!("Asset type not supported for this API"),
 		},
 		AssetKind::Crypto => match api.name {
@@ -37,7 +36,7 @@ pub async fn http_get(url: &str) -> Result<reqwest::Response, reqwest::Error> {
 	reqwest::get(url).await
 }
 
-async fn exchangerate_host(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn Error>> {
+async fn ecb(pda: &PriceDataAsset, date: i64) -> Result<Prices, Box<dyn Error>> {
 	thread::sleep(time::Duration::from_millis(500));
 
 	let start_timestamp = date / 1000 - 60 * 60 * 24 * 10; // 10 days before
@@ -45,40 +44,75 @@ async fn exchangerate_host(pda: &PriceDataAsset, date: i64) -> Result<Prices, Bo
 	let start_dt_str = start_dt.format("%Y-%m-%d").to_string();
 	let end_dt = start_dt + Duration::days(365);
 
-	type PriceMap = HashMap<String, String>;
-	#[derive(Deserialize, Debug)]
-	struct Timeseries {
-		success: bool,
-		timeseries: bool,
-		rates: HashMap<String, PriceMap>,
-	}
+	// https://data.ecb.europa.eu/data/datasets/EXR/structure
+	// https://data.ecb.europa.eu/help/api/overview
 	let request_url = format!(
-		"https://api.exchangerate.host/timeseries?base={symbol}&symbols={base}&places=8&start_date={from}&end_date={to}",
+		"https://data-api.ecb.europa.eu/service/data/EXR/D.{symbol}.{base}.SP00.A?startPeriod={from}&endPeriod={to}&format=jsondata",
 		symbol = pda.id,
-		base = "USD",
 		from = start_dt_str,
+		base = "EUR", // Only EUR is supported
 		to = end_dt.format("%Y-%m-%d").to_string(),
 	);
-
 	let timeseries_res = http_get(&request_url).await?;
 	if !timeseries_res.status().is_success() {
 		return err!("Error fetching price of {}", pda.id);
 	}
-	let timeseries: Timeseries = timeseries_res.json().await?;
-	if !timeseries.success || !timeseries.timeseries {
-		return err!("Unknown error fetching prices");
-	}
+	let timeseries_body = timeseries_res.bytes().await?;
+
+	// TODO convert EUR to be based in USD
+
+	let mut timeseries_reader = csv::Reader::from_reader(timeseries_body.as_ref());
 	let mut prices = Prices::new();
-	for (date, price_map) in timeseries.rates {
-		let rate: f64 = match price_map.get("USD") {
-			None => continue,
-			Some(rate) => rate.parse().expect("Error parsing price"),
-		};
-		let d = NaiveDate::parse_from_str(&date, "%Y-%m-%d").expect("Error parsing price time");
-		let timestamp = d.and_hms_opt(0, 0, 0).unwrap().timestamp_millis();
+	for row in timeseries_reader.deserialize::<EcbExchangeRateRow>() {
+		let row = row.or_else(|e| throw!("Error parsing ECV data: {}", e))?;
+		if row.freq != "D" {
+			return err!("Unexpected frequency: {}", row.freq);
+		}
+
+		let rate: f64 = row.obs_value.parse().expect("Error parsing price");
+		let d = NaiveDate::parse_from_str(&row.time_period, "%Y-%m-%d")?;
+		// ECB data is the spot price average (SP00.A), so we use the middle of the day
+		let timestamp = d.and_hms_opt(12, 0, 0).unwrap().timestamp_millis();
 		prices.entry(timestamp).or_insert(rate);
 	}
 	Ok(prices)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub struct EcbExchangeRateRow {
+	key: String,
+	freq: String,
+	currency: String,
+	currency_denom: String,
+	exr_type: String,
+	exr_suffix: String,
+	time_period: String,
+	obs_value: String,
+	obs_status: String,
+	obs_conf: String,
+	obs_pre_break: String,
+	obs_com: String,
+	time_format: String,
+	breaks: String,
+	collection: String,
+	compiling_org: String,
+	diss_org: String,
+	dom_ser_ids: String,
+	publ_ecb: String,
+	publ_mu: String,
+	publ_public: String,
+	unit_index_base: String,
+	compilation: String,
+	coverage: String,
+	decimals: String,
+	nat_title: String,
+	source_agency: String,
+	source_pub: String,
+	title: String,
+	title_compl: String,
+	unit: String,
+	unit_mult: String,
 }
 
 #[derive(Deserialize, Debug)]
