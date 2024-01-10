@@ -289,7 +289,7 @@ pub enum AssetKind {
 #[test]
 fn crypto() {
 	let mut pd = PriceData::new();
-	let mut eth_pda = pd.asset("ETH").unwrap();
+	let eth_pda = pd.asset("ETH").unwrap();
 	eth_pda.prices = map! {
 		1600000000000 => 5.2,
 		1600009000000 => 6.1

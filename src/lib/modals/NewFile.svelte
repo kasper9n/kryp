@@ -1,37 +1,27 @@
 <script lang="ts">
 	import { runCmd } from '$lib/general'
-	import Modal from '$lib/Modal.svelte'
+	import Modal from 'modal-svelte'
 	import Button from '$lib/Button.svelte'
-	import { createEventDispatcher } from 'svelte'
 	import TextInput from '$lib/TextInput.svelte'
 
-	const dispatch = createEventDispatcher()
+	export let onClose: () => void
 	let baseCurrency = 'USD'
 
-	function keydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault()
-			dispatch('close')
-		}
-	}
 	async function create() {
 		await runCmd('new_file', {
 			baseCurrency: baseCurrency,
 		})
-		dispatch('close')
+		onClose()
 	}
 </script>
 
-<Modal width="340px" on:close on:keydown={keydown} let:focus>
-	<h2>New File</h2>
-	<form on:submit|preventDefault={create}>
-		<p>Base currency</p>
-		<TextInput bind:value={baseCurrency} action={focus} />
-		<div class="mt-4 grid grid-flow-col justify-end gap-2">
-			<Button secondary on:click={() => dispatch('close')}>Cancel</Button>
-			<Button type="submit">Create</Button>
-		</div>
-	</form>
+<Modal title="New File" class="w-[340px]" form={create} onCancel={onClose}>
+	<p>Base currency</p>
+	<TextInput bind:value={baseCurrency} autofocus />
+	<div class="mt-4 grid grid-flow-col justify-end gap-2">
+		<Button secondary on:click={() => onClose()}>Cancel</Button>
+		<Button type="submit">Create</Button>
+	</div>
 </Modal>
 
 <style lang="sass">

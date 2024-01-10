@@ -1,24 +1,17 @@
 <script lang="ts">
 	import Button from '$lib/Button.svelte'
 	import { settings } from '$lib/data'
-	import Modal from '$lib/Modal.svelte'
+	import Modal from 'modal-svelte'
 	import ReorderableList from '$lib/ReorderableList.svelte'
-	import { createEventDispatcher } from 'svelte'
 
-	const dispatch = createEventDispatcher()
+	export let onClose: () => void
 
-	function keydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault()
-			dispatch('close')
-		}
-	}
 	function save() {
 		console.log('x save')
 	}
 </script>
 
-<Modal width="520px" title="Settings" on:keydown={keydown} on:close>
+<Modal title="Settings" class="w-[520px]" onCancel={onClose}>
 	<form on:submit|preventDefault={save} class="container">
 		<h4>Base currency</h4>
 		<input type="text" value={$settings.base_currency} disabled />
@@ -48,7 +41,7 @@
 			</div>
 		</ReorderableList>
 		<div class="mt-4 grid grid-flow-col justify-end gap-2">
-			<Button secondary on:click={() => dispatch('close')}>Cancel</Button>
+			<Button secondary on:click={() => onClose()}>Cancel</Button>
 			<Button type="submit">Save</Button>
 		</div>
 	</form>

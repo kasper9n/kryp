@@ -71,7 +71,7 @@
 </div>
 
 {#if showAdd}
-	<TransactionModal on:close={closeModal} />
+	<TransactionModal onClose={closeModal} />
 {/if}
 
 <style lang="sass">

@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { DateInput } from 'date-picker-svelte'
 	import Button from '$lib/Button.svelte'
-	import Modal from '$lib/Modal.svelte'
+	import Modal from 'modal-svelte'
 	import { tags, type Transaction } from '$lib/transactions'
 	import { popup, runCmd, UnreachableCaseError } from '$lib/general'
 	import NumericInput from '$lib/NumericInput.svelte'
 	import Dropdown from '$lib/Dropdown.svelte'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 
-	const dispatch = createEventDispatcher()
-	function close() {
-		dispatch('close')
-	}
+	export let onClose: () => void
 	function numStr(str: string) {
 		if (str === '') return '0'
 		else return str
@@ -96,7 +93,7 @@
 		}
 		console.log('Add transaction:', json)
 		await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
-		close()
+		onClose()
 	}
 	let tag = tags[0]
 	$: enabledFields = getEnabledFields(tag.type)
@@ -175,16 +172,9 @@
 		hasErrors = !!errors.size || !validDate
 	}
 	$: validate(info, true)
-
-	function keydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault()
-			close()
-		}
-	}
 </script>
 
-<Modal on:keydown={keydown} on:close>
+<Modal onCancel={onClose}>
 	<form on:submit|preventDefault={save} class="container">
 		<h2>Add transaction</h2>
 		<div class="row">
@@ -307,7 +297,7 @@
 			<textarea class="note" bind:value={info.note} />
 		</div>
 		<div class="mt-4 grid grid-flow-col justify-end gap-2">
-			<Button secondary on:click={close}>Cancel</Button>
+			<Button secondary on:click={() => onClose()}>Cancel</Button>
 			<Button type="submit">Add</Button>
 		</div>
 	</form>

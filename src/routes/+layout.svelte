@@ -130,10 +130,10 @@
 {/if}
 
 {#if newFileModalVisible}
-	<NewFileModal on:close={() => (newFileModalVisible = false)} />
+	<NewFileModal onClose={() => (newFileModalVisible = false)} />
 {/if}
 {#if settingsModalVisible}
-	<SettingsModal on:close={() => (settingsModalVisible = false)} />
+	<SettingsModal onClose={() => (settingsModalVisible = false)} />
 {/if}
 
 <style lang="sass">
