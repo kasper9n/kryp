@@ -7,7 +7,6 @@
 	import { opened, settings } from '$lib/data'
 	import NewFileModal from '$lib/modals/NewFile.svelte'
 	import SettingsModal from '$lib/modals/Settings.svelte'
-	import Button from '$lib/Button.svelte'
 	import FileDrop from 'svelte-tauri-filedrop'
 	import { fade } from 'svelte/transition'
 	import { page } from '$app/stores'
@@ -116,8 +115,12 @@
 	<div class="start-page">
 		<h1>Kryp</h1>
 		<div class="buttons">
-			<Button neutral on:click={() => open()}>Open</Button>
-			<Button neutral on:click={() => (newFileModalVisible = true)}>New</Button>
+			<button type="button" class="button button-neutral" on:click={() => open()}>Open</button>
+			<button
+				type="button"
+				class="button button-neutral"
+				on:click={() => (newFileModalVisible = true)}>New</button
+			>
 		</div>
 		<FileDrop extensions={['json']} handleOneFile={open} let:files>
 			{#if files.length > 0}

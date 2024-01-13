@@ -28,9 +28,8 @@
 		border: none
 		font-size: 13px
 		font-weight: 500
-		$accent: #3061F6
-		background-color: $accent
-		box-shadow: 0px 0px 2px 0px $accent
+		background-color: #3061F6
+		box-shadow: 0px 0px 2px 0px #3061F6
 		color: #ffffff
 		border-radius: 7px
 		transition: 100ms ease-out
@@ -40,9 +39,8 @@
 			transform: scale(0.95)
 	.neutral
 		margin: 0px 5px
-		$neutral: #242429
-		background-color: $neutral
-		box-shadow: 0px 0px 2px 0px $neutral
+		background-color: #242429
+		box-shadow: 0px 0px 2px 0px #242429
 		height: 30px
 		padding: 0px 22px
 	.secondary

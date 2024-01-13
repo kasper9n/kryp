@@ -2,7 +2,6 @@
 	import TxTable from '$lib/TxTable.svelte'
 	import TxList from '$lib/TxList.svelte'
 	import TransactionModal from '$lib/modals/Transaction.svelte'
-	import Button from '$lib/Button.svelte'
 	import { tags, type Transaction } from '$lib/transactions'
 	import { runCmd } from '$lib/general'
 	import ButtonGroup from '$lib/ButtonGroup.svelte'
@@ -33,13 +32,17 @@
 	<div class="mt-2 flex flex-shrink-0 items-center px-4">
 		<ButtonGroup values={['List', 'Table']} bind:selected={view} />
 		<div class="p-1.5" />
-		<Button on:click={() => (showAdd = true)}>Add</Button>
+		<button type="button" class="button" on:click={() => (showAdd = true)}>Add</button>
 		<div class="p-1.5" />
-		<Button secondary on:click={() => goto('/import')}>Import</Button>
+		<button type="button" class="button button-secondary" on:click={() => goto('/import')}
+			>Import</button
+		>
 	</div>
 	<div class="my-2 flex flex-shrink-0 items-center px-4">
 		<InlinePopup let:toggle>
-			<Button secondary slim on:click={toggle}>Type</Button>
+			<button type="button" class="button button-secondary button-slim" on:click={toggle}
+				>Type</button
+			>
 			<div slot="popup" class="popup-box rounded bg-white px-4 py-2 dark:bg-black">
 				{#each tags as tag}
 					<label class="flex select-none items-center">

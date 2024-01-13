@@ -107,6 +107,8 @@
 			box-shadow: 0px 0px 0px 2px var(--input-highlight-shadow)
 	.asset:focus
 		z-index: 1 // outline fix
+	.odd
+		background-color: var(--bg-max)
 	.asset
 		min-width: 60px
 		width: 0px

@@ -14,7 +14,6 @@
 </script>
 
 <script lang="ts">
-	import Button from '$lib/Button.svelte'
 	import { runCmd } from '$lib/general'
 	import { event } from '@tauri-apps/api'
 	import { onDestroy } from 'svelte'
@@ -71,7 +70,7 @@
 		</div>
 		<p class="center">Import a custom CSV or TSV file</p>
 		<div class="center my-4">
-			<Button on:click={importFile}>Import</Button>
+			<button type="button" class="button" on:click={importFile}>Import</button>
 		</div>
 	{/if}
 </div>

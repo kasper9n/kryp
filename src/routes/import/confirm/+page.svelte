@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Button from '$lib/Button.svelte'
 	import { runCmd } from '$lib/general'
 	import { goto } from '$app/navigation'
 	import type { ImportData } from '../+page.svelte'
@@ -37,16 +36,18 @@
 {:else if !importData.has_errors}
 	<p class="text-center">Successful scan. Continue to import?</p>
 	<div class="button-row flex justify-center">
-		<Button secondary on:click={cancel}>Cancel</Button>
+		<button type="button" class="button button-secondary" on:click={cancel}>Cancel</button>
 		<div class="w-2" />
-		<Button disabled={importData.has_errors} on:click={continueImport}>Continue</Button>
+		<button type="button" class="button" disabled={importData.has_errors} on:click={continueImport}
+			>Continue</button
+		>
 	</div>
 {:else}
 	<p class="red text-center">
 		Could not calculate the cost of the following transactions. Please enter them manually
 	</p>
 	<div class="button-row">
-		<Button on:click={updateImportTransactions}>Save</Button>
+		<button type="button" class="button" on:click={updateImportTransactions}>Save</button>
 	</div>
 	<table>
 		<thead>

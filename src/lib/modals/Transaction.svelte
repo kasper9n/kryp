@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { DateInput } from 'date-picker-svelte'
-	import Button from '$lib/Button.svelte'
 	import Modal from 'modal-svelte'
 	import { tags, type Transaction } from '$lib/transactions'
 	import { popup, runCmd, UnreachableCaseError } from '$lib/general'
@@ -297,8 +296,10 @@
 			<textarea class="note" bind:value={info.note} />
 		</div>
 		<div class="mt-4 grid grid-flow-col justify-end gap-2">
-			<Button secondary on:click={() => onClose()}>Cancel</Button>
-			<Button type="submit">Add</Button>
+			<button type="button" class="button button-secondary" on:click={() => onClose()}
+				>Cancel</button
+			>
+			<button type="submit" class="button">Add</button>
 		</div>
 	</form>
 </Modal>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Button from '$lib/Button.svelte'
 	import { settings } from '$lib/data'
 	import Modal from 'modal-svelte'
 	import ReorderableList from '$lib/ReorderableList.svelte'
@@ -41,8 +40,10 @@
 			</div>
 		</ReorderableList>
 		<div class="mt-4 grid grid-flow-col justify-end gap-2">
-			<Button secondary on:click={() => onClose()}>Cancel</Button>
-			<Button type="submit">Save</Button>
+			<button type="button" class="button button-secondary" on:click={() => onClose()}
+				>Cancel</button
+			>
+			<button type="submit" class="button">Save</button>
 		</div>
 	</form>
 </Modal>
