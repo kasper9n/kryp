@@ -370,6 +370,7 @@ impl Transaction {
 		let manual_worth = self.manual_worth().as_ref().unwrap_or(&empty);
 		match self {
 			Transaction::Trade(trade) => {
+				let feeless = trade.fee_amount == dec!(0) && trade.fee_asset == "";
 				vec![
 					trade.tag.clone(),
 					trade.sent_amount.to_string(),
@@ -378,7 +379,11 @@ impl Transaction {
 					trade.recv_amount.to_string(),
 					trade.recv_asset.clone(),
 					trade.recv_wallet.clone(),
-					trade.fee_amount.to_string(),
+					if feeless {
+						"".to_string()
+					} else {
+						trade.fee_amount.to_string()
+					},
 					trade.fee_asset.clone(),
 					trade.note.clone(),
 					trade.hash.clone(),
@@ -483,8 +488,10 @@ pub struct Quantity {
 }
 impl Quantity {
 	pub fn new(amount: String, asset: String) -> Result<Quantity, String> {
-		if amount == "" || asset == "" {
-			throw!("Invalid amount/asset: {} {}", amount, asset);
+		if amount == "" {
+			throw!("Invalid amount \"{}\"", amount);
+		} else if asset == "" {
+			throw!("Invalid asset \"{}\"", asset);
 		} else {
 			let num = match Decimal::from_str(&amount) {
 				Ok(d) => d,

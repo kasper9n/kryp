@@ -135,7 +135,7 @@ async fn from_row(
 
 	let base_transaction = BaseTransaction {
 		tag: parse_kind(kind).into(),
-		date: match Utc.datetime_from_str(date, "%Y-%m-%d %H:%M:%S UTC") {
+		date: match Utc.datetime_from_str(date, "%Y-%m-%d %H:%M:%S%.f UTC") {
 			Ok(date) => date.timestamp_millis(),
 			Err(_) => match tz.datetime_from_str(date, "%Y-%m-%d %H:%M:%S") {
 				Ok(date) => date.timestamp_millis(),
