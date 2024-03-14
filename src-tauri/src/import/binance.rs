@@ -266,16 +266,23 @@ async fn parse_all_statements_row(
 			base_transaction.tag = "Gift".into();
 			base_transaction.recv = Some(Value::new(change, coin, "Binance")?);
 		}
-		("Spot", "Savings Interest" | "POS savings interest" | "Launchpool Interest") => {
+		(
+			"Spot",
+			"Savings Interest"
+			| "POS savings interest"
+			| "Launchpool Interest"
+			| "Simple Earn Flexible Interest"
+			| "ETH 2.0 Staking Rewards",
+		) => {
 			base_transaction.tag = "Interest".into();
 			base_transaction.recv = Some(Value::new(change, coin, "Binance")?);
 		}
 		// skip savings balance "lock-ins"
-		("Spot", "Savings purchase" | "POS savings purchase") => {
+		("Spot", "Staking Purchase" | "ETH 2.0 Staking" | "Simple Earn Flexible Subscription") => {
 			return Ok(None);
 		}
 		// skip savings balance "lock-in releases"
-		("Spot", "Savings Principal redemption" | "POS savings redemption") => {
+		("Spot", "Simple Earn Flexible Redemption" | "Staking Redemption") => {
 			return Ok(None);
 		}
 		("Spot", "Small assets exchange BNB") => {
