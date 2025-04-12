@@ -162,7 +162,25 @@
 				},
 				{
 					text: 'Window',
-					items: [{ item: 'Minimize' }, { item: 'Maximize' }],
+					items: [
+						{
+							text: 'Back',
+							accelerator: 'cmdOrControl+[',
+							action() {
+								history.back()
+							},
+						},
+						{
+							text: 'Forward',
+							accelerator: 'cmdOrControl+]',
+							action() {
+								history.forward()
+							},
+						},
+						{ item: 'Separator' },
+						{ item: 'Minimize' },
+						{ item: 'Maximize' },
+					],
 				},
 			],
 		})
