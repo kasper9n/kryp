@@ -12,7 +12,7 @@ use tauri::{
 };
 use tauri_plugin_dialog::{DialogExt, FilePath, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_opener::OpenerExt;
-use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+use tauri_plugin_window_state::{AppHandleExt, StateFlags, WindowExt};
 
 mod calc;
 mod data;
@@ -114,7 +114,8 @@ fn main() {
 				.inner_size(1050.0, 800.0)
 				.min_inner_size(300.0, 200.0)
 				.fullscreen(false)
-				.build();
+				.visible(false) // tauri_plugin_window_state will reveal the window
+				.build()?;
 
 			Ok(())
 		})
