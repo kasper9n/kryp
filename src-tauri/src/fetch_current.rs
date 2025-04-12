@@ -40,6 +40,7 @@ pub async fn fetch_current(assets: Vec<&String>, base: &String) -> Result<Curren
 
 	let mut id_prices = crypto_prices;
 	id_prices.extend(fiat_prices);
+	id_prices.insert("USD".to_string(), dec!(1));
 	let base_price = id_prices
 		.get(base)
 		.ok_or("No base price".to_string())?
