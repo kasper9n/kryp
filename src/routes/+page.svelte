@@ -147,7 +147,7 @@
 		<div class="sidebar">
 			{#if chartHoldings.length >= 1}
 				<div class="center">
-					<canvas use:create_chart />
+					<canvas use:create_chart></canvas>
 				</div>
 			{/if}
 		</div>
@@ -177,7 +177,7 @@
 				{/each}
 			{/await}
 		</div>
-		<div class="sidebar" />
+		<div class="sidebar"></div>
 	</div>
 </div>
 

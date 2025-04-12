@@ -45,26 +45,26 @@
 			<td class="recv amount">{transaction.recv_amount}</td>
 			<td class="recv asset">{transaction.recv_asset}</td>
 			<td class="recv wallet">{transaction.recv_wallet}</td>
-			<td class="fee amount" />
-			<td class="fee asset" />
+			<td class="fee amount"></td>
+			<td class="fee asset"></td>
 		{:else if transaction.type === 'Deposit'}
-			<td class="sent amount" />
-			<td class="sent asset" />
-			<td class="sent wallet" />
+			<td class="sent amount"></td>
+			<td class="sent asset"></td>
+			<td class="sent wallet"></td>
 			<td class="recv amount">{transaction.amount}</td>
 			<td class="recv asset">{transaction.asset}</td>
 			<td class="recv wallet">{transaction.wallet}</td>
-			<td class="fee amount" />
-			<td class="fee asset" />
+			<td class="fee amount"></td>
+			<td class="fee asset"></td>
 		{:else if transaction.type === 'Withdrawal'}
 			<td class="sent amount">{transaction.amount}</td>
 			<td class="sent asset">{transaction.asset}</td>
 			<td class="sent wallet">{transaction.wallet}</td>
-			<td class="recv amount" />
-			<td class="recv asset" />
-			<td class="recv wallet" />
-			<td class="fee amount" />
-			<td class="fee asset" />
+			<td class="recv amount"></td>
+			<td class="recv asset"></td>
+			<td class="recv wallet"></td>
+			<td class="fee amount"></td>
+			<td class="fee asset"></td>
 		{/if}
 		<td class="note">{transaction.note}</td>
 		<td class="hash">{transaction.hash}</td>

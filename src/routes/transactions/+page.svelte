@@ -31,9 +31,9 @@
 <div class="flex h-full flex-col">
 	<div class="mt-2 flex flex-shrink-0 items-center px-4">
 		<ButtonGroup values={['List', 'Table']} bind:selected={view} />
-		<div class="p-1.5" />
+		<div class="p-1.5"></div>
 		<button type="button" class="button" on:click={() => (showAdd = true)}>Add</button>
-		<div class="p-1.5" />
+		<div class="p-1.5"></div>
 		<button type="button" class="button button-secondary" on:click={() => goto('/import')}
 			>Import</button
 		>
@@ -52,7 +52,7 @@
 				{/each}
 			</div>
 		</InlinePopup>
-		<div class="p-1.5" />
+		<div class="p-1.5"></div>
 		<div class="relative">
 			<input
 				class="w-28 rounded px-3 py-1"

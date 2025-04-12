@@ -141,7 +141,7 @@
 			</div>
 			<div class="kind">{tx.tag}</div>
 			{#if tx.type === 'Deposit'}
-				<div class="sent" />
+				<div class="sent"></div>
 			{:else if tx.type === 'Withdrawal'}
 				<div class="sent">{tx.amount} {tx.asset} {tx.wallet}</div>
 			{:else}
@@ -160,7 +160,7 @@
 				>
 			</div>
 			{#if tx.type === 'Withdrawal'}
-				<div class="recv" />
+				<div class="recv"></div>
 			{:else if tx.type === 'Deposit'}
 				<div class="recv">{tx.amount} {tx.asset} {tx.wallet}</div>
 			{:else}

@@ -126,7 +126,7 @@
 				{#if report}{report.total_realized}{/if}
 			</div>
 		</div>
-		<div class="my-2 border-t" />
+		<div class="my-2 border-t"></div>
 		<div class="my-1.5 flex">
 			<div class="w-18 mr-auto">Income</div>
 			<div class="font-medium text-emerald-500">

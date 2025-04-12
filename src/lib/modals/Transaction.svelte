@@ -293,7 +293,7 @@
 		</div>
 		<div class="row">
 			<p>Note</p>
-			<textarea class="note" bind:value={info.note} />
+			<textarea class="note" bind:value={info.note}></textarea>
 		</div>
 		<div class="mt-4 grid grid-flow-col justify-end gap-2">
 			<button type="button" class="button button-secondary" on:click={() => onClose()}

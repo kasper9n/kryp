@@ -37,7 +37,7 @@
 	<p class="text-center">Successful scan. Continue to import?</p>
 	<div class="button-row flex justify-center">
 		<button type="button" class="button button-secondary" on:click={cancel}>Cancel</button>
-		<div class="w-2" />
+		<div class="w-2"></div>
 		<button type="button" class="button" disabled={importData.has_errors} on:click={continueImport}
 			>Continue</button
 		>

@@ -84,7 +84,7 @@
 		<a class="item" on:click={go} class:active={$page.route.id === '/reports'} href="/reports"
 			><span>Reports</span></a
 		>
-		<div class="nav-mid" />
+		<div class="nav-mid"></div>
 		<span class="rounded border bg-white px-1.5 dark:bg-black">{$settings.base_currency}</span>
 		<a class="item" on:click={go} class:active={$page.route.id === '/prices'} href="/prices"
 			><span>Prices</span></a
