@@ -80,6 +80,7 @@
 		getItem={(i) => transactions[i]}
 		itemCount={transactions.length}
 		itemHeight={62}
+		on_mousedown_self={() => selection.clear()}
 		on:keydown={rowKeydown}
 		let:item={tx}
 		let:index={i}
