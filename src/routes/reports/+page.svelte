@@ -146,13 +146,15 @@
 			<input type="number" bind:value={hideValuesLessThan} />
 		</div>
 		<table class="w-full border-separate px-4 text-sm">
-			<thead class="my-1 flex text-left font-bold">
-				<th class="w-0 flex-grow">Name</th>
-				<th class="w-0 flex-grow">Income</th>
-				<th class="w-0 flex-grow">Deductible</th>
-				<th class="w-0 flex-grow">Realized</th>
-				<th class="w-0 flex-grow">Realized Gain</th>
-				<th class="w-0 flex-grow">Realized Loss</th>
+			<thead>
+				<tr class="my-1 flex text-left font-bold">
+					<td class="w-0 flex-grow">Name</td>
+					<td class="w-0 flex-grow">Income</td>
+					<td class="w-0 flex-grow">Deductible</td>
+					<td class="w-0 flex-grow">Realized</td>
+					<td class="w-0 flex-grow">Realized Gain</td>
+					<td class="w-0 flex-grow">Realized Loss</td>
+				</tr>
 			</thead>
 			<tbody>
 				{#if report}

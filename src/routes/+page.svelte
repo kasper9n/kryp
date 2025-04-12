@@ -168,9 +168,9 @@
 						</div>
 						{#each wallet.holdings.list as holding}
 							<div class="tr">
-								<td class="asset">{holding.asset}</td>
-								<td class="align-right amount">{holding.amount}</td>
-								<td class="align-right cost">{holding.cost}</td>
+								<div class="asset">{holding.asset}</div>
+								<div class="align-right amount">{holding.amount}</div>
+								<div class="align-right cost">{holding.cost}</div>
 							</div>
 						{/each}
 					</div>
