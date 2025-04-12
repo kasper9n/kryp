@@ -1,10 +1,12 @@
 <script lang="ts" generics="T">
 	import { onMount, tick } from 'svelte'
+	import type { AriaRole } from 'svelte/elements'
 
 	export let getItem: (index: number) => T
 	export let on_mousedown_self: (e: MouseEvent) => void
 	export let itemCount: number
 	export let itemHeight: number
+	export let role: AriaRole | null = null
 	let startIndex = -1
 	let endIndex = -1
 	let height = 0
@@ -95,6 +97,7 @@
 	on:mousedown|self={on_mousedown_self}
 	tabindex="0"
 	on:keydown={keydown}
+	{role}
 >
 	<div
 		class="content"

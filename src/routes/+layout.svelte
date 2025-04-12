@@ -92,7 +92,13 @@
 		<a class="item" on:click={go} class:active={$page.route.id === '/help'} href="/help"
 			><span>Help</span></a
 		>
-		<button type="button" class="item" on:click={() => (settingsModalVisible = true)}>
+		<button
+			type="button"
+			class="item"
+			on:click={() => (settingsModalVisible = true)}
+			title="Settings"
+			aria-label="Settings"
+		>
 			<span class="icon">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

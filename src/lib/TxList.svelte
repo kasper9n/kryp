@@ -84,12 +84,16 @@
 		on:keydown={rowKeydown}
 		let:item={tx}
 		let:index={i}
+		role="listbox"
 	>
+		<!-- svelte-ignore a11y_interactive_supports_focus -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			class="item"
-			class:selected={$selection.list[i] === true}
 			on:mousedown={(e) => rowMouseDown(e, i)}
 			on:click={(e) => rowClick(e, i)}
+			role="option"
+			aria-selected={$selection.list[i] === true}
 		>
 			<div class="icon">
 				{#if tx.type === 'Trade'}
@@ -189,7 +193,7 @@
 		border-bottom: 1px solid hsla(225, 50%, 60%, 0.5)
 		border-top: none
 		padding: 0px 16px
-		&.selected
+		&[aria-selected='true']
 			background-color: hsla(223, 100%, 55%, 0.3)
 			z-index: 5
 			position: relative
