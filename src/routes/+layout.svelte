@@ -149,6 +149,7 @@
 		</div>
 		<FileDrop extensions={['json']} handleOneFile={open} let:files>
 			{#if files.length > 0}
+				<div class="inset-0 bg-[--bg] opacity-75 fixed" transition:fade={{ duration: 100 }}></div>
 				<div class="dropzone-overlay" transition:fade={{ duration: 100 }}>
 					<h1>Drop to open</h1>
 				</div>
