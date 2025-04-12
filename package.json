@@ -51,5 +51,8 @@
 			"svelte",
 			"tailwindcss"
 		]
+	},
+	"dependencies": {
+		"@tauri-apps/plugin-window-state": "^2.2.2"
 	}
 }

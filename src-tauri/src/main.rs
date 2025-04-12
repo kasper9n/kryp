@@ -12,6 +12,7 @@ use tauri::{
 };
 use tauri_plugin_dialog::{DialogExt, FilePath, MessageDialogButtons, MessageDialogKind};
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 mod calc;
 mod data;
@@ -72,6 +73,7 @@ fn get_system_timezone() -> Option<String> {
 fn main() {
 	let ctx = tauri::generate_context!();
 	let app = tauri::Builder::default()
+		.plugin(tauri_plugin_window_state::Builder::new().build())
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_dialog::init())
 		.manage(import::ImportData::default())
