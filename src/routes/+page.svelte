@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { runCmd } from '$lib/general'
-	import { Pie } from 'svelte-chartjs'
-	import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale } from 'chart.js'
+	import {
+		Chart as ChartJS,
+		Title,
+		Tooltip,
+		Legend,
+		ArcElement,
+		CategoryScale,
+		Chart,
+		PieController,
+	} from 'chart.js'
 	import { darkMode } from '$lib/DarkMode'
 
-	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale)
+	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, PieController)
 
 	type ChartItem = {
 		label: string
@@ -70,7 +78,6 @@
 	function getColor(index: number) {
 		return colors[index % colors.length]
 	}
-
 	$: data = {
 		labels: chartHoldings.map((item) => item.label),
 		datasets: [
@@ -86,19 +93,29 @@
 			},
 		],
 	}
-
-	const options = {
-		cutout: '75%',
-		plugins: {
-			legend: {
-				display: false,
-			},
-			tooltip: {
-				animation: {
-					duration: 240,
+	$: if (chart) {
+		chart.data = data
+		chart.update()
+	}
+	let chart: Chart<'pie'>
+	function create_chart(node: HTMLCanvasElement) {
+		chart = new Chart(node, {
+			type: 'pie',
+			data,
+			options: {
+				cutout: '75%',
+				plugins: {
+					legend: {
+						display: false,
+					},
+					tooltip: {
+						animation: {
+							duration: 240,
+						},
+					},
 				},
 			},
-		},
+		})
 	}
 </script>
 
@@ -130,7 +147,7 @@
 		<div class="sidebar">
 			{#if chartHoldings.length >= 1}
 				<div class="center">
-					<Pie {data} {options} />
+					<canvas use:create_chart />
 				</div>
 			{/if}
 		</div>
