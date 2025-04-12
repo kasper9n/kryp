@@ -4,7 +4,7 @@
 	import { onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { runCmd } from '$lib/general'
-	import { opened, settings } from '$lib/data'
+	import { opened, recent_files, save_recent_files, settings } from '$lib/data'
 	import NewFileModal from '$lib/modals/NewFile.svelte'
 	import SettingsModal from '$lib/modals/Settings.svelte'
 	import FileDrop from 'svelte-tauri-filedrop'
@@ -114,13 +114,38 @@
 {:else}
 	<div class="start-page">
 		<h1>Kryp</h1>
-		<div class="buttons">
+		<div>
 			<button type="button" class="button button-neutral" on:click={() => open()}>Open</button>
 			<button
 				type="button"
 				class="button button-neutral"
 				on:click={() => (newFileModalVisible = true)}>New</button
 			>
+		</div>
+		<div class="pt-4" class:hidden={$recent_files.length === 0}>
+			<h2 class="text-lg mb-0">Recent</h2>
+			{#each $recent_files as file_path}
+				<div>
+					<button
+						type="button"
+						class="text-blue-500 hover:text-blue-700"
+						on:click={() => open(file_path)}>{file_path}</button
+					>
+					<button
+						type="button"
+						class="opacity-75 hover:opacity-100"
+						on:click={() => {
+							recent_files.update((files) => {
+								files = files.filter((f) => f !== file_path)
+								return files
+							})
+							save_recent_files()
+						}}
+					>
+						✕
+					</button>
+				</div>
+			{/each}
 		</div>
 		<FileDrop extensions={['json']} handleOneFile={open} let:files>
 			{#if files.length > 0}

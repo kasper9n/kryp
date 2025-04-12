@@ -16,6 +16,11 @@ pub struct Kryp {
 	pub file_path: Option<PathBuf>,
 	pub import_data: ImportData,
 }
+#[derive(Clone, Serialize)]
+struct OpenedEvent {
+	opened: bool,
+	file_path: Option<PathBuf>,
+}
 
 impl Kryp {
 	pub fn new(app: AppHandle) -> Self {
@@ -30,15 +35,19 @@ impl Kryp {
 	pub fn is_open(&self) -> bool {
 		self.opened
 	}
-	pub fn set_opened(&mut self, opened: bool) {
+	pub fn emit_file_status(&mut self, opened: bool) {
 		if self.opened != opened {
 			self.opened = opened;
 			if !opened {
 				*self = Kryp::new(self.app.clone());
 			}
-			println!("EMIT opened");
-			self.app.emit_all("opened", opened).unwrap();
 		}
+		println!("EMIT opened");
+		let opened_event = OpenedEvent {
+			opened,
+			file_path: self.file_path.clone(),
+		};
+		self.app.emit_all("opened", opened_event).unwrap();
 	}
 	pub fn has_unsaved_changes(&self) -> bool {
 		self.opened && self.tax.dirty
@@ -67,8 +76,8 @@ pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<()
 	let mut kryp = kryp.0.lock().await;
 	if !kryp.is_open() {
 		kryp.tax = Tax::new(&base_currency);
-		kryp.set_opened(true);
 		kryp.file_path = None;
+		kryp.emit_file_status(true);
 	}
 	Ok(())
 }
@@ -96,8 +105,8 @@ pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> 
 		};
 		println!("open file {:?}", file_path);
 		kryp.tax = Tax::load(&file_path)?;
-		kryp.set_opened(true);
 		kryp.file_path = Some(file_path);
+		kryp.emit_file_status(true);
 	}
 	Ok(())
 }
@@ -129,6 +138,7 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 				kryp.tax.save(&file_path);
 				kryp.file_path = Some(file_path);
 				kryp.tax.dirty = false;
+				kryp.emit_file_status(true); // emit event with file_path
 			}
 			None => return Ok(()),
 		};
@@ -150,7 +160,7 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
 	if !kryp.opened {
 		win.close().unwrap();
 	}
-	kryp.set_opened(false);
+	kryp.emit_file_status(false);
 	Ok(())
 }
 
