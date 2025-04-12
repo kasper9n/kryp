@@ -1,62 +1,57 @@
 {
-	"build": {
-		"distDir": "../build",
-		"devPath": "http://localhost:5448",
-		"beforeDevCommand": "npm run dev:web",
-		"beforeBuildCommand": "npm run build:web"
-	},
-	"package": {
-		"productName": "Kryp"
-	},
-	"tauri": {
-		"bundle": {
-			"active": true,
-			"targets": ["dmg", "deb", "appimage", "msi"],
-			"identifier": "space.kasper.kryp",
-			"icon": [
-				"icons/32x32.png",
-				"icons/128x128.png",
-				"icons/128x128@2x.png",
-				"icons/icon.icns",
-				"icons/icon.ico"
-			],
-			"resources": [],
-			"externalBin": [],
-			"copyright": "© 2024 kasper.space",
-			"category": "Finance",
-			"shortDescription": "Cryptocurrency tax calculator",
-			"longDescription": "",
-			"deb": {
-				"depends": []
-			},
-			"macOS": {
-				"frameworks": [],
-				"minimumSystemVersion": "10.13",
-				"exceptionDomain": "",
-				"signingIdentity": null,
-				"entitlements": null
-			},
-			"windows": {
-				"certificateThumbprint": null,
-				"digestAlgorithm": "sha256",
-				"timestampUrl": ""
-			}
-		},
-		"updater": {
-			"active": false
-		},
-		"allowlist": {
-			"shell": {
-				"execute": true,
-				"open": true
-			},
-			"dialog": {
-				"open": true,
-				"save": true
-			}
-		},
-		"security": {
-			"csp": "default-src 'self'; img-src 'unsafe-inline' *; style-src 'unsafe-inline' *"
-		}
-	}
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Kryp",
+  "identifier": "space.kasper.kryp",
+  "build": {
+    "beforeDevCommand": "npm run dev:web",
+    "devUrl": "http://localhost:5448",
+    "beforeBuildCommand": "npm run build:web",
+    "frontendDist": "../build"
+  },
+  "mainBinaryName": "Kryp",
+  "bundle": {
+    "active": true,
+    "targets": [
+      "dmg",
+      "deb",
+      "appimage",
+      "msi"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2024 kasper.space",
+    "category": "Finance",
+    "shortDescription": "Cryptocurrency tax calculator",
+    "longDescription": "",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": null
+    },
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  },
+  "plugins": {},
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; img-src 'unsafe-inline' *; style-src 'unsafe-inline' *; connect-src ipc: http://ipc.localhost"
+    }
+  }
 }

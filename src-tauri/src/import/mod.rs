@@ -5,10 +5,8 @@ use crate::throw;
 use crate::transaction::UncostedTransaction;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::sync::mpsc;
-use tauri::api::dialog;
-use tauri::{command, State, Window};
+use tauri::{command, Emitter, State, Window};
+use tauri_plugin_dialog::{DialogExt, FilePath};
 
 mod binance;
 mod csv;
@@ -93,17 +91,12 @@ pub struct ImportStatus {
 	count: usize,
 }
 
-fn pick_files(_win: &Window) -> Option<Vec<PathBuf>> {
-	let mut d = dialog::FileDialogBuilder::new().add_filter("Table", &["csv", "tsv"]);
-	#[cfg(any(target_os = "macos", target_os = "windows"))]
-	{
-		d = d.set_parent(&_win);
-	}
-	let (sender, receiver) = mpsc::channel();
-	d.pick_files(move |p| {
-		sender.send(p).unwrap();
-	});
-	receiver.recv().unwrap_or_default()
+fn pick_files(_win: &Window) -> Option<Vec<FilePath>> {
+	_win.dialog()
+		.file()
+		.add_filter("Table", &["csv", "tsv"])
+		.set_parent(&_win)
+		.blocking_pick_files()
 }
 
 /// Returns `true` if the scan was cancelled
@@ -128,6 +121,7 @@ pub async fn scan_import_file(
 
 	let mut uncosted_transactions = Vec::new();
 	for file_path in file_paths {
+		let file_path = file_path.into_path().unwrap();
 		let file_name = file_path.file_name().unwrap_or_default().to_owned();
 		let result = match source.as_str() {
 			"Kryp" => kryp::read(file_path, tz).await,

@@ -144,7 +144,8 @@ impl Calculation {
 					cost: trade.cost(),
 				});
 
-				let deducted = self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
+				let deducted =
+					self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
 				let r = Realized {
 					tag: trade.tag.clone(),
 					date: trade.date,
@@ -160,7 +161,8 @@ impl Calculation {
 				self.realized_gains.push(r);
 
 				if trade.fee_asset != "" {
-					let fee_deducted = self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
+					let fee_deducted =
+						self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
 					let rf = Realized {
 						tag: trade.tag.clone(),
 						date: trade.date,
@@ -224,7 +226,8 @@ impl Calculation {
 				});
 			}
 			Transaction::Withdrawal(withdrawal) => {
-				let deducted = self.deduct(&withdrawal.wallet, &withdrawal.asset, withdrawal.amount)?;
+				let deducted =
+					self.deduct(&withdrawal.wallet, &withdrawal.asset, withdrawal.amount)?;
 				self.realized_gains.push(Realized {
 					tag: withdrawal.tag.clone(),
 					date: withdrawal.date,

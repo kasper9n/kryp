@@ -5,8 +5,8 @@ use crate::{confirm_async, throw};
 use serde::Serialize;
 use serde_json::Value;
 use std::path::PathBuf;
-use tauri::api::dialog;
-use tauri::{command, AppHandle, Manager, State, Window};
+use tauri::{command, AppHandle, Emitter, State, Window};
+use tauri_plugin_dialog::{DialogExt, FilePath};
 use tokio::sync::Mutex;
 
 pub struct Kryp {
@@ -47,7 +47,7 @@ impl Kryp {
 			opened,
 			file_path: self.file_path.clone(),
 		};
-		self.app.emit_all("opened", opened_event).unwrap();
+		self.app.emit("opened", opened_event).unwrap();
 	}
 	pub fn has_unsaved_changes(&self) -> bool {
 		self.opened && self.tax.dirty
@@ -83,28 +83,31 @@ pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<()
 }
 
 #[command]
-pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
+pub async fn open(
+	path: Option<FilePath>,
+	kryp: State<'_, Data>,
+	win: Window,
+) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 	if !kryp.is_open() {
 		let file_path = match path {
 			Some(path) => path,
 			None => {
-				let (sender, receiver) = std::sync::mpsc::channel();
-				let mut d = dialog::FileDialogBuilder::new().add_filter("Kryp", &["json"]);
-				if cfg!(any(target_os = "macos", target_os = "windows")) {
-					d = d.set_parent(&win);
-				}
-				d.pick_file(move |p| {
-					sender.send(p).unwrap();
-				});
-				match receiver.recv().unwrap_or_default() {
+				let d = win
+					.dialog()
+					.file()
+					.add_filter("Kryp", &["json"])
+					.set_parent(&win)
+					.blocking_pick_file();
+				match d {
 					Some(file_path) => file_path,
 					None => return Ok(()),
 				}
 			}
 		};
 		println!("open file {:?}", file_path);
-		kryp.tax = Tax::load(&file_path)?;
+		let file_path = file_path.into_path().unwrap();
+		kryp.tax = Tax::load(file_path.clone())?;
 		kryp.file_path = Some(file_path);
 		kryp.emit_file_status(true);
 	}
@@ -123,25 +126,23 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 	}
 	println!("save as? {}", save_path.is_none());
 	if let Some(path) = save_path {
-		kryp.tax.save(path);
+		kryp.tax.save(path.clone());
 		kryp.tax.dirty = false;
 	} else {
-		let (sender, receiver) = std::sync::mpsc::channel();
-		dialog::FileDialogBuilder::new()
+		let file_path = kryp
+			.app
+			.dialog()
+			.file()
 			.set_file_name("Kryp Tax.json")
 			.add_filter("Kryp", &["json"])
-			.save_file(move |p| {
-				sender.send(p).unwrap();
-			});
-		match receiver.recv().unwrap_or_default() {
-			Some(file_path) => {
-				kryp.tax.save(&file_path);
-				kryp.file_path = Some(file_path);
-				kryp.tax.dirty = false;
-				kryp.emit_file_status(true); // emit event with file_path
-			}
-			None => return Ok(()),
-		};
+			.blocking_save_file();
+		if let Some(file_path) = file_path {
+			let file_path = file_path.into_path().unwrap();
+			kryp.tax.save(file_path.clone());
+			kryp.file_path = Some(file_path);
+			kryp.tax.dirty = false;
+			kryp.emit_file_status(true); // emit event with file_path
+		}
 	}
 	Ok(())
 }
@@ -158,7 +159,7 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
 		}
 	}
 	if !kryp.opened {
-		win.close().unwrap();
+		win.destroy().unwrap();
 	}
 	kryp.emit_file_status(false);
 	Ok(())

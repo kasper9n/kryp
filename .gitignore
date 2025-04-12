@@ -22,6 +22,6 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-/src-tauri/target
-/src-tauri/WixTools
+/src-tauri/target/
 /src-tauri/appdata
+/src-tauri/gen/schemas

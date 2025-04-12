@@ -3,12 +3,12 @@ use crate::tax::Api;
 use crate::{round_8, throw};
 use chrono::{Local, TimeZone};
 use lazy_static::lazy_static;
+use regex::Regex;
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use std::iter::Peekable;
 use std::str::{Chars, FromStr};
-use tauri::regex::Regex;
 
 pub fn format_date(ts: i64) -> String {
 	let dt = Local.timestamp_millis_opt(ts).unwrap();

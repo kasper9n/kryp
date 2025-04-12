@@ -113,6 +113,7 @@ pub async fn download_report(
 	)
 	.await?;
 
+	let file_path = file_path.into_path().unwrap();
 	let mut writer = match csv::Writer::from_path(file_path) {
 		Ok(writer) => writer,
 		Err(e) => throw!("Unable to write to file: {}", e),

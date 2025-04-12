@@ -10,7 +10,7 @@ pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
 	}
 	let file_name = format!("Kryp Export");
 	let file_path = match save_csv_tsv(&win, &file_name) {
-		Some(p) => p,
+		Some(p) => p.into_path().unwrap(),
 		None => return Ok(()),
 	};
 

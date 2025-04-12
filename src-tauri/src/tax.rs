@@ -6,7 +6,7 @@ use atomicwrites::{AllowOverwrite, AtomicFile};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::PathBuf;
 use std::time::Instant;
 
 #[cfg(test)]
@@ -65,7 +65,7 @@ impl Tax {
 		self.realized_gains = calc.realized_gains;
 		self.dirty = true;
 	}
-	pub fn save<P: AsRef<Path>>(&self, file_path: P) {
+	pub fn save(&self, file_path: PathBuf) {
 		let now = Instant::now();
 		let mut json = Vec::new();
 		let formatter = serde_json::ser::PrettyFormatter::with_indent(b"	"); // tab
@@ -73,10 +73,10 @@ impl Tax {
 		self.serialize(&mut ser).expect("Error saving content");
 		println!("Stringify: {}ms", now.elapsed().as_millis());
 
-		let af = AtomicFile::new(&file_path, AllowOverwrite);
+		let af = AtomicFile::new(file_path, AllowOverwrite);
 		af.write(|f| f.write_all(&json)).expect("Error saving");
 	}
-	pub fn load<P: AsRef<Path>>(file_path: P) -> Result<Self, String> {
+	pub fn load(file_path: PathBuf) -> Result<Self, String> {
 		let now = Instant::now();
 		match File::open(file_path) {
 			Ok(mut file) => {
@@ -230,7 +230,7 @@ mod tests {
 
 	#[test]
 	pub fn trades() {
-		let mut tax = Tax::load("./tests/kryp.json").unwrap();
+		let mut tax = Tax::load("./tests/kryp.json".into()).unwrap();
 		tax.transactions = vec![
 			tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
 				.unwrap(),
@@ -300,7 +300,7 @@ mod tests {
 
 	#[test]
 	pub fn transfer_fee() {
-		let mut tax = Tax::load("./tests/kryp.json").unwrap();
+		let mut tax = Tax::load("./tests/kryp.json".into()).unwrap();
 		tax.transactions = vec![
 			tax.new_deposit(1500000000000, (dec!(1000), "NOK", "Binance"))
 				.unwrap(),
@@ -338,7 +338,7 @@ mod tests {
 
 	#[test]
 	pub fn deposit_withdraw_crypto() {
-		let mut tax = Tax::load("./tests/kryp.json").unwrap();
+		let mut tax = Tax::load("./tests/kryp.json".into()).unwrap();
 		tax.transactions = vec![
 			tax.new_deposit(1500000000000, (dec!(2), "ETH", "Coinbase"))
 				.unwrap(),

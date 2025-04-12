@@ -1,7 +1,5 @@
 <script lang="ts">
 	import '../app.css'
-	import { event } from '@tauri-apps/api'
-	import { onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { runCmd } from '$lib/general'
 	import { opened, recent_files, save_recent_files, settings } from '$lib/data'
@@ -10,19 +8,181 @@
 	import FileDrop from 'svelte-tauri-filedrop'
 	import { fade } from 'svelte/transition'
 	import { page } from '$app/stores'
+	import { openUrl } from '@tauri-apps/plugin-opener'
+	import { Menu, Submenu } from '@tauri-apps/api/menu'
 
-	// prevent history from being written, to hide context menu Back/Forwards buttons
-	function go(e: MouseEvent) {
-		if (e.target instanceof HTMLElement) {
-			const href = e.target.getAttribute('href')
-			if (href !== null) {
-				e.preventDefault()
-				e.stopPropagation()
-				e.stopImmediatePropagation()
-				goto(href)
-			}
-		}
+	async function create_menu() {
+		let menu = await Menu.new({
+			items: [
+				// #[cfg(target_os = "macos")]
+				{
+					text: 'Kryp',
+					items: [
+						{
+							item: {
+								About: null,
+							},
+						},
+						{ item: 'Separator' },
+						{
+							text: 'Preferences...',
+							id: 'Preferences...',
+							accelerator: 'cmdOrControl+,',
+							action() {
+								if ($opened) {
+									settingsModalVisible = true
+								}
+							},
+						},
+						{ item: 'Separator' },
+						{ item: 'Services' },
+						{ item: 'Separator' },
+						{ item: 'Hide' },
+						{ item: 'HideOthers' },
+						{ item: 'ShowAll' },
+						{ item: 'Separator' },
+						{ item: 'Quit' },
+					],
+				},
+				{
+					text: 'File',
+					items: [
+						{ item: 'Separator' },
+						{
+							text: 'New',
+							accelerator: 'cmdOrControl+N',
+							action() {
+								if (!$opened) {
+									newFileModalVisible = true
+								}
+							},
+						},
+						{
+							text: 'Open...',
+							accelerator: 'cmdOrControl+O',
+							action() {
+								open()
+							},
+						},
+						{ item: 'Separator' },
+						{
+							text: 'Save',
+							accelerator: 'cmdOrControl+S',
+							action() {
+								save()
+							},
+						},
+						{
+							text: 'Save As...',
+							accelerator: 'shift+cmdOrControl+S',
+							action() {
+								saveAs()
+							},
+						},
+						{ item: 'Separator' },
+						{
+							text: 'Import...',
+							accelerator: 'cmdOrControl+I',
+							action() {
+								if ($opened) {
+									goto('/import')
+								}
+							},
+						},
+						{
+							text: 'Export...',
+							accelerator: 'cmdOrControl+E',
+							action() {
+								runCmd('export')
+							},
+						},
+						{
+							text: 'Close',
+							accelerator: 'cmdOrControl+W',
+							action() {
+								close()
+							},
+						},
+						// #[cfg(not(target_os = "macos"))]
+						{ item: 'Separator' },
+						// #[cfg(not(target_os = "macos"))]
+						{
+							text: 'Options...',
+							id: 'Preferences...',
+							accelerator: 'cmdOrControl+,',
+							action() {
+								if ($opened) {
+									settingsModalVisible = true
+								}
+							},
+						},
+					],
+				},
+				{
+					text: 'Edit',
+					items: [
+						{ item: 'Undo' },
+						{ item: 'Redo' },
+						{ item: 'Separator' },
+						{ item: 'Cut' },
+						{ item: 'Copy' },
+						{ item: 'Paste' },
+						// #[cfg(not(target_os = "macos"))]
+						{ item: 'Separator' },
+						{ item: 'SelectAll' },
+					],
+				},
+				{
+					text: 'View',
+					items: [
+						{
+							text: 'Dashboard',
+							accelerator: 'cmdOrControl+1',
+							action() {
+								goto('/')
+							},
+						},
+						{
+							text: 'Transactions',
+							accelerator: 'cmdOrControl+2',
+							action() {
+								goto('/transactions')
+							},
+						},
+						{
+							text: 'Reports',
+							accelerator: 'cmdOrControl+3',
+							action() {
+								goto('/reports')
+							},
+						},
+						{ item: 'Separator' },
+						{ item: 'Fullscreen' },
+					],
+				},
+				{
+					text: 'Window',
+					items: [{ item: 'Minimize' }, { item: 'Maximize' }],
+				},
+			],
+		})
+		menu.setAsAppMenu()
+		let help_menu = await Submenu.new({
+			text: 'Help',
+			id: 'help',
+			items: [
+				{
+					text: 'Learn More',
+					action() {
+						openUrl('https://github.com/probablykasper/kryp')
+					},
+				},
+			],
+		})
+		// https://github.com/tauri-apps/tauri/issues/12652
+		help_menu.setAsHelpMenuForNSApp()
 	}
+	create_menu()
 
 	let newFileModalVisible = false
 	let settingsModalVisible = false
@@ -39,59 +199,23 @@
 	async function close() {
 		await runCmd('close')
 	}
-	const unlistenFuture = event.listen('tauri://menu', async ({ payload }) => {
-		if (payload === 'Dashboard') {
-			goto('/')
-		} else if (payload === 'Transactions') {
-			goto('/transactions')
-		} else if (payload === 'Reports') {
-			goto('/reports')
-		} else if (payload === 'New' && !$opened) {
-			newFileModalVisible = true
-		} else if (payload === 'Preferences...' && $opened) {
-			settingsModalVisible = true
-		} else if (payload === 'Open...') {
-			open()
-		} else if (payload === 'Save') {
-			save()
-		} else if (payload === 'Save As...') {
-			saveAs()
-		} else if (payload === 'Import...' && $opened) {
-			goto('/import')
-		} else if (payload === 'Export...') {
-			await runCmd('export')
-		} else if (payload === 'Close') {
-			close()
-		}
-	})
-	onDestroy(async () => {
-		const unlisten = await unlistenFuture
-		unlisten()
-	})
 </script>
 
 {#if $opened}
 	<nav class="z-10 flex h-12 select-none items-center space-x-2 px-4 text-sm">
-		<a class="item" on:click={go} class:active={$page.route.id === '/'} href="/"
-			><span>Dashboard</span></a
+		<a class="item" class:active={$page.route.id === '/'} href="/"><span>Dashboard</span></a>
+		<a class="item" class:active={$page.route.id === '/transactions'} href="/transactions"
+			><span>Transactions</span></a
 		>
-		<a
-			class="item"
-			on:click={go}
-			class:active={$page.route.id === '/transactions'}
-			href="/transactions"><span>Transactions</span></a
-		>
-		<a class="item" on:click={go} class:active={$page.route.id === '/reports'} href="/reports"
+		<a class="item" class:active={$page.route.id === '/reports'} href="/reports"
 			><span>Reports</span></a
 		>
 		<div class="nav-mid"></div>
 		<span class="rounded border bg-white px-1.5 dark:bg-black">{$settings.base_currency}</span>
-		<a class="item" on:click={go} class:active={$page.route.id === '/prices'} href="/prices"
+		<a class="item" class:active={$page.route.id === '/prices'} href="/prices"
 			><span>Prices</span></a
 		>
-		<a class="item" on:click={go} class:active={$page.route.id === '/help'} href="/help"
-			><span>Help</span></a
-		>
+		<a class="item" class:active={$page.route.id === '/help'} href="/help"><span>Help</span></a>
 		<button
 			type="button"
 			class="item"

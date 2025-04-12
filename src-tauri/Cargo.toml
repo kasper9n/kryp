@@ -6,7 +6,7 @@ edition = "2021"
 build = "src/build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.3", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 rust_decimal = "1.29"
@@ -16,12 +16,8 @@ tokio = { version = "1.28", features = ["full"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
-tauri = { version = "1.3", features = [
+tauri = { version = "2", features = [
 	"devtools",
-	"dialog-open",
-	"dialog-save",
-	"shell-execute",
-	"shell-open",
 ] }
 chrono = { version = "0.4", features = ["serde"] }
 csv = "1.2"
@@ -29,6 +25,9 @@ atomicwrites = "0.4"
 lazy_static = "1.4"
 chrono-tz = "0.8"
 localzone = { version = "0.2", features = ["auto_validation"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+regex = "1.11.1"
 
 [features]
 default = ["custom-protocol"]
