@@ -15,7 +15,8 @@
 	})
 
 	let loading = false
-	$: if (symbol) {
+	$: if (symbol) get_asset(symbol)
+	async function get_asset(symbol: string) {
 		loading = true
 		runCmd('get_prices', { symbol }).then(async (result: PriceDataAsset) => {
 			asset = result
@@ -60,6 +61,7 @@
 			<div>
 				{#each assets as asset}
 					<button
+						type="button"
 						class="asset-item block"
 						class:current={symbol === asset}
 						on:click={() => (symbol = asset)}

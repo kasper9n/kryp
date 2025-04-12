@@ -1,6 +1,6 @@
 <script lang="ts">
 	// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
-	// eslint-disable-next-line no-undef
+
 	type T = $$Generic
 	export let values: T[]
 	export let selected = 0
@@ -8,7 +8,9 @@
 
 <div class="view">
 	{#each values as value, i}
-		<button class:selected={selected === i} on:click={() => (selected = i)}>{value}</button>
+		<button type="button" class:selected={selected === i} on:click={() => (selected = i)}
+			>{value}</button
+		>
 	{/each}
 </div>
 

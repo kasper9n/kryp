@@ -152,7 +152,6 @@
 		style="max-height: {menuMaxHeight}px"
 	>
 		{#each filteredOptions as option}
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
 				class="item"
 				on:mousedown|preventDefault

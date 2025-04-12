@@ -207,7 +207,7 @@
 						<NumericInput
 							bind:value={info.sent_amount}
 							invalid={errors.has('sent_amount')}
-							style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+							style="border-top-right-radius: 0px; border-bottom-right-radius: 0px"
 							placeholder="Amount"
 						/>
 						<input
@@ -236,7 +236,7 @@
 						<NumericInput
 							bind:value={info.recv_amount}
 							invalid={errors.has('recv_amount')}
-							style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+							style="border-top-right-radius: 0px; border-bottom-right-radius: 0px"
 							placeholder="Amount"
 						/>
 						<input
@@ -274,7 +274,7 @@
 				<div class="amount-container">
 					<NumericInput
 						bind:value={info.manual_worth_amount}
-						style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+						style="border-top-right-radius: 0px; border-bottom-right-radius: 0px"
 						placeholder="Amount"
 					/>
 				</div>

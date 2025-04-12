@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{ 'mousedown-self': null }>()
 
 	// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
-	// eslint-disable-next-line no-undef
+
 	type T = $$Generic
 	export let getItem: (index: number) => T
 	export let itemCount: number

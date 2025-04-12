@@ -74,7 +74,7 @@
 				<StringQuantity bind:quantity={transaction.manual_worth} bind:amount bind:asset />
 				<NumericInput
 					bind:value={amount}
-					style={'border-top-right-radius: 0px; border-bottom-right-radius: 0px'}
+					style="border-top-right-radius: 0px; border-bottom-right-radius: 0px"
 					placeholder="Amount"
 				/>
 				<input type="text" class="asset" bind:value={asset} placeholder="Asset" />
