@@ -1,7 +1,4 @@
-<script lang="ts">
-	// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
-
-	type T = $$Generic
+<script lang="ts" generics="T">
 	export let values: T[]
 	export let selected = 0
 </script>

@@ -1,7 +1,4 @@
-<script lang="ts">
-	// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
-	 
-	type T = $$Generic
+<script lang="ts" generics="T">
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	interface $$Slots {
 		default: {

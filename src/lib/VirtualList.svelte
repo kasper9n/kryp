@@ -1,11 +1,8 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import { createEventDispatcher, onMount, tick } from 'svelte'
 
 	const dispatch = createEventDispatcher<{ 'mousedown-self': null }>()
 
-	// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
-
-	type T = $$Generic
 	export let getItem: (index: number) => T
 	export let itemCount: number
 	export let itemHeight: number
