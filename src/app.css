@@ -1,68 +1,79 @@
 /* Write your global styles here, in PostCSS syntax */
 @tailwind base;
 
-[type='text'],
-[type='email'],
-[type='url'],
-[type='password'],
-[type='number'],
-[type='date'],
-[type='datetime-local'],
-[type='month'],
-[type='search'],
-[type='tel'],
-[type='time'],
-[type='week'],
-[multiple],
-textarea,
-select,
-button {
-	line-height: normal;
-}
-
-.text-input {
-	@apply relative m-0 w-full rounded border border-slate-300 px-1.5 py-1 text-sm outline-none transition-all duration-75 ease-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-40;
-}
-
-.button {
-	cursor: pointer;
-	user-select: none;
-	margin: 0px;
-	height: 32px;
-	padding: 0px 18px;
-	min-width: 70px;
-	border: none;
-	font-size: 13px;
-	font-weight: 500;
-	background-color: #3061f6;
-	box-shadow: 0px 0px 2px 0px #3061f6;
-	color: #ffffff;
-	border-radius: 7px;
-	transition: 100ms ease-out;
-	transition-property: transform, opacity, box-shadow;
-	&:active {
-		opacity: 0.95;
-		transform: scale(0.95);
+@layer base {
+	:root {
+		--color-background: 255 255 255;
+		--color-foreground: 15 15 15;
+		@media (prefers-color-scheme: dark) {
+			--color-background: 15 15 15;
+			--color-foreground: 256 256 256;
+		}
 	}
-}
-.button-neutral {
-	margin: 0px 5px;
-	background-color: #242429;
-	box-shadow: 0px 0px 2px 0px #242429;
-	height: 30px;
-	padding: 0px 22px;
-}
-.button-secondary {
-	background-color: var(--bg-max);
-	color: var(--text);
-	border: 1px solid var(--input-border);
-	box-shadow: 0px 0px 2px 0px var(--input-border);
-}
-.button-slim {
-	height: 28px;
-}
-.button-disabled {
-	background-color: #191b20;
+
+	[type='text'],
+	[type='email'],
+	[type='url'],
+	[type='password'],
+	[type='number'],
+	[type='date'],
+	[type='datetime-local'],
+	[type='month'],
+	[type='search'],
+	[type='tel'],
+	[type='time'],
+	[type='week'],
+	[multiple],
+	textarea,
+	select,
+	button {
+		line-height: normal;
+	}
+
+	.text-input {
+		@apply relative m-0 w-full rounded border border-slate-300 px-1.5 py-1 text-sm outline-none transition-all duration-75 ease-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-40;
+	}
+
+	.button {
+		cursor: pointer;
+		user-select: none;
+		margin: 0px;
+		height: 32px;
+		padding: 0px 18px;
+		min-width: 70px;
+		border: none;
+		font-size: 13px;
+		font-weight: 500;
+		background-color: #3061f6;
+		box-shadow: 0px 0px 2px 0px #3061f6;
+		color: #ffffff;
+		border-radius: 7px;
+		transition: 100ms ease-out;
+		transition-property: transform, opacity, box-shadow;
+		&:active {
+			opacity: 0.95;
+			transform: scale(0.95);
+		}
+	}
+	.button-neutral {
+		margin: 0px 5px;
+		background-color: #242429;
+		box-shadow: 0px 0px 2px 0px #242429;
+		height: 30px;
+		padding: 0px 22px;
+	}
+	.button-secondary {
+		background-color: var(--bg-max);
+		color: var(--text);
+		border: 1px solid var(--input-border);
+		box-shadow: 0px 0px 2px 0px var(--input-border);
+	}
+	.button-slim {
+		height: 28px;
+	}
+	.button-disabled {
+		background-color: #191b20;
+	}
 }
 
 @tailwind components;

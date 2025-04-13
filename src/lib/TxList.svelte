@@ -172,8 +172,24 @@
 				<div class="recv">{tx.recv_amount} {tx.recv_asset} {tx.recv_wallet}</div>
 			{/if}
 			<div class="right">
-				<span class="date">{formatDate(new Date(tx.date))}</span>
-				<span class="time">{formatTime(new Date(tx.date))}</span>
+				{#if tx.note}
+					<div class="group relative">
+						<p>Note</p>
+						<div
+							class="group-hover:flex right-0 absolute hidden items-end justify-end w-screen z-10"
+						>
+							<div
+								class="max-w-sm text-left text-sm bg-background rounded-md border shadow-lg border-foreground/25 px-3 py-1.5"
+							>
+								{tx.note}
+							</div>
+						</div>
+					</div>
+				{/if}
+				<div>
+					<span class="date">{formatDate(new Date(tx.date))}</span>
+					<span class="time">{formatTime(new Date(tx.date))}</span>
+				</div>
 			</div>
 		</div>
 	</VirtualList>
@@ -227,10 +243,13 @@
 		padding-left: 8px
 		box-sizing: border-box
 	.right
-		width: 100px
+		width: 130px
 		min-width: 100px
 		text-align: right
 		padding: 10px 0px
+		display: flex
+		align-items: center
+		justify-content: right
 	.sent
 		width: 0px
 		flex-grow: 1
