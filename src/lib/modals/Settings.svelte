@@ -19,7 +19,7 @@
 		<ReorderableList items={$settings.apis} let:item let:index>
 			<div class="list-item">
 				<p class="title">
-					{#if item.name === 'ExchangeRateHost'}
+					{#if item.name === 'ExchangerateHost'}
 						Exchangerate.host
 					{:else}
 						{item.name}
