@@ -2,11 +2,11 @@
 	import TxTable from '$lib/TxTable.svelte'
 	import TxList from '$lib/TxList.svelte'
 	import TransactionModal from '$lib/modals/Transaction.svelte'
-	import { tags, type Transaction } from '$lib/transactions'
-	import { runCmd } from '$lib/general'
+	import { tags } from '$lib/transactions'
 	import ButtonGroup from '$lib/ButtonGroup.svelte'
 	import InlinePopup from '$lib/InlinePopup.svelte'
 	import { goto } from '$app/navigation'
+	import { run_unwrap } from '$lib/data'
 
 	let view = 0
 
@@ -21,11 +21,11 @@
 		asset: '',
 	}
 
-	let transactions: Promise<Transaction[]> = runCmd('get_transactions', { search })
+	let transactions = run_unwrap.getTransactions(search)
+	$: transactions = run_unwrap.getTransactions(search)
 	function reload() {
-		transactions = runCmd('get_transactions', { search })
+		transactions = run_unwrap.getTransactions(search)
 	}
-	$: transactions = runCmd('get_transactions', { search })
 </script>
 
 <div class="flex h-full flex-col">

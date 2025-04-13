@@ -15,7 +15,7 @@ pub fn format_date(ts: i64) -> String {
 	dt.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 #[serde(deny_unknown_fields)]
 pub struct Trade {
 	pub tag: String,
@@ -59,7 +59,7 @@ impl Trade {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 #[serde(deny_unknown_fields)]
 pub struct Transfer {
 	pub tag: String,
@@ -96,7 +96,7 @@ impl Transfer {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 #[serde(deny_unknown_fields)]
 pub struct Deposit {
 	pub tag: String,
@@ -130,7 +130,7 @@ impl Deposit {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 #[serde(deny_unknown_fields)]
 pub struct Withdrawal {
 	pub tag: String,
@@ -165,7 +165,7 @@ impl Withdrawal {
 }
 
 /// A transaction without a final cost set
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, specta::Type)]
 #[serde(tag = "type")]
 pub enum UncostedTransaction {
 	Trade(Trade),
@@ -307,7 +307,7 @@ impl UncostedTransaction {
 }
 
 /// A transaction with a final cost set. This should not be directly created
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 #[serde(tag = "type")]
 pub enum Transaction {
 	Trade(Trade),

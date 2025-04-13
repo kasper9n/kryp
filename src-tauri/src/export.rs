@@ -3,6 +3,7 @@ use crate::{save_csv_tsv, throw};
 use tauri::{command, State, Window};
 
 #[command]
+#[specta::specta]
 pub async fn export(win: Window, kryp: State<'_, Data>) -> Result<(), String> {
 	let kryp = kryp.0.lock().await;
 	if !kryp.is_open() {

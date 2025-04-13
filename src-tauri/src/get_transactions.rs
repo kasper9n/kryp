@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use tauri::{command, State};
 
-fn get(tax: &Tax, search: Search) -> Vec<&Transaction> {
+fn get(tax: &Tax, search: Search) -> Vec<Transaction> {
 	let mut transactions = Vec::new();
 	for transaction in &tax.transactions {
 		if search.tags.len() > 0 && !search.tags.contains(transaction.tag()) {
@@ -18,20 +18,21 @@ fn get(tax: &Tax, search: Search) -> Vec<&Transaction> {
 		{
 			continue;
 		}
-		transactions.push(transaction);
+		transactions.push(transaction.clone());
 	}
 	transactions
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, specta::Type)]
 pub struct Search {
 	tags: Vec<String>,
 	asset: String,
 }
 
 #[command]
-pub async fn get_transactions(kryp: State<'_, Data>, search: Search) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_transactions(kryp: State<'_, Data>, search: Search) -> Result<Vec<Transaction>, String> {
 	let kryp = kryp.0.lock().await;
 	let transactions = get(&kryp.tax, search);
-	to_json(&transactions)
+	Ok(transactions.clone())
 }

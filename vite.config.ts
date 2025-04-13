@@ -6,6 +6,9 @@ export default defineConfig({
 	server: {
 		port: 5448,
 		strictPort: true,
+		fs: {
+			allow: ['./bindings.ts'],
+		},
 	},
 	build: {
 		sourcemap: true,

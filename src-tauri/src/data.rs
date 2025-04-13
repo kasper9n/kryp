@@ -1,5 +1,6 @@
 use crate::import::ImportData;
-use crate::tax::Tax;
+use crate::prices::PriceDataAsset;
+use crate::tax::{Tax, TaxSettings};
 use crate::transaction::UncostedTransaction;
 use crate::{confirm_async, throw};
 use serde::Serialize;
@@ -72,6 +73,7 @@ pub fn to_json<T: Serialize>(data: &T) -> Result<Value, String> {
 pub struct Data(pub Mutex<Kryp>);
 
 #[command]
+#[specta::specta]
 pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 	if !kryp.is_open() {
@@ -83,11 +85,8 @@ pub async fn new_file(base_currency: String, kryp: State<'_, Data>) -> Result<()
 }
 
 #[command]
-pub async fn open(
-	path: Option<FilePath>,
-	kryp: State<'_, Data>,
-	win: Window,
-) -> Result<(), String> {
+#[specta::specta]
+pub async fn open(path: Option<PathBuf>, kryp: State<'_, Data>, win: Window) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 	if !kryp.is_open() {
 		let file_path = match path {
@@ -100,13 +99,12 @@ pub async fn open(
 					.set_parent(&win)
 					.blocking_pick_file();
 				match d {
-					Some(file_path) => file_path,
+					Some(file_path) => file_path.into_path().unwrap(),
 					None => return Ok(()),
 				}
 			}
 		};
 		println!("open file {:?}", file_path);
-		let file_path = file_path.into_path().unwrap();
 		kryp.tax = Tax::load(file_path.clone())?;
 		kryp.file_path = Some(file_path);
 		kryp.emit_file_status(true);
@@ -115,6 +113,7 @@ pub async fn open(
 }
 
 #[command]
+#[specta::specta]
 pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 	if !kryp.opened {
@@ -148,6 +147,7 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 }
 
 #[command]
+#[specta::specta]
 /// Returns a hideApp bool
 pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
@@ -166,29 +166,35 @@ pub async fn close(kryp: State<'_, Data>, win: Window) -> Result<(), String> {
 }
 
 #[command]
+#[specta::specta]
 pub async fn is_open(kryp: State<'_, Data>) -> Result<bool, String> {
 	let kryp = kryp.0.lock().await;
 	Ok(kryp.opened)
 }
 
 #[command]
-pub async fn get_tax(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_tax(kryp: State<'_, Data>) -> Result<Tax, String> {
 	let kryp = kryp.0.lock().await;
-	to_json(&kryp.tax)
+	Ok(kryp.tax.clone())
 }
 
 #[command]
-pub async fn get_tax_settings(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_tax_settings(kryp: State<'_, Data>) -> Result<TaxSettings, String> {
 	let kryp = kryp.0.lock().await;
-	to_json(&kryp.tax.settings)
+	Ok(kryp.tax.settings.clone())
 }
 
 #[command]
-pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), String> {
+#[specta::specta]
+pub async fn add_transaction(
+	uncosted_tx: UncostedTransaction,
+	kryp: State<'_, Data>,
+) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 	let tax = &mut kryp.tax;
 	let base = &tax.settings.base_currency;
-	let uncosted_tx = UncostedTransaction::from_json(&json)?;
 	let tx = uncosted_tx
 		.auto_cost_and_finalize(&mut tax.price_data, &tax.settings.apis, base)
 		.await?;
@@ -198,16 +204,24 @@ pub async fn add_transaction(json: String, kryp: State<'_, Data>) -> Result<(), 
 }
 
 #[command]
-pub async fn list_assets(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn list_assets(kryp: State<'_, Data>) -> Result<Vec<String>, String> {
 	let kryp = kryp.0.lock().await;
-	let assets = &kryp.tax.price_data.list_assets();
-	to_json(assets)
+	let assets = kryp
+		.tax
+		.price_data
+		.list_assets()
+		.into_iter()
+		.map(|a| a.to_string())
+		.collect();
+	Ok(assets)
 }
 
 #[command]
-pub async fn get_prices(symbol: String, kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_prices(symbol: String, kryp: State<'_, Data>) -> Result<PriceDataAsset, String> {
 	let kryp = kryp.0.lock().await;
 	let pd = &kryp.tax.price_data;
 	let asset = pd.get_asset(&symbol).ok_or("Asset not found".to_string())?;
-	to_json(&asset)
+	Ok(asset.clone())
 }

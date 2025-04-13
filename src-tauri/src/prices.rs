@@ -6,7 +6,7 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, specta::Type)]
 pub struct PriceData {
 	assets: HashMap<String, PriceDataAsset>,
 }
@@ -235,7 +235,7 @@ async fn get_value() {
 
 pub type Prices = BTreeMap<i64, f64>;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub struct PriceDataAsset {
 	pub name: String,
 	pub symbol: String,
@@ -275,12 +275,12 @@ impl PriceDataAsset {
 	}
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub enum Interval {
 	Daily = 0,
 	HourlyOrDaily = 1,
 }
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, specta::Type)]
 pub enum AssetKind {
 	Fiat = 0,
 	Crypto = 1,

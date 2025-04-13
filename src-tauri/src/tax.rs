@@ -14,7 +14,7 @@ use crate::transaction::{Deposit, Trade, Transfer, UncostedTransaction, Withdraw
 #[cfg(test)]
 use rust_decimal::Decimal;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, specta::Type)]
 pub struct Tax {
 	version: String,
 	pub transactions: Vec<Transaction>,
@@ -185,13 +185,13 @@ impl Tax {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub struct TaxSettings {
 	pub base_currency: String,
 	pub apis: Vec<Api>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub struct Api {
 	pub name: ApiName,
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -216,7 +216,7 @@ impl Api {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub enum ApiName {
 	ExchangerateHost,
 	CoinGecko,

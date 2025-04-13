@@ -1,9 +1,8 @@
 <script lang="ts">
+	import type { ImportData, Transaction } from '$lib/data'
 	import NumericInput from '$lib/NumericInput.svelte'
 	import StringQuantity from '$lib/StringQuantity.svelte'
 	import { formatDateTime } from '$lib/transactions'
-	import type { Transaction } from '$lib/transactions'
-	import type { ImportData } from './+page.svelte'
 
 	export let transaction: Transaction
 	export let cost: string | null

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { DateInput } from 'date-picker-svelte'
 	import Modal from 'modal-svelte'
-	import { tags, type Transaction } from '$lib/transactions'
-	import { popup, runCmd, UnreachableCaseError } from '$lib/general'
+	import { tags } from '$lib/transactions'
 	import NumericInput from '$lib/NumericInput.svelte'
 	import Dropdown from '$lib/Dropdown.svelte'
 	import { onMount } from 'svelte'
+	import { run_unwrap, type UncostedTransaction } from '$lib/data'
 
 	export let onClose: () => void
 	function numStr(str: string) {
@@ -25,9 +25,9 @@
 		validate(info, false)
 		if (hasErrors || !info.date) return
 
-		let json: Transaction
+		let tx: UncostedTransaction
 		if (tag.type === 'Trade') {
-			json = {
+			tx = {
 				type: tag.type,
 				tag: tag.value,
 				date: info.date.getTime(),
@@ -45,7 +45,7 @@
 				cost: numStr(info.cost),
 			}
 		} else if (tag.type === 'Transfer') {
-			json = {
+			tx = {
 				type: tag.type,
 				tag: tag.value,
 				date: info.date.getTime(),
@@ -61,7 +61,7 @@
 				cost: numStr(info.cost),
 			}
 		} else if (tag.type === 'Deposit') {
-			json = {
+			tx = {
 				type: tag.type,
 				tag: tag.value,
 				date: info.date.getTime(),
@@ -74,7 +74,7 @@
 				cost: numStr(info.cost),
 			}
 		} else if (tag.type === 'Withdrawal') {
-			json = {
+			tx = {
 				type: tag.type,
 				tag: tag.value,
 				date: info.date.getTime(),
@@ -87,11 +87,10 @@
 				cost: numStr(info.cost),
 			}
 		} else {
-			popup('Unsupported tx type: ' + tag)
-			throw new UnreachableCaseError(tag.type)
+			throw tag.type satisfies never
 		}
-		console.log('Add transaction:', json)
-		await runCmd('add_transaction', { ttype: json.type, json: JSON.stringify(json) })
+		console.log('Add transaction:', tx)
+		await run_unwrap.addTransaction(tx)
 		onClose()
 	}
 	let tag = tags[0]

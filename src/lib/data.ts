@@ -1,44 +1,30 @@
+import { commands as c, type Result, type TaxSettings } from '../../bindings'
+export * from '../../bindings'
 import { get, writable } from 'svelte/store'
-import { runCmd } from '$lib/general'
-import { event } from '@tauri-apps/api'
 
-export type PriceData = {
-	assets: { [key: string]: PriceDataAsset }
-}
-export type PriceDataAsset = {
-	symbol: string
-	kind: string
-	interval: string
-	prices: Map<number, number>
+// Utility type to unwrap Result<T, E> in a Promise
+type UnwrapResult<T> = T extends Promise<Result<infer U, unknown>> ? Promise<U> : T
+
+// Transform each method to unwrap its return type
+type UnwrapResultMethods<T> = {
+	[K in keyof T]: T[K] extends (...args: infer A) => infer R
+		? (...args: A) => UnwrapResult<R>
+		: T[K]
 }
 
-export type Balance = {
-	acquire_date: number
-	amount: string
-	currency: string
-	wallet: string
-	cost: string
-}
-
-export type Realized = {
-	date: number
-	input: string
-	output: string
-	wallet: string
-}
-
-export type Deposit = {
-	date: number
-	amount: string
-	currency: string
-	value: string
-	wallet: string
-}
-
-export type TaxSettings = {
-	base_currency: string
-	apis: { name: string; key?: string; disabled: boolean }[]
-}
+export const run_unwrap = new Proxy({} as UnwrapResultMethods<typeof c>, {
+	get:
+		(_, property: string) =>
+		async (...args: unknown[]) => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const result: Result<any, any> = await (c as any)[property](...args)
+			if (result.status === 'error') {
+				c.errorPopup(String(result.error))
+				throw new Error(result.error)
+			}
+			return result.data
+		},
+})
 
 export const opened = writable(false)
 
@@ -47,11 +33,11 @@ export const settings = writable({
 	apis: [],
 } as TaxSettings)
 
-runCmd('is_open').then((isOpen) => {
-	opened.set(isOpen)
+run_unwrap.isOpen().then((is_open) => {
+	opened.set(is_open)
 })
-runCmd('get_tax_settings').then((taxSettings) => {
-	settings.set(taxSettings)
+run_unwrap.getTaxSettings().then((tax_settings) => {
+	settings.set(tax_settings)
 })
 
 const recent_files_key = 'kryp_recent_files'
@@ -80,5 +66,5 @@ event.listen('opened', async (e: { payload: { opened?: boolean; file_path?: stri
 		})
 		save_recent_files()
 	}
-	settings.set(await runCmd('get_tax_settings'))
+	settings.set(await run_unwrap.getTaxSettings())
 })

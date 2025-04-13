@@ -1,30 +1,27 @@
 <script lang="ts">
-	import { runCmd } from '$lib/general'
 	import { goto } from '$app/navigation'
-	import type { ImportData } from '../+page.svelte'
+	import { run_unwrap, type ImportData } from '$lib/data'
 	import TxTableRow from '../TxTableRow.svelte'
 
 	let importData: ImportData | null = null
-	runCmd('get_import_data').then((data: ImportData) => {
+	run_unwrap.getImportData().then((data) => {
 		importData = data
 		console.log(importData)
 	})
 
 	async function continueImport() {
-		await runCmd('continue_import')
+		run_unwrap.continueImport()
 		goto('/transactions')
 	}
 
 	async function cancel() {
-		await runCmd('cancel_import')
+		run_unwrap.cancelImport()
 		goto('/import')
 	}
 
 	async function updateImportTransactions() {
 		if (importData) {
-			importData = await runCmd('update_import_transactions', {
-				transactions: importData.transactions,
-			})
+			importData = await run_unwrap.updateImportTransactions(importData.transactions)
 			console.log(importData)
 		}
 	}

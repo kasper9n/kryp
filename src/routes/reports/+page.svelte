@@ -1,34 +1,12 @@
 <script lang="ts">
-	import { runCmd } from '$lib/general'
+	import { run_unwrap, type DWTags, type Report } from '$lib/data'
 
 	let year = new Date().getFullYear() - 1
 
-	type Report = {
-		total_income: string
-		total_deductible: string
-		total_realized_gain: string
-		total_realized_loss: string
-		total_realized: string
-		records: [
-			{
-				name: string
-				income: string
-				deductible: string
-				realized_gain: string
-				realized_loss: string
-				realized: string
-			},
-		]
-	}
-
-	type DWTags = {
-		deposit_tags: string[]
-		withdrawal_tags: string[]
-	} | null
-	let tags: DWTags = null
+	let tags: DWTags | null = null
 	getDepositWithdrawalTags()
 	async function getDepositWithdrawalTags() {
-		tags = await runCmd('get_deposit_withdrawal_tags')
+		tags = await run_unwrap.getDepositWithdrawalTags()
 		console.log('tags', tags)
 	}
 
@@ -46,22 +24,22 @@
 		incomeTags: string[],
 		hideValuesLessThan: number | null,
 	) {
-		report = await runCmd('get_report', {
-			year: Number(year),
+		report = await run_unwrap.getReport(
+			Number(year),
 			deductibleTags,
 			incomeTags,
-			hideValuesLessThan: hideValuesLessThan || 0,
-		})
+			String(hideValuesLessThan || 0),
+		)
 		console.log('report', report)
 	}
 
 	async function download() {
-		report = await runCmd('download_report', {
-			year: Number(year),
+		report = await run_unwrap.downloadReport(
+			Number(year),
 			deductibleTags,
 			incomeTags,
-			hideValuesLessThan: hideValuesLessThan || 0,
-		})
+			String(hideValuesLessThan || 0),
+		)
 	}
 </script>
 

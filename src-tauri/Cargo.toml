@@ -16,9 +16,7 @@ tokio = { version = "1.28", features = ["full"] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
-tauri = { version = "2", features = [
-	"devtools",
-] }
+tauri = { version = "2", features = ["devtools"] }
 chrono = { version = "0.4", features = ["serde"] }
 csv = "1.2"
 atomicwrites = "0.4"
@@ -28,6 +26,9 @@ localzone = { version = "0.2", features = ["auto_validation"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 regex = "1.11.1"
+specta-typescript = "=0.0.9"
+tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
+specta = { version = "=2.0.0-rc.22", features = ["rust_decimal"] }
 
 [features]
 default = ["custom-protocol"]

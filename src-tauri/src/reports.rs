@@ -5,12 +5,12 @@ use crate::{save_csv_tsv, throw};
 use chrono::{Local, TimeZone};
 use rust_decimal::{Decimal, RoundingStrategy::AwayFromZero as AwayFrom0};
 use rust_decimal_macros::dec;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 use tauri::{command, State, Window};
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, specta::Type)]
 pub struct Row {
 	name: String,
 	income: Decimal,
@@ -32,7 +32,7 @@ impl Row {
 	}
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, specta::Type)]
 pub struct Report {
 	records: Vec<Row>,
 	total_deductible: Decimal,
@@ -43,6 +43,7 @@ pub struct Report {
 }
 
 #[command]
+#[specta::specta]
 pub async fn get_report(
 	year: i32,
 	kryp: State<'_, Data>,
@@ -90,6 +91,7 @@ pub async fn get_report(
 }
 
 #[command]
+#[specta::specta]
 pub async fn download_report(
 	year: i32,
 	win: Window,
@@ -149,12 +151,13 @@ pub async fn download_report(
 	Ok(())
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, specta::Type)]
 pub struct DWTags {
 	withdrawal_tags: HashSet<String>,
 	deposit_tags: HashSet<String>,
 }
 #[command]
+#[specta::specta]
 pub async fn get_deposit_withdrawal_tags(kryp: State<'_, Data>) -> Result<DWTags, String> {
 	let kryp = kryp.0.lock().await;
 

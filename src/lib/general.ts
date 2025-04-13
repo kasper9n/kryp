@@ -4,14 +4,6 @@ export function popup(msg: string) {
 	invoke('error_popup', { msg })
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function runCmd<T = any>(cmd: string, options: { [key: string]: any } = {}) {
-	return (await invoke(cmd, options).catch((msg) => {
-		popup(msg)
-		throw msg
-	})) as T
-}
-
 type ShortcutOptions = {
 	shift?: boolean
 	alt?: boolean
@@ -48,10 +40,4 @@ export function checkShortcut(e: KeyboardEvent, key: string, options: ShortcutOp
 }
 export function checkMouseShortcut(e: MouseEvent, options: ShortcutOptions = {}) {
 	return checkModifiers(e, options)
-}
-
-export class UnreachableCaseError extends Error {
-	constructor(val: never) {
-		super(`Unreachable case: ${JSON.stringify(val)}`)
-	}
 }

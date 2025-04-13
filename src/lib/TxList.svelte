@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { formatDate, formatTime, type Transaction } from '$lib/transactions'
+	import { formatDate, formatTime } from '$lib/transactions'
 	import { newSelection } from './selection'
 	import { checkMouseShortcut, checkShortcut } from './general'
 	import VirtualList from './VirtualList.svelte'
+	import type { Transaction } from './data'
 
 	export let transactions: Transaction[]
 	const selection = newSelection()

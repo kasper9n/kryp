@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { runCmd } from '$lib/general'
+	import { run_unwrap } from '$lib/data'
 	import Modal from 'modal-svelte'
 
 	export let onClose: () => void
 	let baseCurrency = 'USD'
 
 	async function create() {
-		await runCmd('new_file', {
-			baseCurrency: baseCurrency,
-		})
+		await run_unwrap.newFile(baseCurrency)
 		onClose()
 	}
 </script>

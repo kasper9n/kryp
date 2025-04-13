@@ -10,7 +10,7 @@ use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
 use tauri::{command, State};
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, specta::Type)]
 pub struct Holding {
 	pub asset: String,
 	pub amount: Decimal,
@@ -35,7 +35,7 @@ impl Holding {
 	}
 }
 
-#[derive(Default, Serialize)]
+#[derive(Default, Serialize, specta::Type)]
 pub struct Holdings {
 	pub list: Vec<Holding>,
 	pub total_cost: Decimal,
@@ -68,17 +68,19 @@ pub fn holdings_from_balances<B: Borrow<Balance>>(balances: &Vec<B>) -> Holdings
 }
 
 #[command]
-pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_holdings(kryp: State<'_, Data>) -> Result<Holdings, String> {
 	let kryp = kryp.0.lock().await;
 	let mut holdings = holdings_from_balances(&kryp.tax.balances);
 	for holding in &mut holdings.list {
 		holding.round();
 	}
-	to_json(&holdings)
+	Ok(holdings)
 }
 
 #[command]
-pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Holdings, String> {
 	let kryp = kryp.0.lock().await;
 	let mut holdings = holdings_from_balances(&kryp.tax.balances);
 
@@ -97,17 +99,20 @@ pub async fn get_holdings_valued(kryp: State<'_, Data>) -> Result<Value, String>
 	for holding in &mut holdings.list {
 		holding.round();
 	}
-	to_json(&holdings)
+	Ok(holdings)
 }
 
-#[derive(Serialize)]
-struct WalletHoldings {
+#[derive(Serialize, specta::Type)]
+pub struct WalletHoldings {
 	name: String,
 	holdings: Holdings,
 }
 
 #[command]
-pub async fn get_holdings_by_wallet(kryp: State<'_, Data>) -> Result<Value, String> {
+#[specta::specta]
+pub async fn get_holdings_by_wallet(
+	kryp: State<'_, Data>,
+) -> Result<HashMap<String, WalletHoldings>, String> {
 	let kryp = kryp.0.lock().await;
 
 	let balances = &kryp.tax.balances;
@@ -126,5 +131,5 @@ pub async fn get_holdings_by_wallet(kryp: State<'_, Data>) -> Result<Value, Stri
 		}
 		wallets_map.insert(wallet.clone(), wallet_holdings);
 	}
-	to_json(&wallets_map)
+	Ok(wallets_map)
 }

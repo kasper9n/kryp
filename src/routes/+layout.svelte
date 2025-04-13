@@ -1,8 +1,7 @@
 <script lang="ts">
 	import '../app.css'
 	import { goto } from '$app/navigation'
-	import { runCmd } from '$lib/general'
-	import { opened, recent_files, save_recent_files, settings } from '$lib/data'
+	import { opened, recent_files, run_unwrap, save_recent_files, settings } from '$lib/data'
 	import NewFileModal from '$lib/modals/NewFile.svelte'
 	import SettingsModal from '$lib/modals/Settings.svelte'
 	import FileDrop from 'svelte-tauri-filedrop'
@@ -93,7 +92,7 @@
 							text: 'Export...',
 							accelerator: 'cmdOrControl+E',
 							action() {
-								runCmd('export')
+								run_unwrap.export()
 							},
 						},
 						{
@@ -206,16 +205,16 @@
 	let settingsModalVisible = false
 
 	async function open(path?: string) {
-		await runCmd('open', { path })
+		run_unwrap.open(path ?? null)
 	}
 	async function save() {
-		await runCmd('save', { saveAs: false })
+		run_unwrap.save(false)
 	}
 	async function saveAs() {
-		await runCmd('save', { saveAs: true })
+		run_unwrap.save(true)
 	}
 	async function close() {
-		await runCmd('close')
+		run_unwrap.close()
 	}
 </script>
 

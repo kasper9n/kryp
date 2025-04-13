@@ -12,7 +12,7 @@ mod binance;
 mod csv;
 mod kryp;
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, specta::Type)]
 pub struct ImportData {
 	transactions: Vec<ImportTransaction>,
 	has_errors: bool,
@@ -35,12 +35,14 @@ impl ImportData {
 }
 
 #[command]
+#[specta::specta]
 pub async fn get_import_data(kryp: State<'_, Data>) -> Result<ImportData, String> {
 	let kryp = kryp.0.lock().await;
 	Ok(kryp.import_data.clone())
 }
 
 #[command]
+#[specta::specta]
 pub async fn update_import_transactions(
 	transactions: Vec<ImportTransaction>,
 	kryp: State<'_, Data>,
@@ -57,7 +59,7 @@ pub async fn update_import_transactions(
 	Ok(kryp.import_data.clone())
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub struct ImportTransaction {
 	pub transaction: UncostedTransaction,
 	pub cost: Option<Decimal>,
@@ -101,6 +103,7 @@ fn pick_files(_win: &Window) -> Option<Vec<FilePath>> {
 
 /// Returns `true` if the scan was cancelled
 #[command]
+#[specta::specta]
 pub async fn scan_import_file(
 	source: String,
 	tz: String,
@@ -156,6 +159,7 @@ pub async fn scan_import_file(
 }
 
 #[command]
+#[specta::specta]
 pub async fn cancel_import(kryp: State<'_, Data>) -> Result<(), ()> {
 	let mut kryp = kryp.0.lock().await;
 	kryp.import_data = ImportData::default();
@@ -164,6 +168,7 @@ pub async fn cancel_import(kryp: State<'_, Data>) -> Result<(), ()> {
 }
 
 #[command]
+#[specta::specta]
 pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
 	let mut kryp = kryp.0.lock().await;
 

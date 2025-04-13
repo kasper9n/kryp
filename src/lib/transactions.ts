@@ -1,3 +1,5 @@
+import type { Transaction } from './data'
+
 type Tag = {
 	type: Transaction['type']
 	value: string
@@ -13,68 +15,6 @@ export const tags: Tag[] = [
 	{ type: 'Withdrawal', value: 'Spend', name: 'Spend' },
 	{ type: 'Withdrawal', value: 'Lost', name: 'Lost' },
 ]
-
-export type Trade = {
-	type: 'Trade'
-	tag: string
-	date: number
-	note: string
-	hash: string
-	sent_amount: string
-	sent_asset: string
-	sent_wallet: string
-	recv_amount: string
-	recv_asset: string
-	recv_wallet: string
-	fee_amount: string
-	fee_asset: string
-	manual_worth: string | null
-	cost: string
-}
-
-export type Transfer = {
-	type: 'Transfer'
-	tag: string
-	date: number
-	note: string
-	hash: string
-	sent_amount: string
-	sent_asset: string
-	sent_wallet: string
-	recv_amount: string
-	recv_asset: string
-	recv_wallet: string
-	manual_worth: string | null
-	cost: string
-}
-
-export type Deposit = {
-	type: 'Deposit'
-	tag: string
-	date: number
-	note: string
-	hash: string
-	amount: string
-	asset: string
-	wallet: string
-	manual_worth: string | null
-	cost: string
-}
-
-export type Withdrawal = {
-	type: 'Withdrawal'
-	tag: string
-	date: number
-	note: string
-	hash: string
-	amount: string
-	asset: string
-	wallet: string
-	manual_worth: string | null
-	cost: string
-}
-
-export type Transaction = Trade | Transfer | Deposit | Withdrawal
 
 function twoDigit(value: number) {
 	return ('0' + value.toString()).slice(-2)

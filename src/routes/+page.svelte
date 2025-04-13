@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { runCmd } from '$lib/general'
 	import {
 		Chart as ChartJS,
 		Title,
@@ -11,6 +10,7 @@
 		PieController,
 	} from 'chart.js'
 	import { darkMode } from '$lib/DarkMode'
+	import { run_unwrap, type Holdings, type WalletHoldings } from '$lib/data'
 
 	ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, PieController)
 
@@ -18,30 +18,14 @@
 		label: string
 		value: number
 	}
-	type Holding = {
-		asset: string
-		amount: string
-		cost: string
-		value: string | null
-		error: string | null
-	}
-	type Holdings = {
-		list: Holding[]
-		total_cost: string
-		total_value: string | null
-	}
-	type WalletHoldings = {
-		name: string
-		holdings: Holdings
-	}
 
 	let holdings: Holdings = { list: [], total_cost: '', total_value: null }
 	let chartHoldings = [] as ChartItem[]
-	let walletHoldings = {} as { [wallet: string]: WalletHoldings }
+	let walletHoldings: Partial<{ [wallet: string]: WalletHoldings }> = {}
 
 	async function getHoldings() {
-		holdings = await runCmd('get_holdings')
-		holdings = await runCmd('get_holdings_valued')
+		holdings = await run_unwrap.getHoldings()
+		holdings = await run_unwrap.getHoldingsValued()
 
 		chartHoldings = holdings.list
 			.filter((holding) => holding.value !== null)
@@ -50,7 +34,7 @@
 				value: Number(holding.value),
 			}))
 
-		walletHoldings = await runCmd('get_holdings_by_wallet')
+		walletHoldings = await run_unwrap.getHoldingsByWallet()
 	}
 	getHoldings()
 
@@ -158,7 +142,7 @@
 			{#await walletHoldings}
 				Loading...
 			{:then walletHoldings}
-				{#each Object.values(walletHoldings) as wallet}
+				{#each Object.values(walletHoldings).filter((w) => w !== undefined) as wallet}
 					<div>{wallet.name}</div>
 					<div class="wallet">
 						<div class="header tr">

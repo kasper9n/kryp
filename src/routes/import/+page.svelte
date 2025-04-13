@@ -1,35 +1,20 @@
-<script lang="ts" context="module">
-	import type { Transaction } from '$lib/transactions'
-
-	export type ImportTransaction = {
-		transaction: Transaction
-		cost: string | null
-		error: string | null
-	}
-	export type ImportData = {
-		transactions: ImportTransaction[]
-		has_errors: boolean
-		source: string
-	}
-</script>
-
 <script lang="ts">
-	import { runCmd } from '$lib/general'
 	import { event } from '@tauri-apps/api'
 	import { onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
+	import { run_unwrap } from '$lib/data'
 
 	let source = 'Kryp'
 
 	let timezone = ''
-	runCmd('get_system_timezone').then((tz: string | null) => {
+	run_unwrap.getSystemTimezone().then((tz) => {
 		if (tz) {
 			timezone = tz
 		}
 	})
 
 	async function importFile() {
-		const cancelled = await runCmd('scan_import_file', { source, tz: timezone })
+		const cancelled = await run_unwrap.scanImportFile(source, timezone)
 		if (!cancelled) {
 			goto('/import/confirm')
 		}

@@ -2,17 +2,18 @@
 	all(not(debug_assertions), target_os = "windows"),
 	windows_subsystem = "windows"
 )]
+#![allow(warnings)]
 
 use data::{Data, Kryp};
 use localzone;
 use rust_decimal::{Decimal, RoundingStrategy};
+use specta_typescript::Typescript;
 use tauri::async_runtime::Mutex;
 use tauri::{
 	command, AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Window, WindowEvent,
 };
 use tauri_plugin_dialog::{DialogExt, FilePath, MessageDialogButtons, MessageDialogKind};
-use tauri_plugin_opener::OpenerExt;
-use tauri_plugin_window_state::{AppHandleExt, StateFlags, WindowExt};
+use tauri_specta::{collect_commands, Builder};
 
 mod calc;
 mod data;
@@ -39,6 +40,7 @@ fn save_csv_tsv(_win: &Window, file_name: &str) -> Option<FilePath> {
 }
 
 #[command]
+#[specta::specta]
 fn error_popup(msg: String, win: Window) {
 	println!("Error: {}", msg);
 	win.app_handle()
@@ -66,18 +68,15 @@ pub fn round_8(num: Decimal) -> Decimal {
 }
 
 #[command]
+#[specta::specta]
 fn get_system_timezone() -> Option<String> {
 	localzone::get_local_zone()
 }
 
 fn main() {
-	let ctx = tauri::generate_context!();
-	let app = tauri::Builder::default()
-		.plugin(tauri_plugin_window_state::Builder::new().build())
-		.plugin(tauri_plugin_opener::init())
-		.plugin(tauri_plugin_dialog::init())
-		.manage(import::ImportData::default())
-		.invoke_handler(tauri::generate_handler![
+	let mut builder = Builder::<tauri::Wry>::new()
+		// Then register them (separated by a comma)
+		.commands(collect_commands![
 			error_popup,
 			get_system_timezone,
 			data::new_file,
@@ -103,8 +102,27 @@ fn main() {
 			import::cancel_import,
 			export::export,
 			get_transactions::get_transactions,
-		])
-		.setup(|app| {
+		]);
+
+	#[cfg(debug_assertions)] // <- Only export on non-release builds
+	builder
+		.export(
+			Typescript::default().bigint(specta_typescript::BigIntExportBehavior::Number),
+			"../bindings.ts",
+		)
+		.expect("Failed to export typescript bindings");
+
+	let ctx = tauri::generate_context!();
+	let app = tauri::Builder::default()
+		.plugin(tauri_plugin_window_state::Builder::new().build())
+		.plugin(tauri_plugin_opener::init())
+		.plugin(tauri_plugin_dialog::init())
+		.manage(import::ImportData::default())
+		.invoke_handler(builder.invoke_handler())
+		.setup(move |app| {
+			// This is also required if you want to use events
+			builder.mount_events(app);
+
 			app.manage(data::Data(Mutex::new(Kryp::new(app.app_handle().clone()))));
 			let _ = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
 				.title("Kryp")

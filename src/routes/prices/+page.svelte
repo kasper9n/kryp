@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { runCmd } from '$lib/general'
-	import type { PriceDataAsset } from '$lib/data'
+	import { run_unwrap, type PriceDataAsset } from '$lib/data'
 	import { tick } from 'svelte'
 
 	let assets: string[] = []
 	let symbol: string | null = null
 	let asset: PriceDataAsset | null = null
 
-	runCmd('list_assets').then((result: string[]) => {
+	run_unwrap.listAssets().then((result) => {
 		assets = result
 		if (assets[0]) {
 			symbol = assets[0]
@@ -18,11 +17,9 @@
 	$: if (symbol) get_asset(symbol)
 	async function get_asset(symbol: string) {
 		loading = true
-		runCmd('get_prices', { symbol }).then(async (result: PriceDataAsset) => {
-			asset = result
-			await tick()
-			loading = false
-		})
+		asset = await run_unwrap.getPrices(symbol)
+		await tick()
+		loading = false
 	}
 
 	function twoDigit(value: number) {

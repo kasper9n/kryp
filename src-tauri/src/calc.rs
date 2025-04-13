@@ -5,7 +5,7 @@ use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use std::slice::IterMut;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, specta::Type)]
 pub struct Balance {
 	pub acquire_date: i64,
 	pub amount: Decimal,
@@ -34,7 +34,7 @@ impl Balances {
 	}
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, specta::Type)]
 pub struct Realized {
 	pub tag: String,
 	pub date: i64,
