@@ -206,6 +206,13 @@ async getTransactions(search: Search) : Promise<Result<Transaction[], string>> {
 /** user-defined events **/
 
 
+export const events = __makeEvents__<{
+importStatus: ImportStatus,
+openedEvent: OpenedEvent
+}>({
+importStatus: "import-status",
+openedEvent: "opened-event"
+})
 
 /** user-defined constants **/
 
@@ -226,8 +233,10 @@ cost: string }
 export type Holding = { asset: string; amount: string; cost: string; value: string | null; error: string | null }
 export type Holdings = { list: Holding[]; total_cost: string; total_value: string | null }
 export type ImportData = { transactions: ImportTransaction[]; has_errors: boolean; source: string }
+export type ImportStatus = { index: number; count: number }
 export type ImportTransaction = { transaction: UncostedTransaction; cost: string | null; error: string | null }
 export type Interval = "Daily" | "HourlyOrDaily"
+export type OpenedEvent = { opened: boolean; file_path: string | null }
 export type PriceData = { assets: Partial<{ [key in string]: PriceDataAsset }> }
 export type PriceDataAsset = { name: string; symbol: string; id: string; kind: AssetKind; interval: Interval; prices: Partial<{ [key in number]: number }> }
 export type Realized = { tag: string; date: number; input: string; asset: string; is_fee: boolean; output: string; wallet: string }

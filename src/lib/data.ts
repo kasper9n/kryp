@@ -1,4 +1,4 @@
-import { commands as c, type Result, type TaxSettings } from '../../bindings'
+import { commands as c, events, type Result, type TaxSettings } from '../../bindings'
 export * from '../../bindings'
 import { get, writable } from 'svelte/store'
 
@@ -48,7 +48,7 @@ export function save_recent_files() {
 	localStorage.setItem(recent_files_key, JSON.stringify(get(recent_files)))
 }
 
-event.listen('opened', async (e: { payload: { opened?: boolean; file_path?: string | null } }) => {
+events.openedEvent.listen(async (e) => {
 	console.log('OPENED event', e)
 	if (e.payload?.opened === true) {
 		opened.set(true)

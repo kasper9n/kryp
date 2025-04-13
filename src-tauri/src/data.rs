@@ -8,6 +8,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 use tauri::{command, AppHandle, Emitter, State, Window};
 use tauri_plugin_dialog::{DialogExt, FilePath};
+use tauri_specta::Event;
 use tokio::sync::Mutex;
 
 pub struct Kryp {
@@ -17,8 +18,9 @@ pub struct Kryp {
 	pub file_path: Option<PathBuf>,
 	pub import_data: ImportData,
 }
-#[derive(Clone, Serialize)]
-struct OpenedEvent {
+
+#[derive(Clone, Serialize, specta::Type, tauri_specta::Event)]
+pub struct OpenedEvent {
 	opened: bool,
 	file_path: Option<PathBuf>,
 }
@@ -43,12 +45,12 @@ impl Kryp {
 				*self = Kryp::new(self.app.clone());
 			}
 		}
-		println!("EMIT opened");
-		let opened_event = OpenedEvent {
+		println!("EMIT opened {}", opened);
+		OpenedEvent {
 			opened,
 			file_path: self.file_path.clone(),
-		};
-		self.app.emit("opened", opened_event).unwrap();
+		}
+		.emit(&self.app);
 	}
 	pub fn has_unsaved_changes(&self) -> bool {
 		self.opened && self.tax.dirty
@@ -140,7 +142,7 @@ pub async fn save(save_as: bool, kryp: State<'_, Data>) -> Result<(), String> {
 			kryp.tax.save(file_path.clone());
 			kryp.file_path = Some(file_path);
 			kryp.tax.dirty = false;
-			kryp.emit_file_status(true); // emit event with file_path
+			kryp.emit_file_status(true);
 		}
 	}
 	Ok(())

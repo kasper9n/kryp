@@ -2,7 +2,7 @@
 	import { event } from '@tauri-apps/api'
 	import { onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
-	import { run_unwrap } from '$lib/data'
+	import { events, run_unwrap } from '$lib/data'
 
 	let source = 'Kryp'
 
@@ -25,12 +25,10 @@
 		count: number
 	}
 	let status: ImportStatus | null = null
-	const statusUnlisten = event.listen('importStatus', (e) => {
-		if (e.payload) {
-			status = e.payload as ImportStatus
-		}
+	const status_unlisten = events.importStatus.listen((e) => {
+		status = e.payload
 	})
-	onDestroy(async () => (await statusUnlisten)())
+	onDestroy(async () => (await status_unlisten)())
 </script>
 
 <h1 class="center">Import</h1>

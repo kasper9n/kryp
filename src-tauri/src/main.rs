@@ -13,7 +13,7 @@ use tauri::{
 	command, AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder, Window, WindowEvent,
 };
 use tauri_plugin_dialog::{DialogExt, FilePath, MessageDialogButtons, MessageDialogKind};
-use tauri_specta::{collect_commands, Builder};
+use tauri_specta::{collect_commands, collect_events, Builder};
 
 mod calc;
 mod data;
@@ -102,7 +102,8 @@ fn main() {
 			import::cancel_import,
 			export::export,
 			get_transactions::get_transactions,
-		]);
+		])
+		.events(collect_events![data::OpenedEvent, import::ImportStatus]);
 
 	#[cfg(debug_assertions)] // <- Only export on non-release builds
 	builder

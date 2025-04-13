@@ -7,6 +7,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use tauri::{command, Emitter, State, Window};
 use tauri_plugin_dialog::{DialogExt, FilePath};
+use tauri_specta::Event;
 
 mod binance;
 mod csv;
@@ -87,7 +88,7 @@ impl ImportTransaction {
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, specta::Type, tauri_specta::Event)]
 pub struct ImportStatus {
 	index: usize,
 	count: usize,
@@ -145,11 +146,11 @@ pub async fn scan_import_file(
 		let import_tx = ImportTransaction::from_uncosted_tx(uncosted_transaction, tax).await;
 		import_transactions.push(import_tx);
 
-		let status = ImportStatus {
+		ImportStatus {
 			index: i,
 			count: transaction_count,
-		};
-		win.emit("importStatus", status).ok();
+		}
+		.emit(&win);
 	}
 
 	kryp.import_data = ImportData::new(&source, import_transactions);
