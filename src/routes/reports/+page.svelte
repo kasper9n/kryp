@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { run_unwrap, type DWTags, type Report } from '$lib/data'
+	import Dropdown from '$lib/Dropdown.svelte'
 
 	let year = new Date().getFullYear() - 1
 
@@ -13,22 +14,28 @@
 	let deductibleTags = ['Lost']
 	let incomeTags = ['Income', 'Interest']
 	let hideValuesLessThan: number | null = 0
-
+	const cost_basis_methods = [
+		{ name: 'FIFO', value: 'fifo' },
+		{ name: 'HIFO', value: 'hifo' },
+	] as const
+	let cost_basis_method = cost_basis_methods[0]
 	let report: Report | null = null
 	$: if (tags) {
-		getReport(year, deductibleTags, incomeTags, hideValuesLessThan)
+		getReport(year, deductibleTags, incomeTags, hideValuesLessThan, cost_basis_method.value)
 	}
 	async function getReport(
 		year: number,
 		deductibleTags: string[],
 		incomeTags: string[],
 		hideValuesLessThan: number | null,
+		cost_basis_method: string,
 	) {
 		report = await run_unwrap.getReport(
 			Number(year),
 			deductibleTags,
 			incomeTags,
 			String(hideValuesLessThan || 0),
+			cost_basis_method,
 		)
 		console.log('report', report)
 	}
@@ -53,7 +60,9 @@
 	</div>
 	<div class="mx-4 my-4 flex items-center">
 		<p class="mr-4">Cost basis method</p>
-		FIFO
+		<div class="w-28">
+			<Dropdown options={cost_basis_methods} bind:value={cost_basis_method} />
+		</div>
 	</div>
 
 	<div class="flex">

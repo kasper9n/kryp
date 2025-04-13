@@ -188,7 +188,10 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
 		Tax::add_transaction_to_vec(&mut new_transactions, transaction);
 	}
 
-	let calculation = Calculation::calculate(new_transactions.iter().collect())?;
+	let calculation = Calculation::calculate(
+		new_transactions.iter().collect(),
+		kryp.tax.settings.cost_basis_method.clone(),
+	)?;
 
 	kryp.tax.transactions = new_transactions;
 	kryp.tax.apply_calc_output(calculation);

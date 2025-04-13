@@ -1,5 +1,6 @@
 use crate::calc::{Balance, Calculation, Realized};
 use crate::prices::{AssetKind, PriceData};
+use crate::reports::CostBasisMethod;
 use crate::throw;
 use crate::transaction::Transaction;
 use atomicwrites::{AllowOverwrite, AtomicFile};
@@ -32,6 +33,7 @@ impl Tax {
 			version: "0.1".to_string(),
 			transactions: Vec::new(),
 			settings: TaxSettings {
+				cost_basis_method: CostBasisMethod::FIFO,
 				base_currency: base_currency.to_string(),
 				apis: vec![
 					Api::new(ApiName::ExchangerateHost),
@@ -56,7 +58,10 @@ impl Tax {
 		transactions.insert(pos, tx);
 	}
 	pub fn calculate(&mut self) -> Result<(), String> {
-		let output = Calculation::calculate(self.transactions.iter().collect())?;
+		let output = Calculation::calculate(
+			self.transactions.iter().collect(),
+			self.settings.cost_basis_method.clone(),
+		)?;
 		self.apply_calc_output(output);
 		Ok(())
 	}
@@ -187,6 +192,7 @@ impl Tax {
 
 #[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
 pub struct TaxSettings {
+	pub cost_basis_method: CostBasisMethod,
 	pub base_currency: String,
 	pub apis: Vec<Api>,
 }

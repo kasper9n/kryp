@@ -1,3 +1,4 @@
+use crate::reports::CostBasisMethod;
 use crate::transaction::{format_date, Quantity, Transaction};
 use crate::{round_8, throw};
 use rust_decimal::Decimal;
@@ -29,7 +30,7 @@ impl Balances {
 	pub fn to_inner(self) -> Vec<Balance> {
 		self.0
 	}
-	fn iter_fifo(&mut self) -> IterMut<Balance> {
+	fn iter_mut(&mut self) -> IterMut<Balance> {
 		self.0.iter_mut()
 	}
 }
@@ -59,6 +60,7 @@ pub struct Calculation {
 	pub realized_gains: Vec<Realized>,
 	pub deposits: Vec<TaggedValue>,
 	pub withdrawals: Vec<TaggedValue>,
+	pub cost_basis_method: CostBasisMethod,
 }
 
 enum DeductError {
@@ -77,12 +79,16 @@ enum DeductError {
 
 impl Calculation {
 	/// Adds transactions to the calculation
-	pub fn calculate(mut transactions: Vec<&Transaction>) -> Result<Self, String> {
+	pub fn calculate(
+		mut transactions: Vec<&Transaction>,
+		cost_basis_method: CostBasisMethod,
+	) -> Result<Self, String> {
 		let mut calc = Calculation {
 			balances: Balances::default(),
 			realized_gains: Vec::new(),
 			deposits: Vec::new(),
 			withdrawals: Vec::new(),
+			cost_basis_method,
 		};
 
 		// sort by date
@@ -133,7 +139,6 @@ impl Calculation {
 	}
 
 	fn apply_transaction(&mut self, transaction: &Transaction) -> Result<(), DeductError> {
-		// println!("tx {:?}", transaction);
 		match transaction {
 			Transaction::Trade(trade) => {
 				self.balances.add_if_positive(Balance {
@@ -155,9 +160,6 @@ impl Calculation {
 					output: trade.cost(),
 					wallet: trade.sent_wallet.clone(),
 				};
-				if trade.recv_asset == "BNB" || trade.sent_asset == "BNB" {
-					println!("\n\n{:?}\n{:?}\n{:?}", trade, deducted, r);
-				}
 				self.realized_gains.push(r);
 
 				if trade.fee_asset != "" {
@@ -173,9 +175,6 @@ impl Calculation {
 						output: sum_balance_costs(&fee_deducted),
 						wallet: trade.sent_wallet.clone(),
 					};
-					if trade.fee_asset == "BNB" {
-						println!("\n\n{:?}\n{:?}\n{:?}", trade, fee_deducted, rf);
-					}
 					self.realized_gains.push(rf);
 				};
 			}
@@ -262,7 +261,29 @@ impl Calculation {
 		let mut amount_left = amount;
 		let mut deducted_balances = Vec::new();
 
-		for balance in self.balances.iter_fifo() {
+		match self.cost_basis_method {
+			CostBasisMethod::FIFO => {} // Keep original order
+			CostBasisMethod::HIFO => {
+				self.balances.0.sort_by(|a, b| {
+					// if amount and cost are 0 (used-up balances), count it as 0 to move them to the end
+					let a_price = match (a.amount.is_zero(), a.cost.is_zero()) {
+						(true, true) => dec!(0),
+						(true, false) => panic!("encountered zero-amount balance with cost"),
+						(false, true) => dec!(0), // airdrop for example
+						(false, false) => a.cost / a.amount,
+					};
+					let b_price = match (b.amount.is_zero(), b.cost.is_zero()) {
+						(true, true) => dec!(0),
+						(true, false) => panic!("encountered zero-amount balance with cost"),
+						(false, true) => dec!(0), // airdrop for example
+						(false, false) => b.cost / b.amount,
+					};
+					b_price.cmp(&a_price)
+				});
+			}
+		}
+
+		for balance in self.balances.iter_mut() {
 			if balance.wallet != wallet || balance.currency != asset {
 				continue;
 			}

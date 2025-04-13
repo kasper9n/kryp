@@ -70,6 +70,14 @@ async getTaxSettings() : Promise<Result<TaxSettings, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async setTaxSettings(settings: TaxSettings) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_tax_settings", { settings }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async addTransaction(uncostedTx: UncostedTransaction) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("add_transaction", { uncostedTx }) };
@@ -126,9 +134,9 @@ async getDepositWithdrawalTags() : Promise<Result<DWTags, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async getReport(year: number, deductibleTags: string[], incomeTags: string[], hideValuesLessThan: string) : Promise<Result<Report, string>> {
+async getReport(year: number, deductibleTags: string[], incomeTags: string[], hideValuesLessThan: string, costBasisMethod: CostBasisMethod) : Promise<Result<Report, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_report", { year, deductibleTags, incomeTags, hideValuesLessThan }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_report", { year, deductibleTags, incomeTags, hideValuesLessThan, costBasisMethod }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -224,6 +232,7 @@ export type Api = { name: ApiName; key?: string | null; disabled: boolean }
 export type ApiName = "ExchangerateHost" | "CoinGecko" | "CryptoCompare"
 export type AssetKind = "Fiat" | "Crypto"
 export type Balance = { acquire_date: number; amount: string; currency: string; wallet: string; cost: string }
+export type CostBasisMethod = "fifo" | "hifo"
 export type DWTags = { withdrawal_tags: string[]; deposit_tags: string[] }
 export type Deposit = { tag: string; date: number; note: string; hash: string; amount: string; asset: string; wallet: string; manual_worth: string | null; 
 /**
@@ -244,7 +253,7 @@ export type Report = { records: Row[]; total_deductible: string; total_income: s
 export type Row = { name: string; income: string; deductible: string; realized_gain: string; realized_loss: string; realized: string }
 export type Search = { tags: string[]; asset: string }
 export type Tax = { version: string; transactions: Transaction[]; settings: TaxSettings; price_data: PriceData; realized_gains: Realized[]; balances: Balance[] }
-export type TaxSettings = { base_currency: string; apis: Api[] }
+export type TaxSettings = { cost_basis_method: CostBasisMethod; base_currency: string; apis: Api[] }
 export type Trade = { tag: string; date: number; note: string; hash: string; sent_amount: string; sent_asset: string; sent_wallet: string; recv_amount: string; recv_asset: string; recv_wallet: string; fee_amount: string; fee_asset: string; manual_worth: string | null; 
 /**
  * Includes fee

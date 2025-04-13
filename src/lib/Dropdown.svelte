@@ -4,10 +4,10 @@
 	export let value: Option
 	let text = value.name
 	type Option = { name: string; [key: string]: unknown }
-	export let options: Option[]
+	export let options: readonly Option[]
 	let dragSwitching = false
 	export let menuMaxHeight = 300
-	function filterOptions(options: Option[], text: string) {
+	function filterOptions(options: readonly Option[], text: string) {
 		let filtered = []
 		const lcText = text.toLowerCase()
 		for (const option of options) {

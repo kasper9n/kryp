@@ -42,6 +42,14 @@ pub struct Report {
 	total_realized: Decimal,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, specta::Type)]
+pub enum CostBasisMethod {
+	#[serde(rename = "fifo")]
+	FIFO,
+	#[serde(rename = "hifo")]
+	HIFO,
+}
+
 #[command]
 #[specta::specta]
 pub async fn get_report(
@@ -50,8 +58,10 @@ pub async fn get_report(
 	deductible_tags: Vec<String>,
 	income_tags: Vec<String>,
 	hide_values_less_than: Decimal,
+	cost_basis_method: CostBasisMethod,
 ) -> Result<Report, String> {
-	let kryp = kryp.0.lock().await;
+	let mut kryp = kryp.0.lock().await;
+	kryp.tax.settings.cost_basis_method = cost_basis_method;
 	let transactions: Vec<&Transaction> = kryp.tax.transactions.iter().collect();
 
 	let at_least = Local.with_ymd_and_hms(year, 1, 1, 0, 0, 0).unwrap();
@@ -67,7 +77,10 @@ pub async fn get_report(
 		})
 		.collect();
 
-	let calculation = Calculation::calculate(selected_transactions)?;
+	let calculation = Calculation::calculate(
+		selected_transactions,
+		kryp.tax.settings.cost_basis_method.clone(),
+	)?;
 	let mut report = generate_report(calculation, range, deductible_tags, income_tags)?;
 	report.records = report
 		.records
@@ -100,6 +113,10 @@ pub async fn download_report(
 	income_tags: Vec<String>,
 	hide_values_less_than: Decimal,
 ) -> Result<(), String> {
+	let cost_basis_method = {
+		let kryp = kryp.0.lock().await;
+		kryp.tax.settings.cost_basis_method.clone()
+	};
 	let file_name = format!("Kryp Report {}", year);
 	let file_path = match save_csv_tsv(&win, &file_name) {
 		Some(p) => p,
@@ -112,6 +129,7 @@ pub async fn download_report(
 		deductible_tags,
 		income_tags,
 		hide_values_less_than,
+		cost_basis_method,
 	)
 	.await?;
 

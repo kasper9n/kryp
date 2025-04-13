@@ -190,6 +190,14 @@ pub async fn get_tax_settings(kryp: State<'_, Data>) -> Result<TaxSettings, Stri
 
 #[command]
 #[specta::specta]
+pub async fn set_tax_settings(kryp: State<'_, Data>, settings: TaxSettings) -> Result<(), String> {
+	let mut kryp = kryp.0.lock().await;
+	kryp.tax.settings = settings;
+	Ok(())
+}
+
+#[command]
+#[specta::specta]
 pub async fn add_transaction(
 	uncosted_tx: UncostedTransaction,
 	kryp: State<'_, Data>,

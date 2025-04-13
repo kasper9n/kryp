@@ -86,6 +86,7 @@ fn main() {
 			data::is_open,
 			data::get_tax,
 			data::get_tax_settings,
+			data::set_tax_settings,
 			data::add_transaction,
 			holdings::get_holdings,
 			holdings::get_holdings_valued,
