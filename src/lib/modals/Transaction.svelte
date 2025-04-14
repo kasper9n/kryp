@@ -119,8 +119,10 @@
 		cost: string
 	}
 	function getDefault(): Info {
+		const default_date = new Date()
+		default_date.setMilliseconds(0)
 		return {
-			date: new Date(),
+			date: default_date,
 			note: '',
 			hash: '',
 			sent_amount: '',
@@ -310,8 +312,8 @@
 		user-select: none
 		cursor: default
 		font-size: 12px
-		--date-input-width: 136px
-		--dropdown-width: 136px
+		--date-input-width: 150px
+		--dropdown-width: 150px
 	.tag-option
 		padding: 4px 8px
 		display: flex
