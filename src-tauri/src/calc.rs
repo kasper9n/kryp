@@ -62,6 +62,43 @@ impl Balance {
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Balances(Vec<Balance>);
 impl Balances {
+	fn sort(&mut self, cost_basis_method: CostBasisMethod) {
+		match cost_basis_method {
+			CostBasisMethod::FIFO => {} // Keep original order
+			CostBasisMethod::HIFO => {
+				self.0.sort_by(|a, b| {
+					let a_price = a.cost_price();
+					let b_price = b.cost_price();
+					let result = b_price.cmp(&a_price);
+					result
+				});
+			}
+		}
+
+		// Verify balances sorting
+		match cost_basis_method {
+			CostBasisMethod::FIFO => {
+				let mut last_date = i64::MIN;
+				for balance in self.0.iter_mut() {
+					if last_date > balance.acquire_date {
+						println!("Balances {:#?}", self.0);
+						panic!("Balances are not sorted by date");
+					}
+					last_date = balance.acquire_date;
+				}
+			}
+			CostBasisMethod::HIFO => {
+				let mut last_price = rust_decimal::Decimal::MAX;
+				for balance in self.0.iter_mut() {
+					if last_price < balance.cost_price() {
+						println!("Balances {:#?}", self.0);
+						panic!("Balances are not sorted by cost price");
+					}
+					last_price = balance.cost_price();
+				}
+			}
+		}
+	}
 	fn add_if_positive(&mut self, balance: Balance) {
 		if balance.amount > dec!(0) || balance.cost > dec!(0) {
 			let pos = self
@@ -293,6 +330,7 @@ impl Calculation {
 				});
 			}
 		}
+		self.balances.sort(self.cost_basis_method.clone());
 		Ok(())
 	}
 
@@ -306,14 +344,7 @@ impl Calculation {
 		let mut amount_left = amount;
 		let mut deducted_balances = Vec::new();
 
-		match self.cost_basis_method {
-			CostBasisMethod::FIFO => {} // Keep original order
-			CostBasisMethod::HIFO => {
-				self.balances
-					.0
-					.sort_by(|a, b| b.cost_price().cmp(&a.cost_price()));
-			}
-		}
+		self.balances.sort(self.cost_basis_method.clone());
 
 		for balance in self.balances.iter_mut() {
 			if balance.wallet != wallet || balance.currency != asset {
