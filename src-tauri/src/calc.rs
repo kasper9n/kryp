@@ -90,7 +90,7 @@ pub struct Realized {
 	pub wallet: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TaggedValue {
 	pub tag: String,
 	pub date: i64,
@@ -99,6 +99,7 @@ pub struct TaggedValue {
 	pub cost: Decimal,
 }
 
+#[derive(Clone)]
 pub struct Calculation {
 	pub balances: Balances,
 	pub realized_gains: Vec<Realized>,

@@ -481,7 +481,7 @@ lazy_static! {
 		Regex::new(r"^((\d+[\d,])*\d+(.\d+)*) *(.+)$").unwrap();
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Quantity {
 	pub amount: Decimal,
 	pub asset: String,
