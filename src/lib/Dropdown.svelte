@@ -126,6 +126,7 @@
 </script>
 
 <svelte:window on:mouseup={() => (dragSwitching = false)} />
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="dropdown" class:focused on:keydown={keydown}>
 	<div class="field" on:mousedown|preventDefault={fieldMouseDown}>
 		<input
@@ -152,6 +153,7 @@
 		style="max-height: {menuMaxHeight}px"
 	>
 		{#each filteredOptions as option}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				class="item"
 				on:mousedown|preventDefault
@@ -187,13 +189,6 @@
 		border: 1px solid var(--input-border)
 		border-radius: 3px
 		transition: all 80ms var(--ease)
-		&:active .icon
-			transform: translateY(1px)
-		:active .icon
-			// For some weird reason on macOS 10.15.7, if you trigger the transition,
-			// defocus the dropdown and switch to a diferent window, the transition
-			// will stop working. This line fixes that (don't ask me why)
-			transform: translateY(1px)
 		.icon
 			transition: transform 120ms var(--ease)
 			display: flex

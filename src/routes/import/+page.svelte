@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { event } from '@tauri-apps/api'
 	import { onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { events, run_unwrap } from '$lib/data'

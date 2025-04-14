@@ -21,7 +21,13 @@
 	}
 </script>
 
-<div class="relative outline-none" on:keydown={keydown} on:focusout={close} tabindex="-1">
+<div
+	class="relative outline-none"
+	on:keydown={keydown}
+	on:focusout={close}
+	tabindex="-1"
+	role="button"
+>
 	<slot {visible} {toggle} {close} {open} />
 	<div class="absolute z-10" class:hidden={!visible}>
 		<slot name="popup" />

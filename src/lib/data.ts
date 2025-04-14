@@ -31,6 +31,7 @@ export const opened = writable(false)
 export const settings = writable({
 	base_currency: 'USD',
 	apis: [],
+	cost_basis_method: 'fifo',
 } as TaxSettings)
 
 run_unwrap.isOpen().then((is_open) => {

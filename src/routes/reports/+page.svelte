@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { run_unwrap, type DWTags, type Report } from '$lib/data'
+	import { run_unwrap, type CostBasisMethod, type DWTags, type Report } from '$lib/data'
 	import Dropdown from '$lib/Dropdown.svelte'
 
 	let year = new Date().getFullYear() - 1
@@ -28,7 +28,7 @@
 		deductibleTags: string[],
 		incomeTags: string[],
 		hideValuesLessThan: number | null,
-		cost_basis_method: string,
+		cost_basis_method: CostBasisMethod,
 	) {
 		report = await run_unwrap.getReport(
 			Number(year),
