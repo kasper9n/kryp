@@ -1,4 +1,4 @@
-use crate::calc::Balance;
+use crate::calc::{Balance, BalancePriced};
 use crate::data::{to_json, Data};
 use crate::fetch_current::fetch_current;
 use rust_decimal::{Decimal, RoundingStrategy::AwayFromZero as AwayFrom0};
@@ -48,7 +48,7 @@ impl Holdings {
 	}
 }
 
-pub fn holdings_from_balances<B: Borrow<Balance>>(balances: &Vec<B>) -> Holdings {
+pub fn holdings_from_balances<B: Borrow<BalancePriced>>(balances: &Vec<B>) -> Holdings {
 	let mut map = HashMap::new();
 	for balance in balances {
 		let balance = balance.borrow();
@@ -120,7 +120,7 @@ pub async fn get_holdings_by_wallet(
 
 	let mut wallets_map: HashMap<String, WalletHoldings> = HashMap::new();
 	for wallet in wallets {
-		let balances: Vec<&Balance> = balances.iter().filter(|b| &b.wallet == wallet).collect();
+		let balances: Vec<_> = balances.iter().filter(|b| &b.wallet == wallet).collect();
 		let holdings = holdings_from_balances(&balances);
 		let mut wallet_holdings = WalletHoldings {
 			name: wallet.clone(),

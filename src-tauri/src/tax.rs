@@ -1,4 +1,4 @@
-use crate::calc::{Balance, Calculation, Realized};
+use crate::calc::{Balance, BalancePriced, Calculation, Realized};
 use crate::prices::{AssetKind, PriceData};
 use crate::reports::CostBasisMethod;
 use crate::throw;
@@ -22,7 +22,7 @@ pub struct Tax {
 	pub settings: TaxSettings,
 	pub price_data: PriceData,
 	realized_gains: Vec<Realized>,
-	pub balances: Vec<Balance>,
+	pub balances: Vec<BalancePriced>,
 	#[serde(skip)]
 	pub dirty: bool,
 }
@@ -66,7 +66,12 @@ impl Tax {
 		Ok(())
 	}
 	pub fn apply_calc_output(&mut self, calc: Calculation) {
-		self.balances = calc.balances.to_inner();
+		self.balances = calc
+			.balances
+			.to_inner()
+			.into_iter()
+			.map(|b| b.priced())
+			.collect();
 		self.realized_gains = calc.realized_gains;
 		self.dirty = true;
 	}
@@ -269,7 +274,8 @@ mod tests {
 					currency: "NOK".to_string(),
 					wallet: "Binance".to_string(),
 					cost: dec!(200),
-				},
+				}
+				.priced(),
 				Balance {
 					acquire_date: 1500300000000,
 					amount: dec!(3),
@@ -277,6 +283,7 @@ mod tests {
 					wallet: "Coinbase".to_string(),
 					cost: dec!(9398.57934082), // = 0.5 BTC
 				}
+				.priced(),
 			]
 		);
 		assert_eq!(
@@ -326,7 +333,8 @@ mod tests {
 				currency: "NOK".to_string(),
 				wallet: "Coinbase".to_string(),
 				cost: dec!(750),
-			}]
+			}
+			.priced()]
 		);
 		assert_eq!(
 			tax.realized_gains,
@@ -365,7 +373,8 @@ mod tests {
 				currency: "ETH".to_string(),
 				wallet: "Coinbase".to_string(),
 				cost: dec!(1633.83825099),
-			}]
+			}
+			.priced()]
 		);
 		assert_eq!(
 			tax.realized_gains,

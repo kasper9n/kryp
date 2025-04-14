@@ -7,12 +7,56 @@ use serde::{Deserialize, Serialize};
 use std::slice::IterMut;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, specta::Type)]
+pub struct BalancePriced {
+	pub acquire_date: i64,
+	pub amount: Decimal,
+	pub currency: String,
+	pub wallet: String,
+	pub cost: Decimal,
+	pub cost_price: Decimal,
+}
+impl BalancePriced {
+	pub fn into_balance(self) -> Balance {
+		Balance {
+			acquire_date: self.acquire_date,
+			amount: self.amount,
+			currency: self.currency,
+			wallet: self.wallet,
+			cost: self.cost,
+		}
+	}
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, specta::Type)]
 pub struct Balance {
 	pub acquire_date: i64,
 	pub amount: Decimal,
 	pub currency: String,
 	pub wallet: String,
 	pub cost: Decimal,
+}
+impl Balance {
+	pub fn cost_price(&self) -> Decimal {
+		// if amount and cost are 0 (used-up balances), count it as 0 to move them to the end with HIFO
+		let price = match (self.amount.is_zero(), self.cost.is_zero()) {
+			(true, true) => dec!(0),
+			(true, false) => panic!("encountered zero-amount balance with cost"),
+			(false, true) => dec!(0), // airdrop for example
+			(false, false) => self.cost / self.amount,
+		};
+		price
+	}
+	pub fn priced(self) -> BalancePriced {
+		let cost_price = self.cost_price();
+		BalancePriced {
+			acquire_date: self.acquire_date,
+			amount: self.amount,
+			currency: self.currency,
+			wallet: self.wallet,
+			cost: self.cost,
+			cost_price,
+		}
+	}
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -264,22 +308,9 @@ impl Calculation {
 		match self.cost_basis_method {
 			CostBasisMethod::FIFO => {} // Keep original order
 			CostBasisMethod::HIFO => {
-				self.balances.0.sort_by(|a, b| {
-					// if amount and cost are 0 (used-up balances), count it as 0 to move them to the end
-					let a_price = match (a.amount.is_zero(), a.cost.is_zero()) {
-						(true, true) => dec!(0),
-						(true, false) => panic!("encountered zero-amount balance with cost"),
-						(false, true) => dec!(0), // airdrop for example
-						(false, false) => a.cost / a.amount,
-					};
-					let b_price = match (b.amount.is_zero(), b.cost.is_zero()) {
-						(true, true) => dec!(0),
-						(true, false) => panic!("encountered zero-amount balance with cost"),
-						(false, true) => dec!(0), // airdrop for example
-						(false, false) => b.cost / b.amount,
-					};
-					b_price.cmp(&a_price)
-				});
+				self.balances
+					.0
+					.sort_by(|a, b| b.cost_price().cmp(&a.cost_price()));
 			}
 		}
 

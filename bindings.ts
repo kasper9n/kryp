@@ -231,7 +231,7 @@ openedEvent: "opened-event"
 export type Api = { name: ApiName; key?: string | null; disabled: boolean }
 export type ApiName = "ExchangerateHost" | "CoinGecko" | "CryptoCompare"
 export type AssetKind = "Fiat" | "Crypto"
-export type Balance = { acquire_date: number; amount: string; currency: string; wallet: string; cost: string }
+export type BalancePriced = { acquire_date: number; amount: string; currency: string; wallet: string; cost: string; cost_price: string }
 export type CostBasisMethod = "fifo" | "hifo"
 export type DWTags = { withdrawal_tags: string[]; deposit_tags: string[] }
 export type Deposit = { tag: string; date: number; note: string; hash: string; amount: string; asset: string; wallet: string; manual_worth: string | null; 
@@ -252,7 +252,7 @@ export type Realized = { tag: string; date: number; input: string; asset: string
 export type Report = { records: Row[]; total_deductible: string; total_income: string; total_realized_gain: string; total_realized_loss: string; total_realized: string }
 export type Row = { name: string; income: string; deductible: string; realized_gain: string; realized_loss: string; realized: string }
 export type Search = { tags: string[]; asset: string }
-export type Tax = { version: string; transactions: Transaction[]; settings: TaxSettings; price_data: PriceData; realized_gains: Realized[]; balances: Balance[] }
+export type Tax = { version: string; transactions: Transaction[]; settings: TaxSettings; price_data: PriceData; realized_gains: Realized[]; balances: BalancePriced[] }
 export type TaxSettings = { cost_basis_method: CostBasisMethod; base_currency: string; apis: Api[] }
 export type Trade = { tag: string; date: number; note: string; hash: string; sent_amount: string; sent_asset: string; sent_wallet: string; recv_amount: string; recv_asset: string; recv_wallet: string; fee_amount: string; fee_asset: string; manual_worth: string | null; 
 /**
