@@ -25,6 +25,7 @@
 
 	async function getHoldings() {
 		holdings = await run_unwrap.getHoldings()
+		walletHoldings = await run_unwrap.getHoldingsByWallet()
 		holdings = await run_unwrap.getHoldingsValued()
 
 		chartHoldings = holdings.list
@@ -33,8 +34,6 @@
 				label: holding.asset,
 				value: Number(holding.value),
 			}))
-
-		walletHoldings = await run_unwrap.getHoldingsByWallet()
 	}
 	getHoldings()
 
