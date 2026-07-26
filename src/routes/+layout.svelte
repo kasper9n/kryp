@@ -191,7 +191,7 @@
 				{
 					text: 'Learn More',
 					action() {
-						openUrl('https://github.com/probablykasper/kryp')
+						openUrl('https://github.com/kasper9n/kryp')
 					},
 				},
 			],
