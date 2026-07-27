@@ -239,6 +239,7 @@ impl Calculation {
 					input: sum_balance_costs(&deducted),
 					asset: trade.sent_asset.clone(),
 					is_fee: false,
+					// The fee is included in the cost here
 					output: trade.cost(),
 					wallet: trade.sent_wallet.clone(),
 				};
@@ -253,8 +254,8 @@ impl Calculation {
 						input: sum_balance_costs(&fee_deducted),
 						asset: trade.fee_asset.clone(),
 						is_fee: true,
-						// TODO calculate fee output cost
-						output: sum_balance_costs(&fee_deducted),
+						// The fee output is already included in the main trade
+						output: dec!(0),
 						wallet: trade.sent_wallet.clone(),
 					};
 					self.realized_gains.push(rf);

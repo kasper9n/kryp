@@ -12,16 +12,19 @@
 	<ul class="my-4 list-disc pl-10">
 		<li>Buy transaction: Trade from your base currency. These are tax-free.</li>
 		<li>
-			Sell transaction: Trade into your base currency. These will realize capital gains taxes.
+			Sell transaction: Trade into your base currency. These will realise capital gains taxes.
 		</li>
 		<li>
-			Exchange transaction: Not to or from your base currency. These realize capital gains taxes on
+			Exchange transaction: Not to or from your base currency. These realise capital gains taxes on
 			the amount you sold.
 		</li>
 	</ul>
 	<p>
 		If the transaction has a fee, that will be added to the cost of what you traded into. If the fee
-		is not in your base currency, it will realize capital gains.
+		is not in your base currency, it will realise capital gains.
+	</p>
+	<p>
+		NOTE: Realised gains from fees do not get reported in the fee currency. Instead, the realised gain is included in the trade's currency.
 	</p>
 	<p>
 		Some countries have different tax rates depending on how long you hold your investments, and
@@ -31,20 +34,20 @@
 	<h3>Transfer</h3>
 	<p>
 		Move an asset from one wallet to another. Transfers are tax-free, but if you pay a fee for the
-		transfer, capital gains will be realized for the fee. The fee is automatically calculated as the
+		transfer, capital gains will be realised for the fee. The fee is automatically calculated as the
 		difference between the sent and received amount.
 	</p>
 
 	<h3>Deposit</h3>
 	<p>
-		Add an asset to a wallet. This will not realize any capital gains, however income tax may be
+		Add an asset to a wallet. This will not realise any capital gains, however income tax may be
 		applicable for some types of deposits. If a deposit is not in your base currency, it will be
 		treated as a purchase of that asset with your base currency.
 	</p>
 
 	<h3>Withdrawal</h3>
 	<p>
-		Remove an asset from your wallet. By default this transaction will realize capital gains, unless
+		Remove an asset from your wallet. By default this transaction will realise capital gains, unless
 		the transaction has a tag that disables capital gains (like Lost).
 	</p>
 </div>
