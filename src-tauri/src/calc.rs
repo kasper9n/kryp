@@ -1,6 +1,7 @@
 use crate::reports::CostBasisMethod;
 use crate::transaction::{format_date, Quantity, Transaction};
 use crate::{round_8, throw};
+use chrono::{Datelike, Local, TimeZone};
 use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
@@ -183,6 +184,10 @@ impl Calculation {
 		transactions.sort_by_key(|tx| tx.date());
 
 		for transaction in transactions {
+			calc.cost_basis_method = debug_override_cost_basis_method(
+				transaction.date(),
+				requested_cost_basis_method.clone(),
+			);
 			match calc.apply_transaction(transaction) {
 				Ok(()) => {}
 				Err(DeductError::InsufficientBalance {
@@ -401,6 +406,18 @@ impl Calculation {
 				wallet_to_deduct: wallet.to_string(),
 			})
 		}
+	}
+}
+
+fn debug_override_cost_basis_method(
+	transaction_date: i64,
+	cost_basis_method: CostBasisMethod,
+) -> CostBasisMethod {
+	let year = Local.timestamp_millis_opt(transaction_date).unwrap().year();
+	if year >= 2024 {
+		CostBasisMethod::HIFO
+	} else {
+		CostBasisMethod::FIFO
 	}
 }
 

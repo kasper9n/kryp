@@ -59,7 +59,8 @@
 		{/if}
 	</div>
 	<div class="mx-4 my-4 flex items-center">
-		<p class="mr-4">Cost basis method</p>
+		<strike><p class="mr-4">Cost basis method</p></strike>
+		<p class='font-bold text-orange-500'>Currently overriden to be FIFO up to 2023, then HIFO in 2024+</p>
 		<div class="w-28">
 			<Dropdown options={cost_basis_methods} bind:value={cost_basis_method} />
 		</div>
