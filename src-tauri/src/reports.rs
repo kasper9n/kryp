@@ -80,6 +80,7 @@ pub async fn get_report(
 	let calculation = Calculation::calculate(
 		selected_transactions,
 		kryp.tax.settings.cost_basis_method.clone(),
+		kryp.tax.settings.base_currenty.clone(),
 	)?;
 	kryp.tax.apply_calc_output(calculation.clone());
 	let mut report = generate_report(calculation, range, deductible_tags, income_tags)?;

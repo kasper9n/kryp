@@ -61,6 +61,7 @@ impl Tax {
 		let output = Calculation::calculate(
 			self.transactions.iter().collect(),
 			self.settings.cost_basis_method.clone(),
+			self.settings.base_currency.clone(),
 		)?;
 		self.apply_calc_output(output);
 		Ok(())

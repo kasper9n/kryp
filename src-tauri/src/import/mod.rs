@@ -191,6 +191,7 @@ pub async fn continue_import(kryp: State<'_, Data>) -> Result<(), String> {
 	let calculation = Calculation::calculate(
 		new_transactions.iter().collect(),
 		kryp.tax.settings.cost_basis_method.clone(),
+		kryp.tax.settings.base_currency.clone(),
 	)?;
 
 	kryp.tax.transactions = new_transactions;

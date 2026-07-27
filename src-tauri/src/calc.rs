@@ -140,6 +140,7 @@ pub struct TaggedValue {
 
 #[derive(Clone)]
 pub struct Calculation {
+	base_currency: String,
 	pub balances: Balances,
 	pub realized_gains: Vec<Realized>,
 	pub deposits: Vec<TaggedValue>,
@@ -166,8 +167,11 @@ impl Calculation {
 	pub fn calculate(
 		mut transactions: Vec<&Transaction>,
 		cost_basis_method: CostBasisMethod,
+		base_currency: String,
 	) -> Result<Self, String> {
+		let requested_cost_basis_method = cost_basis_method.clone();
 		let mut calc = Calculation {
+			base_currency,
 			balances: Balances::default(),
 			realized_gains: Vec::new(),
 			deposits: Vec::new(),
@@ -235,33 +239,33 @@ impl Calculation {
 
 				let deducted =
 					self.deduct(&trade.sent_wallet, &trade.sent_asset, trade.sent_amount)?;
+				let fee_deducted = match trade.fee_asset.as_str() {
+					"" => vec![],
+					_ => self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?,
+				};
+
+				let asset = if trade.sent_asset == self.base_currency
+					&& trade.fee_asset != self.base_currency
+					&& trade.fee_asset != ""
+				{
+					trade.fee_asset.clone()
+				} else {
+					trade.sent_asset.clone()
+				};
+
 				let r = Realized {
 					tag: trade.tag.clone(),
 					date: trade.date,
-					input: sum_balance_costs(&deducted),
-					asset: trade.sent_asset.clone(),
+					// We include the fee's realised gain here, even though the currency could be different.
+					// This is mentiond in the Help page as well.
+					input: sum_balance_costs(&deducted) + sum_balance_costs(&fee_deducted),
+					asset,
 					is_fee: false,
 					// The fee is included in the cost here
 					output: trade.cost(),
 					wallet: trade.sent_wallet.clone(),
 				};
 				self.realized_gains.push(r);
-
-				if trade.fee_asset != "" {
-					let fee_deducted =
-						self.deduct(&trade.sent_wallet, &trade.fee_asset, trade.fee_amount)?;
-					let rf = Realized {
-						tag: trade.tag.clone(),
-						date: trade.date,
-						input: sum_balance_costs(&fee_deducted),
-						asset: trade.fee_asset.clone(),
-						is_fee: true,
-						// The fee output is already included in the main trade
-						output: dec!(0),
-						wallet: trade.sent_wallet.clone(),
-					};
-					self.realized_gains.push(rf);
-				};
 			}
 			Transaction::Transfer(transfer) => {
 				if transfer.sent_amount > transfer.recv_amount {
