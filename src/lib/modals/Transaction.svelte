@@ -6,6 +6,7 @@
 	import Dropdown from '$lib/Dropdown.svelte'
 	import { onMount } from 'svelte'
 	import { run_unwrap, type UncostedTransaction } from '$lib/data'
+	import IconHelp from '$lib/IconHelp.svelte'
 
 	export let onClose: () => void
 	function numStr(str: string) {
@@ -174,7 +175,7 @@
 	$: validate(info, true)
 </script>
 
-<Modal onCancel={onClose}>
+<Modal class="overflow-visible" onCancel={onClose}>
 	<form on:submit|preventDefault={save} class="container">
 		<h2>Add transaction</h2>
 		<div class="row">
@@ -252,7 +253,21 @@
 			</div>
 			{#if enabledFields.fee}
 				<div class="fee">
-					<h4>Fee</h4>
+					<h4 class="relative flex items-center gap-1">
+						Fee
+						<div class="group">
+							<IconHelp class="fill-foreground/75 size-3" />
+							<div
+								class="group-hover:flex left-0 top-full absolute hidden justify-start w-screen z-10"
+							>
+								<div
+									class="max-w-sm text-left text-sm bg-background rounded-md border shadow-lg border-foreground/25 px-3 py-1.5"
+								>
+									Separate fee on top of the sent amounts. In many cases, the fee does not need to be specified here.
+								</div>
+							</div>
+						</div>
+					</h4>
 					<div class="row">
 						<NumericInput bind:value={info.fee_amount} placeholder="Amount" />
 					</div>
@@ -271,7 +286,21 @@
 		{/if}
 		{#if showNetWorth}
 			<div class="row">
-				<p>Net Worth</p>
+				<div class="label flex items-center gap-1">
+					Net Worth
+					<div class='relative w-fit group gap-1'>
+						<IconHelp class="fill-foreground/75 size-3" />
+						<div
+							class="group-hover:flex left-0 top-full absolute hidden justify-start w-screen z-10"
+						>
+							<div
+								class="max-w-sm text-left text-sm bg-background rounded-md border shadow-lg border-foreground/25 px-3 py-1.5"
+							>
+								Including the fee.
+							</div>
+						</div>
+					</div>
+				</div>
 				<div class="amount-container">
 					<NumericInput
 						bind:value={info.manual_worth_amount}
@@ -309,8 +338,6 @@
 	.container
 		width: 580px
 		max-width: 100%
-		user-select: none
-		cursor: default
 		font-size: 12px
 		--date-input-width: 150px
 		--dropdown-width: 150px
@@ -361,12 +388,10 @@
 			margin: 9px
 	.fee
 		width: 25%
-	p
-		display: inline-block
-		min-width: 80px
+	p, .label
+		min-width: 150px
 		margin: 4px 0px
 		font-size: 13px
-		cursor: default
 	input, textarea
 		width: 100%
 		min-width: 0px
