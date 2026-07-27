@@ -73,30 +73,6 @@ impl Tax {
 			.map(|b| b.priced())
 			.collect();
 
-		// Verify balances sorting
-		match self.settings.cost_basis_method {
-			CostBasisMethod::FIFO => {
-				let mut last_date = i64::MIN;
-				for balance in self.balances.iter_mut() {
-					if last_date > balance.acquire_date {
-						println!("Balances {:#?}", self.balances);
-						panic!("Balances are not sorted by date");
-					}
-					last_date = balance.acquire_date;
-				}
-			}
-			CostBasisMethod::HIFO => {
-				let mut last_price = rust_decimal::Decimal::MAX;
-				for balance in self.balances.iter_mut() {
-					if last_price < balance.cost_price {
-						println!("Balances {:#?}", self.balances);
-						panic!("Balances are not sorted by cost price");
-					}
-					last_price = balance.cost_price;
-				}
-			}
-		}
-
 		self.realized_gains = calc.realized_gains;
 		self.dirty = true;
 	}

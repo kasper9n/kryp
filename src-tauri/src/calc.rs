@@ -64,7 +64,9 @@ pub struct Balances(Vec<Balance>);
 impl Balances {
 	fn sort(&mut self, cost_basis_method: CostBasisMethod) {
 		match cost_basis_method {
-			CostBasisMethod::FIFO => {} // Keep original order
+			CostBasisMethod::FIFO => {
+				self.0.sort_by_key(|balance| balance.acquire_date);
+			}
 			CostBasisMethod::HIFO => {
 				self.0.sort_by(|a, b| {
 					let a_price = a.cost_price();
